@@ -17,9 +17,16 @@ export interface DeviceActivatedEvent {
  */
 export interface PositionUpdateEvent {
   vesselId: number;
+  vesselName: string;
+  vesselType: string;
+  vesselTypeId?: number;
+  vesselTypeColor: string;
   lat: number;
   lng: number;
-  timestamp: string;
+  heading: number | null;
+  speed: number | null;
+  status: string | null;
+  timestamp: string | Date;
 }
 
 /**

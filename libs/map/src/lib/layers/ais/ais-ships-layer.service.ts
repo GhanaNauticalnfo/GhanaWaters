@@ -5,20 +5,7 @@ import { Map as MapLibreMap, GeoJSONSource, Popup } from 'maplibre-gl';
 import { BaseLayerService } from '../base-layer.service';
 import { firstValueFrom, BehaviorSubject, Observable } from 'rxjs';
 import { io, Socket } from 'socket.io-client';
-
-interface PositionUpdate {
-  vesselId: number;
-  vesselName: string;
-  vesselType: string;
-  vesselTypeId?: number;
-  vesselTypeColor?: string;
-  lat: number;
-  lng: number;
-  heading: number | null;
-  speed: number | null;
-  status: string | null;
-  timestamp: Date;
-}
+import { PositionUpdateEvent } from '@ghanawaters/shared-models';
 
 
 @Injectable({
@@ -30,7 +17,7 @@ export class AisShipLayerService extends BaseLayerService implements OnDestroy {
   private updateInterval: any;
   private socket: Socket | null = null;
   private syncSocket: Socket | null = null;
-  private vesselPositions = new Map<number, PositionUpdate>();
+  private vesselPositions = new Map<number, PositionUpdateEvent>();
   private iconCache = new Set<string>();
   
   // Vessel filtering configuration
@@ -40,7 +27,7 @@ export class AisShipLayerService extends BaseLayerService implements OnDestroy {
   private showVesselNames = false;
   
   // Expose vessel positions as Observable
-  private vesselPositions$ = new BehaviorSubject<PositionUpdate[]>([]);
+  private vesselPositions$ = new BehaviorSubject<PositionUpdateEvent[]>([]);
   public readonly vesselPositionsObservable$ = this.vesselPositions$.asObservable();
   
   constructor(
@@ -373,7 +360,7 @@ export class AisShipLayerService extends BaseLayerService implements OnDestroy {
           // Ensure icon exists for this color and vessel name
           await this.ensureIconExists(vesselTypeColor, vessel.name);
           
-          const positionUpdate: PositionUpdate = {
+          const positionUpdate: PositionUpdateEvent = {
             vesselId: vessel.id,
             vesselName: vessel.name,
             vesselType: vessel.vessel_type?.name || 'Unknown',
@@ -580,7 +567,7 @@ export class AisShipLayerService extends BaseLayerService implements OnDestroy {
     // Handle single position update
     this.socket.on('position-update', (update: any) => {
       // Ensure proper data types - update now comes with flat lat/lng structure
-      const typedUpdate: PositionUpdate = {
+      const typedUpdate: PositionUpdateEvent = {
         vesselId: Number(update.vesselId),
         vesselName: update.vesselName,
         vesselType: update.vesselType,
@@ -602,7 +589,7 @@ export class AisShipLayerService extends BaseLayerService implements OnDestroy {
       console.log('📦 WebSocket batch update:', `${updates.length} position updates`);
       updates.forEach(update => {
         // Ensure proper data types - updates now come with flat lat/lng structure
-        const typedUpdate: PositionUpdate = {
+        const typedUpdate: PositionUpdateEvent = {
           vesselId: Number(update.vesselId),
           vesselName: update.vesselName,
           vesselType: update.vesselType,
@@ -678,7 +665,7 @@ export class AisShipLayerService extends BaseLayerService implements OnDestroy {
     });
   }
   
-  private async handlePositionUpdate(update: PositionUpdate): Promise<void> {
+  private async handlePositionUpdate(update: PositionUpdateEvent): Promise<void> {
     // Ensure icon exists for this vessel's color and name
     if (update.vesselTypeColor) {
       await this.ensureIconExists(update.vesselTypeColor, update.vesselName);
@@ -717,7 +704,7 @@ export class AisShipLayerService extends BaseLayerService implements OnDestroy {
       console.log(`AIS Layer: Displaying ${allPositions.length} vessels (highlighted: ${this.vesselFilter || 'none'})`);
       
       // Convert all vessel positions to GeoJSON with highlight flag
-      const features: GeoJSON.Feature[] = await Promise.all(allPositions.map(async (pos: PositionUpdate) => {
+      const features: GeoJSON.Feature[] = await Promise.all(allPositions.map(async (pos: PositionUpdateEvent) => {
         // Get the appropriate icon name for this vessel
         const iconName = await this.ensureIconExists(pos.vesselTypeColor || '#808080', pos.vesselName);
         

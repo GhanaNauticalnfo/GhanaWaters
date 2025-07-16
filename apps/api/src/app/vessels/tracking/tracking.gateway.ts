@@ -12,21 +12,7 @@ import { Server, Socket } from 'socket.io';
 import { Logger } from '@nestjs/common';
 import { VesselTelemetry } from './vessel-telemetry.entity';
 import { Vessel } from '../vessel.entity';
-import { GeoPoint, isGeoPoint } from '@ghanawaters/shared-models';
-
-interface PositionUpdate {
-  vesselId: number;
-  vesselName: string;
-  vesselType: string;
-  vesselTypeId?: number;
-  vesselTypeColor: string;
-  lat: number;
-  lng: number;
-  heading: number | null;
-  speed: number | null;
-  status: string | null;
-  timestamp: Date;
-}
+import { GeoPoint, isGeoPoint, PositionUpdateEvent } from '@ghanawaters/shared-models';
 
 @WebSocketGateway({
   namespace: '/tracking',
@@ -92,7 +78,7 @@ export class TrackingGateway
   // Called by tracking service when new position is saved
   broadcastPosition(trackingPoint: VesselTelemetry, vessel: Vessel, position: GeoPoint) {
     const [lng, lat] = position.coordinates;
-    const update: PositionUpdate = {
+    const update: PositionUpdateEvent = {
       vesselId: vessel.id,
       vesselName: vessel.name,
       vesselType: vessel.vessel_type?.name || 'Unknown',
@@ -117,7 +103,7 @@ export class TrackingGateway
 
   // Broadcast multiple position updates (e.g., initial load)
   broadcastPositions(positions: Array<{ trackingPoint: VesselTelemetry; vessel: Vessel }>) {
-    const updates: PositionUpdate[] = [];
+    const updates: PositionUpdateEvent[] = [];
     
     for (const { trackingPoint, vessel } of positions) {
       let lat: number, lng: number;
