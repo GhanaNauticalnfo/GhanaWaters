@@ -9,7 +9,7 @@ import { VesselFormComponent, VesselFormData } from './vessel-form.component';
 import { DialogModule } from 'primeng/dialog';
 import Keycloak from 'keycloak-js';
 import { VesselDatasetService } from '../services/vessel-dataset.service';
-import { VesselDataset } from '../models/vessel-dataset.model';
+import { VesselDataset } from '@ghanawaters/shared-models';
 
 @Component({
   selector: 'app-vessel-list',

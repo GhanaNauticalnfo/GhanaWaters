@@ -2,43 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
-
-export interface SyncSummary {
-  totalEntries: number;
-  lastSyncVersion: string;
-  entityTypes: number;
-}
-
-export interface EntityStats {
-  entityType: string;
-  create: number;
-  update: number;
-  delete: number;
-  totalSize: number;
-  total: number;
-}
-
-export interface RecentEntry {
-  entityType: string;
-  entityId: string;
-  action: 'create' | 'update' | 'delete';
-  dataSize: number;
-  hasData: boolean;
-  timestamp: string | null;
-}
-
-export interface SyncManageResponse {
-  version: string;
-  majorVersion: number;
-  summary: SyncSummary;
-  entityStats: EntityStats[];
-  recentEntries: RecentEntry[];
-}
-
-export interface SyncResetResponse {
-  success: boolean;
-  majorVersion: number;
-}
+import { SyncManageResponse, SyncResetResponse } from '@ghanawaters/shared-models';
 
 @Injectable()
 export class SyncService {

@@ -15,7 +15,7 @@ import { DialogModule } from 'primeng/dialog';
 import { CheckboxModule } from 'primeng/checkbox';
 import { MessageService } from 'primeng/api';
 
-import { VesselDataset } from '../models/vessel-dataset.model';
+import { VesselDataset } from '@ghanawaters/shared-models';
 import { VesselDatasetService } from '../services/vessel-dataset.service';
 
 interface ExportStats {

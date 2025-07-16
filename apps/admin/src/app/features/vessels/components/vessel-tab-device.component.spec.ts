@@ -4,7 +4,7 @@ import { VesselTabDeviceComponent } from './vessel-tab-device.component';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { of, throwError, Subject } from 'rxjs';
 import { Device } from '../models/device.model';
-import { VesselDataset } from '../models/vessel-dataset.model';
+import { VesselDataset } from '@ghanawaters/shared-models';
 import { signal } from '@angular/core';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
 

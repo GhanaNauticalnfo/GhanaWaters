@@ -16,8 +16,8 @@ import { ToastModule } from 'primeng/toast';
 import { DialogModule } from 'primeng/dialog';
 import { CheckboxModule } from 'primeng/checkbox';
 
-import { VesselDataset } from '../../vessels/models/vessel-dataset.model';
-import { VesselDatasetService, TelemetryExportFilters, TelemetryExportStats } from '../../vessels/services/vessel-dataset.service';
+import { VesselDataset, TelemetryExportFilters, TelemetryExportStats } from '@ghanawaters/shared-models';
+import { VesselDatasetService } from '../../vessels/services/vessel-dataset.service';
 import { VesselTypeService, VesselType } from '../../settings/services/vessel-type.service';
 
 @Component({

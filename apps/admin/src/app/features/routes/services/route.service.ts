@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { Route } from '../models/route.model';
+import { RouteResponse as Route } from '@ghanawaters/shared-models';
 import { environment } from '../../../../environments/environment';
 
 @Injectable({

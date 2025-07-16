@@ -1,0 +1,55 @@
+/**
+ * Sync-related interfaces for offline data synchronization
+ */
+
+/**
+ * Summary of sync data
+ */
+export interface SyncSummary {
+  totalEntries: number;
+  lastSyncVersion: string;
+  entityTypes: number;
+}
+
+/**
+ * Statistics for a specific entity type
+ */
+export interface EntityStats {
+  entityType: string;
+  create: number;
+  update: number;
+  delete: number;
+  totalSize: number;
+  total: number;
+}
+
+/**
+ * Recent sync log entry
+ */
+export interface RecentEntry {
+  entityType: string;
+  entityId: string;
+  action: 'create' | 'update' | 'delete';
+  dataSize: number;
+  hasData: boolean;
+  timestamp: string | null;
+}
+
+/**
+ * Response from sync manage endpoint
+ */
+export interface SyncManageResponse {
+  version: string;
+  majorVersion: number;
+  summary: SyncSummary;
+  entityStats: EntityStats[];
+  recentEntries: RecentEntry[];
+}
+
+/**
+ * Response from sync reset endpoint
+ */
+export interface SyncResetResponse {
+  success: boolean;
+  majorVersion: number;
+}

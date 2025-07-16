@@ -12,7 +12,17 @@ import { ButtonModule } from 'primeng/button';
 
 // Models/Service
 import { VoltaDepthService } from '../../volta-depth.service';
-import { UploadResponse } from '../../models/upload-response.model';
+import { UploadResponse } from '@ghanawaters/shared-models';
+
+// Type definitions for PrimeNG FileUpload events
+interface FileUploadEvent {
+    files: File[];
+}
+
+interface FileUploadErrorEvent {
+    files: File[];
+    error?: { message?: string };
+}
 
 @Component({
     selector: 'app-tile-upload',
@@ -100,7 +110,7 @@ export class TileUploadComponent {
     @Output() uploadValidated = new EventEmitter<{ response: UploadResponse; file: File }>();
 
     // --- Upload Handler ---
-    onUpload(event: any): void {
+    onUpload(event: FileUploadEvent): void {
         const file = event.files[0];
         if (!file) { 
             this.uploadError.set("No file provided to upload handler."); 
@@ -139,14 +149,14 @@ export class TileUploadComponent {
     }
 
     /** Called when a file is selected */
-    onFileSelect(event: any): void {
+    onFileSelect(event: FileUploadEvent): void {
         this.uploadError.set(null); // Clear previous errors
         this.selectedFile.set(event.files[0]);
         console.log("File selected:", event.files[0]?.name);
     }
 
     /** Called by p-fileUpload on internal errors */
-    onFileError(event: any): void {
+    onFileError(event: FileUploadErrorEvent): void {
         const firstFileName = event.files[0]?.name || 'unknown file';
         // Access error message if available (structure might vary by PrimeNG version)
         const internalError = event.error?.message || 'Check file size and format constraints.';

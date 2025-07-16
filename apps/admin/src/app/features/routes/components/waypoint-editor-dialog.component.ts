@@ -7,7 +7,7 @@ import { TextareaModule } from 'primeng/textarea';
 import { MessageModule } from 'primeng/message';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ConfirmationService } from 'primeng/api';
-import { Waypoint } from '../models/route.model';
+import { Waypoint } from '@ghanawaters/shared-models';
 import { RouteValidators } from '../validators/route.validators';
 
 @Component({

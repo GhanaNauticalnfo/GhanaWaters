@@ -4,7 +4,7 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { KmlDatasetService } from '../services/kml-dataset.service';
-import { KmlDataset } from '../models/kml-dataset.model';
+import { KmlDatasetResponse } from '@ghanawaters/shared-models';
 
 // PrimeNG imports
 import { TableModule } from 'primeng/table';
@@ -433,7 +433,7 @@ export class KmlListComponent implements OnInit {
   private fb = inject(FormBuilder);
 
   // Data signals
-  datasets = signal<KmlDataset[]>([]);
+  datasets = signal<KmlDatasetResponse[]>([]);
   loading = signal<boolean>(false);
   saving = signal<boolean>(false);
   error = signal<string | null>(null);
@@ -444,7 +444,7 @@ export class KmlListComponent implements OnInit {
 
   // Other signals
   isEditMode = signal<boolean>(false);
-  selectedDataset = signal<KmlDataset | null>(null);
+  selectedDataset = signal<KmlDatasetResponse | null>(null);
 
   // Reactive Form Group
   kmlForm: FormGroup;
@@ -488,7 +488,7 @@ export class KmlListComponent implements OnInit {
   }
 
   // --- View Dialog Methods ---
-  openViewDialog(dataset: KmlDataset): void {
+  openViewDialog(dataset: KmlDatasetResponse): void {
     this.selectedDataset.set(dataset);
     this.viewDialogVisible = true;
   }
@@ -509,7 +509,7 @@ export class KmlListComponent implements OnInit {
     this.formDialogVisible = true;
   }
 
-  openEditDialog(dataset: KmlDataset | null): void {
+  openEditDialog(dataset: KmlDatasetResponse | null): void {
     if (!dataset) return;
 
     this.isEditMode.set(true);
@@ -617,7 +617,7 @@ export class KmlListComponent implements OnInit {
   }
 
   // --- Delete Confirmation ---
-  confirmDelete(dataset: KmlDataset): void {
+  confirmDelete(dataset: KmlDatasetResponse): void {
     if (!dataset || dataset.id === undefined) return;
 
     this.confirmationService.confirm({

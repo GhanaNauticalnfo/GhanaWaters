@@ -15,7 +15,7 @@ import { TileUploadComponent } from './components/tile-upload/tile-upload.compon
 import { TileListComponent } from './components/tile-list/tile-list.component';
 import { UploadConfirmationComponent } from './components/upload-confirmation/upload-confirmation.component';
 // Models and Service
-import { UploadResponse } from './models/upload-response.model';
+import { UploadResponse } from '@ghanawaters/shared-models';
 import { VoltaDepthService } from './volta-depth.service';
 
 // Export interface for type safety when injecting parent

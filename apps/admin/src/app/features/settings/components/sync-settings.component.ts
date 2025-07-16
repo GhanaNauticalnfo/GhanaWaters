@@ -8,7 +8,8 @@ import { ToastModule } from 'primeng/toast';
 import { ButtonModule } from 'primeng/button';
 import { MessageService, ConfirmationService } from 'primeng/api';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
-import { SyncService, SyncManageResponse, EntityStats, RecentEntry } from '../services/sync.service';
+import { SyncService } from '../services/sync.service';
+import { SyncManageResponse, EntityStats, RecentEntry } from '@ghanawaters/shared-models';
 
 @Component({
   selector: 'app-sync-settings',

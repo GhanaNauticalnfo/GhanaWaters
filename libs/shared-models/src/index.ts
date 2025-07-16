@@ -14,4 +14,7 @@ export * from './lib/resource-settings.model';
 export * from './lib/volta-depth.model';
 export * from './lib/device.model';
 export * from './lib/kml-dataset.model';
+export * from './lib/websocket-events.model';
+export * from './lib/sync.model';
+export * from './lib/vessel-dataset.model';
  

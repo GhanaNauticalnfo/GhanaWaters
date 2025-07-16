@@ -2,13 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
-
-export interface Setting {
-  key: string;
-  value: string;
-  created: string;
-  last_updated: string;
-}
+import { SettingResponse as Setting } from '@ghanawaters/shared-models';
 
 @Injectable({
   providedIn: 'root'

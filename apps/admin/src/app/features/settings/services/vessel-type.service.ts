@@ -2,15 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
-
-export interface VesselType {
-  id: number;
-  name: string;
-  color: string;
-  created_at: string;
-  updated_at: string;
-  vessel_count?: number;
-}
+import { VesselTypeResponse as VesselType, VesselTypeInput } from '@ghanawaters/shared-models';
 
 @Injectable({
   providedIn: 'root'

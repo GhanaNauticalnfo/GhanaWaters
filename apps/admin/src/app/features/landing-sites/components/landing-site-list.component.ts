@@ -7,7 +7,7 @@ import { ResourceListComponent, ResourceListConfig, ResourceAction } from '@ghan
 import { LandingSiteService } from '../services/landing-site.service';
 import { LandingSiteResponseDto, CreateLandingSiteDto, UpdateLandingSiteDto } from '../models/landing-site.dto';
 import { LandingSiteFormComponent } from './landing-site-form.component';
-import { LandingSite } from '../models/landing-site.model';
+import { LandingSiteWithEnabled as LandingSite } from '@ghanawaters/shared-models';
 
 @Component({
   selector: 'app-landing-site-list',

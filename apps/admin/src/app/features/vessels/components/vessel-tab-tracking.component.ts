@@ -1,10 +1,11 @@
 import { Component, Input, Output, EventEmitter, signal, OnInit, OnDestroy, OnChanges, AfterViewInit, ViewChild, ElementRef, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { VesselDataset } from '../models/vessel-dataset.model';
+import { VesselDataset } from '@ghanawaters/shared-models';
 import { VesselDatasetService } from '../services/vessel-dataset.service';
 import { OSM_STYLE, MapComponent, MapConfig } from '@ghanawaters/map';
 import { TimeAgoPipe } from '@ghanawaters/shared';
-import { HttpClient } from '@angular/common/http';
+import { PositionUpdateEvent } from '@ghanawaters/shared-models';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { io, Socket } from 'socket.io-client';
 import { environment } from '../../../../environments/environment';
 
@@ -670,7 +671,7 @@ export class VesselTabTrackingComponent implements OnInit, OnDestroy, OnChanges,
       this.isTrackingLive.set(false);
     });
 
-    this.socket.on('position-update', (data: any) => {
+    this.socket.on('position-update', (data: PositionUpdateEvent) => {
       if (data.vesselId === this.vessel?.id) {
         this.lastUpdateTime.set(new Date());
         // Update vessel position if needed - data now has flat lat/lng structure
@@ -716,7 +717,7 @@ export class VesselTabTrackingComponent implements OnInit, OnDestroy, OnChanges,
         const nearby = vessels.filter((v: VesselDataset) => v.id !== this.vessel?.id);
         this.nearbyVessels.set(nearby);
       },
-      error: (error: any) => {
+      error: (error: HttpErrorResponse) => {
         console.error('Error loading nearby vessels:', error);
         this.nearbyVessels.set([]);
       }
@@ -929,7 +930,7 @@ export class VesselTabTrackingComponent implements OnInit, OnDestroy, OnChanges,
         next: (response: any) => {
           this.updatesSent.update(count => count + 1);
         },
-        error: (error: any) => {
+        error: (error: HttpErrorResponse) => {
           console.error('Error sending fake position:', error);
         }
       });

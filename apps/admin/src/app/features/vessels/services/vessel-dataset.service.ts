@@ -2,23 +2,8 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Observable, map, Subject } from 'rxjs';
-import { VesselDataset, VesselTelemetry } from '../models/vessel-dataset.model';
+import { VesselDataset, VesselTelemetry, TelemetryExportFilters, TelemetryExportStats } from '@ghanawaters/shared-models';
 import { environment } from '../../../../environments/environment';
-
-export interface TelemetryExportFilters {
-  startDate: string;
-  endDate: string;
-  vesselIds?: number[];
-  vesselTypeIds?: number[];
-}
-
-export interface TelemetryExportStats {
-  totalRecords: number;
-  dateRange: {
-    min: string;
-    max: string;
-  };
-}
 
 interface ApiVessel {
   id: number;

@@ -1,8 +1,8 @@
 import { Component, Input, Output, EventEmitter, signal, OnInit, OnChanges, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { VesselDataset } from '../models/vessel-dataset.model';
-import { Device } from '../models/device.model';
-import { HttpClient } from '@angular/common/http';
+import { VesselDataset } from '@ghanawaters/shared-models';
+import { Device, DeviceResponse, DeviceState, DeviceActivatedEvent } from '@ghanawaters/shared-models';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { environment } from '../../../../environments/environment';
 import { io, Socket } from 'socket.io-client';
@@ -557,8 +557,8 @@ export class VesselTabDeviceComponent implements OnInit, OnChanges, OnDestroy {
 
   // Device management signals
   loadingDevices = signal(false);
-  pendingDevice = signal<Device | null>(null);
-  activeDevice = signal<Device | null>(null);
+  pendingDevice = signal<DeviceResponse | null>(null);
+  activeDevice = signal<DeviceResponse | null>(null);
   
   // WebSocket for real-time updates
   private deviceSocket?: Socket;
@@ -594,15 +594,15 @@ export class VesselTabDeviceComponent implements OnInit, OnChanges, OnDestroy {
     if (!this.vessel) return;
     
     this.loadingDevices.set(true);
-    this.http.get<Device[]>(`${environment.apiUrl}/devices?vessel_id=${this.vessel.id}`).subscribe({
-      next: (devices: Device[]) => {
-        const pending = devices.find(d => d.state === 'pending');
-        const active = devices.find(d => d.state === 'active');
+    this.http.get<DeviceResponse[]>(`${environment.apiUrl}/devices?vessel_id=${this.vessel.id}`).subscribe({
+      next: (devices: DeviceResponse[]) => {
+        const pending = devices.find(d => d.state === DeviceState.PENDING);
+        const active = devices.find(d => d.state === DeviceState.ACTIVE);
         
         this.pendingDevice.set(pending || null);
         this.activeDevice.set(active || null);
       },
-      error: (error: any) => {
+      error: (error: HttpErrorResponse) => {
         console.error('Error loading devices:', error);
         this.messageService.add({
           severity: 'error',
@@ -620,8 +620,8 @@ export class VesselTabDeviceComponent implements OnInit, OnChanges, OnDestroy {
     if (!this.vessel) return;
     
     this.loadingDevices.set(true);
-    this.http.post<Device>(`${environment.apiUrl}/devices`, { vessel_id: this.vessel.id }).subscribe({
-      next: (device: Device) => {
+    this.http.post<DeviceResponse>(`${environment.apiUrl}/devices`, { vessel_id: this.vessel.id }).subscribe({
+      next: (device: DeviceResponse) => {
         this.pendingDevice.set(device);
         this.messageService.add({
           severity: 'success',
@@ -630,7 +630,7 @@ export class VesselTabDeviceComponent implements OnInit, OnChanges, OnDestroy {
         });
         this.deviceUpdated.emit();
       },
-      error: (error: any) => {
+      error: (error: HttpErrorResponse) => {
         console.error('Error creating device:', error);
         this.messageService.add({
           severity: 'error',
@@ -644,7 +644,7 @@ export class VesselTabDeviceComponent implements OnInit, OnChanges, OnDestroy {
     });
   }
 
-  deleteDevice(device: Device) {
+  deleteDevice(device: DeviceResponse) {
     this.confirmationService.confirm({
       message: 'Are you sure you want to delete this pending activation token?',
       header: 'Delete Activation Token',
@@ -661,7 +661,7 @@ export class VesselTabDeviceComponent implements OnInit, OnChanges, OnDestroy {
             });
             this.deviceUpdated.emit();
           },
-          error: (error: any) => {
+          error: (error: HttpErrorResponse) => {
             console.error('Error deleting device:', error);
             this.messageService.add({
               severity: 'error',
@@ -677,7 +677,7 @@ export class VesselTabDeviceComponent implements OnInit, OnChanges, OnDestroy {
     });
   }
 
-  retireDevice(device: Device) {
+  retireDevice(device: DeviceResponse) {
     this.confirmationService.confirm({
       message: 'Are you sure you want to retire this active device? The device will no longer be able to report positions.',
       header: 'Retire Device',
@@ -694,7 +694,7 @@ export class VesselTabDeviceComponent implements OnInit, OnChanges, OnDestroy {
             });
             this.deviceUpdated.emit();
           },
-          error: (error: any) => {
+          error: (error: HttpErrorResponse) => {
             console.error('Error retiring device:', error);
             this.messageService.add({
               severity: 'error',
@@ -710,11 +710,11 @@ export class VesselTabDeviceComponent implements OnInit, OnChanges, OnDestroy {
     });
   }
 
-  getPublicActivationUrl(device: Device): string {
+  getPublicActivationUrl(device: DeviceResponse): string {
     return `ghanawaters://auth?token=${device.activation_token}`;
   }
 
-  getHttpsActivationUrl(device: Device): string {
+  getHttpsActivationUrl(device: DeviceResponse): string {
     return `${environment.frontendUrl}/activate?token=${device.activation_token}`;
   }
 
@@ -758,7 +758,7 @@ export class VesselTabDeviceComponent implements OnInit, OnChanges, OnDestroy {
     });
 
     // Handle device activation
-    this.deviceSocket.on('device-activated', (data: any) => {
+    this.deviceSocket.on('device-activated', (data: DeviceActivatedEvent) => {
       console.log('Device activated event received:', data);
       if (data.vesselId === this.vessel?.id && data.device) {
         // Update UI with animation

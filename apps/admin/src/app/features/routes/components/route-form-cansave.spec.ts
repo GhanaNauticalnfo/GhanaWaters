@@ -1,6 +1,6 @@
 import { FormBuilder, Validators } from '@angular/forms';
 import { signal, computed } from '@angular/core';
-import { Route, Waypoint } from '../models/route.model';
+import { RouteResponse as Route, Waypoint } from '@ghanawaters/shared-models';
 import { RouteValidators } from '../validators/route.validators';
 
 // Test the canSave logic in isolation

@@ -27,12 +27,23 @@ export interface VoltaDepthTileFeature {
 /**
  * Tile info for upload
  */
-export interface TileInfo {
+export interface TileUploadInfo {
   x: number;
   y: number;
   z: number;
   features: number;
   depths: string;
+}
+
+/**
+ * Tile metadata info
+ */
+export interface TileInfo {
+  id: string;
+  numberOfFeatures: number;
+  created: Date | string;
+  lastUpdated: Date | string;
+  version: number;
 }
 
 /**
@@ -52,4 +63,24 @@ export interface UploadResponse {
  */
 export interface CommitUpload {
   uploadId: string;
+}
+
+/**
+ * Tile definition with geometric boundaries
+ */
+export interface TileDefinition {
+  type: 'Feature';
+  properties: {
+    id: string;
+    left: number;
+    top: number;
+    right: number;
+    bottom: number;
+    row_index: number;
+    col_index: number;
+  };
+  geometry: {
+    type: 'Polygon';
+    coordinates: number[][][];
+  };
 }

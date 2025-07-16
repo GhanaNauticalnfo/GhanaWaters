@@ -20,7 +20,7 @@ import type * as maplibregl from 'maplibre-gl';
 import { createOsmMapOptions, defaultGeoJsonStyle, getMapLibreGl, fitMapToVoltaLakeBounds, VOLTA_LAKE_BOUNDS } from '../../utils/map-utils';
 
 // Models/Service
-import { TileInfo } from '../../models/tile-info.model';
+import { TileInfo } from '@ghanawaters/shared-models';
 import { VoltaDepthService } from '../../volta-depth.service';
 
 // Type for derived status signal

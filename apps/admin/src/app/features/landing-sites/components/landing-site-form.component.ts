@@ -11,7 +11,7 @@ import { CardModule } from 'primeng/card';
 import { SkeletonModule } from 'primeng/skeleton';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ConfirmationService } from 'primeng/api';
-import { LandingSite } from '../models/landing-site.model';
+import { LandingSiteWithEnabled as LandingSite } from '@ghanawaters/shared-models';
 import { MapComponent, MapConfig, OSM_STYLE } from '@ghanawaters/map';
 import { GeoPoint } from '@ghanawaters/shared-models';
 import { Map as MaplibreMap, Marker, LngLatLike } from 'maplibre-gl';

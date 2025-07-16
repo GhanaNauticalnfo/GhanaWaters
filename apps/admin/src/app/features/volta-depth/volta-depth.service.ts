@@ -3,8 +3,7 @@ import { HttpClient, HttpErrorResponse, HttpHeaders } from '@angular/common/http
 import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 
-import { TileInfo } from './models/tile-info.model';
-import { UploadResponse } from './models/upload-response.model';
+import { TileInfo, UploadResponse } from '@ghanawaters/shared-models';
 import { environment } from '../../../environments/environment';
 
 @Injectable({

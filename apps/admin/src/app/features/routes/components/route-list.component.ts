@@ -4,7 +4,7 @@ import { TagModule } from 'primeng/tag';
 import { MessageService } from 'primeng/api';
 import { ResourceListComponent, ResourceListConfig, ResourceAction } from '@ghanawaters/shared';
 import { RouteService } from '../services/route.service';
-import { Route } from '../models/route.model';
+import { RouteResponse as Route } from '@ghanawaters/shared-models';
 import { RouteFormComponent } from './route-form.component';
 
 @Component({

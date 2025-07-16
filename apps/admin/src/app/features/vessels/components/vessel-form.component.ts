@@ -10,7 +10,7 @@ import { TabsModule } from 'primeng/tabs';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ConfirmationService } from 'primeng/api';
 import { VesselTypeService, VesselType } from '../../settings/services/vessel-type.service';
-import { VesselDataset } from '../models/vessel-dataset.model';
+import { VesselDataset } from '@ghanawaters/shared-models';
 import { VesselTabInfoComponent } from './vessel-tab-info.component';
 import { VesselTabDeviceComponent } from './vessel-tab-device.component';
 import { VesselTabTrackingComponent } from './vessel-tab-tracking.component';
@@ -574,8 +574,9 @@ export class VesselFormComponent implements OnInit, OnDestroy {
     }
   }
   
-  onTabChange(event: any): void {
-    this.activeTabIndex.set(parseInt(event.value || event, 10));
+  onTabChange(event: { value: string } | string): void {
+    const value = typeof event === 'object' ? event.value : event;
+    this.activeTabIndex.set(parseInt(value, 10));
     
     // Restore focus to dialog content so ESC key continues to work
     setTimeout(() => {

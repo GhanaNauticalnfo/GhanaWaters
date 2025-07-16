@@ -1,6 +1,6 @@
 import { Component, Input, signal, OnInit, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { VesselDataset } from '../models/vessel-dataset.model';
+import { VesselDataset } from '@ghanawaters/shared-models';
 import { VesselTypeService, VesselType } from '../../settings/services/vessel-type.service';
 import { VesselIdPipe } from '@ghanawaters/shared';
 

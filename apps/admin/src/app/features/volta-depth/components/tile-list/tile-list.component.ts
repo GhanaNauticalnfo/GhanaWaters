@@ -16,7 +16,7 @@ import { ConfirmationService, MessageService } from 'primeng/api';
 import { ToastModule } from 'primeng/toast';
 
 // Models/Service
-import { TileInfo } from '../../models/tile-info.model';
+import { TileInfo } from '@ghanawaters/shared-models';
 import { VoltaDepthService } from '../../volta-depth.service';
 
 @Component({

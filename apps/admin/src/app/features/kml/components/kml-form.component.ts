@@ -4,7 +4,7 @@ import { CommonModule } from '@angular/common';
 import { RouterModule, ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { KmlDatasetService } from '../services/kml-dataset.service';
-import { KmlDataset } from '../models/kml-dataset.model';
+import { KmlDatasetResponse, KmlDatasetInput } from '@ghanawaters/shared-models';
 
 // PrimeNG imports
 import { CardModule } from 'primeng/card';
@@ -128,7 +128,7 @@ export class KmlFormComponent implements OnInit {
   private router = inject(Router);
   
   isEditMode = signal<boolean>(false);
-  dataset = signal<KmlDataset | null>(null);
+  dataset = signal<KmlDatasetResponse | null>(null);
   loading = signal<boolean>(false);
   error = signal<string | null>(null);
   
