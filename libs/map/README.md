@@ -21,7 +21,7 @@ The `@ghanawaters/map` library provides shared mapping functionality using MapLi
 
 ### Layer Services
 
-- `AisShipsLayerService`: Displays AIS vessel positions with real-time updates via WebSocket
+- `VesselLayerService`: Displays vessel positions with real-time updates via WebSocket
 - `RouteLayerService`: Renders navigation routes and waypoints
 - `DepthLayerService`: Displays depth contours and bathymetric data
 - `NiordLayerService`: Shows navigation warnings from Niord system
@@ -55,13 +55,13 @@ export class MapComponent {
 ### Layer Management
 
 ```typescript
-import { LayerManagerService, AisShipsLayerService } from '@ghanawaters/map';
+import { LayerManagerService, VesselLayerService } from '@ghanawaters/map';
 
 // Add vessel tracking layer
-this.layerManager.addLayer(this.aisShipsLayer);
+this.layerManager.addLayer(this.vesselLayer);
 
 // Remove layer
-this.layerManager.removeLayer('ais-ships');
+this.layerManager.removeLayer('vessels');
 ```
 
 ### Real-time Vessel Updates
@@ -69,8 +69,8 @@ this.layerManager.removeLayer('ais-ships');
 The library integrates with WebSocket services to provide real-time vessel position updates:
 
 ```typescript
-// AIS layer automatically subscribes to WebSocket position updates
-// No manual setup required - handled internally by AisShipsLayerService
+// Vessel layer automatically subscribes to WebSocket position updates
+// No manual setup required - handled internally by VesselLayerService
 ```
 
 ## Map Styles

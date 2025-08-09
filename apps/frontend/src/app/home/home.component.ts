@@ -1,11 +1,11 @@
 import { Component, ViewChild, inject, AfterViewInit } from '@angular/core';
-import { MapComponent, MapConfig, OSM_STYLE, LayerManagerService, AisShipLayerService, VesselWithLocation } from '@ghanawaters/map';
+import { MapComponent, MapConfig, OSM_STYLE, LayerManagerService, VesselLayerService, VesselWithLocation } from '@ghanawaters/map';
 
 @Component({
   selector: 'app-home',
   standalone: true,
   imports: [MapComponent],
-  providers: [AisShipLayerService],
+  providers: [VesselLayerService],
   template: `
     <div class="map-layout">
       <div class="header text-center">
@@ -59,13 +59,13 @@ export class HomeComponent implements AfterViewInit {
     showCoordinateDisplay: true, // Enable coordinate display
     showFullscreenControl: true,
     showControls: false, // Disable layer controls for simpler view
-    availableLayers: ['ais-ships'], // Make vessel tracking layer available
-    initialActiveLayers: ['ais-ships'] // Automatically activate vessel tracking on load
+    availableLayers: ['vessels'], // Make vessel tracking layer available
+    initialActiveLayers: ['vessels'] // Automatically activate vessel tracking on load
   };
 
   ngAfterViewInit() {
-    // Register the AIS ships layer to display vessel tracking
-    this.layerManager.registerLayer('ais-ships', AisShipLayerService);
+    // Register the vessel layer to display vessel tracking
+    this.layerManager.registerLayer('vessels', VesselLayerService);
   }
 
   onVesselSelected(vessel: VesselWithLocation) {

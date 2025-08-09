@@ -11,7 +11,7 @@ Provides shared mapping functionality using MapLibre GL. This library contains a
 - Core map service for managing MapLibre instances
 - Reusable map component with consistent styling
 - OpenStreetMap (OSM) style configurations
-- Layer services for AIS vessels, depth data, navigation warnings (Niord), and routes
+- Layer services for vessels, depth data, navigation warnings (Niord), and routes
 - WebSocket integration for real-time vessel position updates
 
 ### @ghanawaters/shared-models

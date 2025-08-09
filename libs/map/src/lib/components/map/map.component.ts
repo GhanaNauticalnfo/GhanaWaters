@@ -6,7 +6,7 @@ import { LayerManagerService } from '../../core/layer-manager.service';
 import { Map, LngLatLike, NavigationControl, Popup } from 'maplibre-gl';
 import { MapConfig, DEFAULT_MAP_CONFIG } from '../../models/map-config.model';
 import { SearchDropdownComponent, SearchDropdownConfig } from '@ghanawaters/shared';
-import { AisShipLayerService } from '../../layers/ais/ais-ships-layer.service';
+import { VesselLayerService } from '../../layers/vessel/vessel-layer.service';
 import { Subject, takeUntil, map } from 'rxjs';
 import { toSignal } from '@angular/core/rxjs-interop';
 
@@ -490,7 +490,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy, OnChanges
   // Highlight tracking
   private highlightedVesselId: number | null = null;
   private highlightIntervals: any[] = [];
-  private aisLayerService: AisShipLayerService | null = null;
+  private vesselLayerService: VesselLayerService | null = null;
   
   // Computed signal for vessel list
   vesselList = computed(() => {
@@ -608,8 +608,8 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy, OnChanges
         if (this._config.initialActiveLayers && this._config.initialActiveLayers.length > 0) {
           this._config.initialActiveLayers.forEach(layerId => {
             this.layerManager.activateLayer(layerId);
-            // Apply vessel filter if this is the AIS layer
-            if (layerId === 'ais-ships') {
+            // Apply vessel filter if this is the vessel layer
+            if (layerId === 'vessels') {
               this.applyVesselFilter();
             }
           });
@@ -681,8 +681,8 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy, OnChanges
       this.layerManager.deactivateLayer(layerId);
     } else {
       this.layerManager.activateLayer(layerId);
-      // Apply vessel filter if this is the AIS layer
-      if (layerId === 'ais-ships') {
+      // Apply vessel filter if this is the vessel layer
+      if (layerId === 'vessels') {
         this.applyVesselFilter();
       }
     }
@@ -690,13 +690,13 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy, OnChanges
   
   private applyVesselFilter(): void {
     console.log('Map Component: applyVesselFilter called with', this._vesselFilter);
-    // Get the AIS layer and apply vessel filter
-    const aisLayer = this.layerManager.getLayer('ais-ships');
-    console.log('Map Component: AIS layer found:', !!aisLayer);
-    if (aisLayer && 'setVesselFilter' in aisLayer) {
-      (aisLayer as any).setVesselFilter(this._vesselFilter);
+    // Get the vessel layer and apply vessel filter
+    const vesselLayer = this.layerManager.getLayer('vessels');
+    console.log('Map Component: Vessel layer found:', !!vesselLayer);
+    if (vesselLayer && 'setVesselFilter' in vesselLayer) {
+      (vesselLayer as any).setVesselFilter(this._vesselFilter);
     } else {
-      console.log('Map Component: AIS layer not available for filtering');
+      console.log('Map Component: Vessel layer not available for filtering');
     }
   }
   
@@ -813,19 +813,19 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy, OnChanges
   
   // Vessel search methods
   private initializeVesselSearch(): void {
-    // Register the AIS layer if needed
-    if (!this.layerManager.getLayer('ais-ships')) {
-      this.layerManager.registerLayer('ais-ships', AisShipLayerService);
+    // Register the vessel layer if needed
+    if (!this.layerManager.getLayer('vessels')) {
+      this.layerManager.registerLayer('vessels', VesselLayerService);
     }
     
-    // Get the AIS layer service instance
-    const aisLayer = this.layerManager.getLayer('ais-ships');
-    if (aisLayer && aisLayer instanceof AisShipLayerService) {
-      this.aisLayerService = aisLayer;
+    // Get the vessel layer service instance
+    const vesselLayer = this.layerManager.getLayer('vessels');
+    if (vesselLayer && vesselLayer instanceof VesselLayerService) {
+      this.vesselLayerService = vesselLayer;
       
       // Set initial vessel names visibility
-      if ('setShowVesselNames' in this.aisLayerService) {
-        (this.aisLayerService as any).setShowVesselNames(this.showVesselNames());
+      if ('setShowVesselNames' in this.vesselLayerService) {
+        (this.vesselLayerService as any).setShowVesselNames(this.showVesselNames());
       }
       
       // Subscribe to vessel position updates
@@ -834,10 +834,10 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy, OnChanges
   }
   
   private subscribeToVesselUpdates(): void {
-    if (!this.aisLayerService) return;
+    if (!this.vesselLayerService) return;
     
-    // Subscribe to vessel position updates from the AIS layer
-    this.aisLayerService.vesselPositionsObservable$
+    // Subscribe to vessel position updates from the vessel layer
+    this.vesselLayerService.vesselPositionsObservable$
       .pipe(
         takeUntil(this.destroy$),
         map(positions => positions.map(pos => ({
@@ -923,9 +923,9 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy, OnChanges
       localStorage.setItem('showVesselNames', newValue.toString());
     }
     
-    // Update the AIS layer if it exists
-    if (this.aisLayerService && 'setShowVesselNames' in this.aisLayerService) {
-      (this.aisLayerService as any).setShowVesselNames(newValue);
+    // Update the vessel layer if it exists
+    if (this.vesselLayerService && 'setShowVesselNames' in this.vesselLayerService) {
+      (this.vesselLayerService as any).setShowVesselNames(newValue);
     }
   }
   

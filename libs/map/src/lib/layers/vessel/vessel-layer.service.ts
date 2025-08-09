@@ -1,4 +1,4 @@
-// libs/map/src/lib/layers/ais/ais-ships-layer.service.ts
+// libs/map/src/lib/layers/vessel/vessel-layer.service.ts
 import { Injectable, OnDestroy } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Map as MapLibreMap, GeoJSONSource, Popup } from 'maplibre-gl';
@@ -11,8 +11,8 @@ import { PositionUpdateEvent } from '@ghanawaters/shared-models';
 @Injectable({
   providedIn: 'root'
 })
-export class AisShipLayerService extends BaseLayerService implements OnDestroy {
-  readonly layerId = 'ais-ships';
+export class VesselLayerService extends BaseLayerService implements OnDestroy {
+  readonly layerId = 'vessels';
   private map: MapLibreMap | null = null;
   private updateInterval: any;
   private socket: Socket | null = null;
@@ -39,7 +39,7 @@ export class AisShipLayerService extends BaseLayerService implements OnDestroy {
   // Configure vessel filtering
   setVesselFilter(vesselId: number | null): void {
     this.vesselFilter = vesselId;
-    console.log('AIS Layer: vessel filter set to', vesselId);
+    console.log('Vessel Layer: vessel filter set to', vesselId);
     
     // Re-render existing data with new filter
     if (this.map) {
@@ -50,7 +50,7 @@ export class AisShipLayerService extends BaseLayerService implements OnDestroy {
   // Configure vessel name display
   setShowVesselNames(show: boolean): void {
     this.showVesselNames = show;
-    console.log('AIS Layer: show vessel names set to', show);
+    console.log('Vessel Layer: show vessel names set to', show);
     
     // Clear icon cache when toggling names to force recreation
     this.iconCache.clear();
@@ -63,7 +63,7 @@ export class AisShipLayerService extends BaseLayerService implements OnDestroy {
   
   initialize(map: MapLibreMap): void {
     this.map = map;
-    console.log('AIS Layer: Initializing AIS ships layer');
+    console.log('Vessel Layer: Initializing vessels layer');
     
     // Initialize WebSocket connections
     this.initializeWebSocket();
@@ -94,7 +94,7 @@ export class AisShipLayerService extends BaseLayerService implements OnDestroy {
       const response = await this.createShipIcon(color, vesselName);
       this.map.addImage(iconName, response.data);
       this.iconCache.add(cacheKey);
-      console.log(`AIS Layer: Created icon '${iconName}' with color ${color}${vesselName ? ' and name ' + vesselName : ''}`);
+      console.log(`Vessel Layer: Created icon '${iconName}' with color ${color}${vesselName ? ' and name ' + vesselName : ''}`);
       return iconName;
     } catch (error) {
       console.error(`Failed to create icon for color ${color}:`, error);
@@ -319,7 +319,7 @@ export class AisShipLayerService extends BaseLayerService implements OnDestroy {
       const missingImage = e.id;
       if (missingImage.startsWith('ship-icon-')) {
         const color = missingImage.replace('ship-icon-', '');
-        console.log(`AIS Layer: Creating missing icon for color ${color}`);
+        console.log(`Vessel Layer: Creating missing icon for color ${color}`);
         
         // Create the missing icon
         await this.ensureIconExists(color);
@@ -335,7 +335,7 @@ export class AisShipLayerService extends BaseLayerService implements OnDestroy {
     
     try {
       // Fetch real vessel positions from the API
-      console.log('AIS Layer: Fetching latest vessel positions from API');
+      console.log('Vessel Layer: Fetching latest vessel positions from API');
       const apiUrl = this.getApiUrl();
       const response = await firstValueFrom(this.http.get<any[]>(`${apiUrl}/api/vessels?includeLatestPosition=true`));
       
@@ -345,11 +345,11 @@ export class AisShipLayerService extends BaseLayerService implements OnDestroy {
       const features: GeoJSON.Feature[] = [];
       
       if (response && Array.isArray(response)) {
-        console.log('AIS Layer: Received', response.length, 'vessels from API');
+        console.log('Vessel Layer: Received', response.length, 'vessels from API');
         for (const vessel of response) {
           // Check if vessel has latest position data
           if (!vessel.latest_position_coordinates) {
-            console.warn('AIS Layer: Skipping vessel', vessel.id, '- no position data');
+            console.warn('Vessel Layer: Skipping vessel', vessel.id, '- no position data');
             continue;
           }
           
@@ -376,7 +376,7 @@ export class AisShipLayerService extends BaseLayerService implements OnDestroy {
           
           // Debug logging for vessel type mapping
           if (vessel.name === 'asas' || vessel.name === 'sdsd') {
-            console.log(`AIS Layer: Vessel '${vessel.name}' - Type: ${vessel.vessel_type?.name} (ID: ${vessel.vessel_type?.id}), Color: ${vesselTypeColor}`);
+            console.log(`Vessel Layer: Vessel '${vessel.name}' - Type: ${vessel.vessel_type?.name} (ID: ${vessel.vessel_type?.id}), Color: ${vesselTypeColor}`);
           }
           
           // Store in our local map
@@ -420,9 +420,9 @@ export class AisShipLayerService extends BaseLayerService implements OnDestroy {
       };
       
       source.setData(geojsonData);
-      console.log('AIS Layer: Updated map with', features.length, 'vessels');
+      console.log('Vessel Layer: Updated map with', features.length, 'vessels');
     } catch (error) {
-      console.error('AIS Layer: Failed to fetch vessel positions', error);
+      console.error('Vessel Layer: Failed to fetch vessel positions', error);
       
       // Use empty data as fallback instead of mock data
       const source = this.map.getSource(this.layerId) as GeoJSONSource;
@@ -701,7 +701,7 @@ export class AisShipLayerService extends BaseLayerService implements OnDestroy {
       // Show all vessels, but mark the selected one
       const allPositions = Array.from(this.vesselPositions.values());
       
-      console.log(`AIS Layer: Displaying ${allPositions.length} vessels (highlighted: ${this.vesselFilter || 'none'})`);
+      console.log(`Vessel Layer: Displaying ${allPositions.length} vessels (highlighted: ${this.vesselFilter || 'none'})`);
       
       // Convert all vessel positions to GeoJSON with highlight flag
       const features: GeoJSON.Feature[] = await Promise.all(allPositions.map(async (pos: PositionUpdateEvent) => {

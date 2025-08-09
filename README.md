@@ -66,6 +66,21 @@ npx nx serve admin
 - Keycloak Admin: http://localhost:8080/admin (admin/admin)
 - Database: PostgreSQL on port 5432
 
+### Development User Accounts
+
+The development environment includes pre-configured test users:
+
+| Username | Password | Role | Permissions |
+|----------|----------|------|-------------|
+| `admin` | `admin123` | admin | Full system access - can manage all aspects of Ghana Waters |
+| `viewer` | `viewer123` | viewer | Read-only access - can view all data but cannot make changes |
+
+**Note**: The admin role includes viewer permissions (composite role). Use these accounts to test different permission levels in the admin dashboard.
+
+### API Documentation (Swagger)
+
+Interactive API documentation with testing capabilities is available at **http://localhost:3000/api/docs** when the API server is running. Use the "Authorize" button to add Bearer tokens for protected endpoints.
+
 ## Project Structure
 
 ```
@@ -108,24 +123,11 @@ npm run migration:run:dev
 npm run migration:revert:dev
 
 # Infrastructure
-npm run dev:setup        # Start services and run migrations
+npm run dev:setup        # Start dependent services (Docker) and run migrations
 npm run db:up            # Start PostgreSQL and Keycloak
 npm run db:down          # Stop all services
 npm run db:logs          # View service logs
 ```
-
-### API Endpoints
-
-Key endpoints include:
-
-- `GET /api/data/sync?since={timestamp}` - Sync endpoint for offline data
-- `GET/POST/PUT/DELETE /api/routes` - Navigation routes
-- `GET/POST/PUT/DELETE /api/markers` - Map markers
-- `GET/POST/PUT/DELETE /api/hazards` - Navigation hazards
-- `POST /api/devices/activate` - Device activation
-- `POST /api/vessels/telemetry/report` - Position reporting
-
-See [API Reference](docs/api-reference.md) for complete documentation.
 
 ## Offline Sync Feature
 

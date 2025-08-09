@@ -4,7 +4,7 @@ import { CommonModule } from '@angular/common';
 import { 
   MapComponent,
   LayerManagerService, 
-  AisShipLayerService, 
+  VesselLayerService, 
   NiordLayerService,
   MapConfig,
   OSM_STYLE,
@@ -68,7 +68,7 @@ import {
   `],
   providers: [
     DepthLayerService,
-    AisShipLayerService,
+    VesselLayerService,
     NiordLayerService
   ]
 })
@@ -85,10 +85,10 @@ export class LiveComponent implements OnInit, AfterViewInit {
     height: '600px',
     showFullscreenControl: true,
     showControls: false, // Hide the map layers panel
-    availableLayers: ['ais-ships', 'niord', 'depth'],
-    initialActiveLayers: ['ais-ships'], // Automatically activate this layer on load
+    availableLayers: ['vessels', 'niord', 'depth'],
+    initialActiveLayers: ['vessels'], // Automatically activate this layer on load
     layerNames: {
-      'ais-ships': 'Vessels',
+      'vessels': 'Vessels',
       'niord': 'NW/NM',
       'depth': 'Depths'
     }
@@ -98,7 +98,7 @@ export class LiveComponent implements OnInit, AfterViewInit {
     console.log('Live Component: Initializing live vessel tracking page');
     
     // Register available layers
-    this.layerManager.registerLayer('ais-ships', AisShipLayerService);
+    this.layerManager.registerLayer('vessels', VesselLayerService);
     this.layerManager.registerLayer('niord', NiordLayerService);
     this.layerManager.registerLayer('depth', DepthLayerService);
     
