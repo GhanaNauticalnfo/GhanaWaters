@@ -19,22 +19,22 @@ services:
       timeout: 5s
       retries: 5
 
-  martin:
-    image: ghcr.io/maplibre/martin:latest
-    container_name: martin_tileserver
-    depends_on:
-      ghanawaters-postgres:
-        condition: service_healthy
-    environment:
-      DATABASE_URL: postgresql://${DATABASE_USER:-ghanawaters_user}:${DATABASE_PASSWORD:-ghanawaters_password}@ghanawaters-postgres:5432/${DATABASE_NAME:-ghanawaters_db}
-    volumes:
-      - ../../support/martin/config.yaml:/config.yaml  # Mount the config file
-    command: --config /config.yaml --webui enable-for-all  # Use the config file
-    ports:
-      - "4000:3000"
-    restart: unless-stopped
-    networks:
-      - ghanawaters-network
+#  martin:
+#    image: ghcr.io/maplibre/martin:latest
+#    container_name: martin_tileserver
+#    depends_on:
+#      ghanawaters-postgres:
+#        condition: service_healthy
+#    environment:
+#      DATABASE_URL: postgresql://${DATABASE_USER:-ghanawaters_user}:${DATABASE_PASSWORD:-ghanawaters_password}@ghanawaters-postgres:5432/${DATABASE_NAME:-ghanawaters_db}
+#    volumes:
+#      - ../../support/martin/config.yaml:/config.yaml  # Mount the config file
+#    command: --config /config.yaml --webui enable-for-all  # Use the config file
+#    ports:
+#      - "4000:3000"
+#    restart: unless-stopped
+#    networks:
+#      - ghanawaters-network
       
  
   # nanomq:
