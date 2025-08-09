@@ -49,7 +49,7 @@ export class LandingSiteService {
 
   async findEnabled(): Promise<LandingSiteResponseDto[]> {
     const landingSites = await this.landingSiteRepository.find({
-      where: { status: 'active' },
+      where: { active: true },
       order: { name: 'ASC' },
     });
     
@@ -140,7 +140,7 @@ export class LandingSiteService {
     // For now, return all enabled sites
     // TODO: Fix spatial query with proper ST_Within
     const landingSites = await this.landingSiteRepository.find({
-      where: { status: 'active' },
+      where: { active: true },
       order: { name: 'ASC' },
     });
     
@@ -158,7 +158,7 @@ export class LandingSiteService {
     // For now, just return all enabled sites sorted by name
     // TODO: Fix spatial query with proper ST_Distance
     const landingSites = await this.landingSiteRepository.find({
-      where: { status: 'active' },
+      where: { active: true },
       order: { name: 'ASC' },
       take: limit || 5,
     });
@@ -175,7 +175,7 @@ export class LandingSiteService {
         id: landingSite.id,
         name: landingSite.name,
         description: landingSite.description,
-        status: landingSite.status,
+        active: landingSite.active,
         created_at: landingSite.created_at,
         updated_at: landingSite.updated_at
       }

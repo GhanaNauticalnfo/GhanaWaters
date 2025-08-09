@@ -46,11 +46,11 @@ export class CreateLandingSiteDto implements LandingSiteInput {
   location: GeoPoint;
 
   @ApiProperty({ 
-    enum: ['active', 'inactive', 'maintenance'],
-    default: 'active',
+    description: 'Whether the landing site is active',
+    default: true,
     required: false 
   })
   @IsOptional()
-  @IsString()
-  status?: 'active' | 'inactive' | 'maintenance';
+  @IsBoolean()
+  active?: boolean;
 }

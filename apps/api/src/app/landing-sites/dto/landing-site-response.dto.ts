@@ -20,8 +20,8 @@ export class LandingSiteResponseDto implements LandingSiteResponse {
   })
   location: GeoPoint;
 
-  @ApiProperty({ enum: ['active', 'inactive', 'maintenance'] })
-  status: 'active' | 'inactive' | 'maintenance';
+  @ApiProperty({ description: 'Whether the landing site is active' })
+  active: boolean;
 
   @ApiProperty()
   created_at: string;

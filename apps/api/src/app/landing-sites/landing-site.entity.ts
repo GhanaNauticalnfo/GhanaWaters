@@ -32,8 +32,8 @@ export class LandingSite {
   @Index({ spatial: true })
   location: GeoPoint;
 
-  @Column({ default: 'active' })
-  status: string;
+  @Column({ default: true })
+  active: boolean;
 
   @CreateDateColumn()
   created_at: Date;
@@ -47,7 +47,7 @@ export class LandingSite {
       name: this.name,
       description: this.description,
       location: this.location,
-      status: this.status as 'active' | 'inactive' | 'maintenance',
+      active: this.active,
       created_at: this.created_at.toISOString(),
       updated_at: this.updated_at.toISOString(),
     };
