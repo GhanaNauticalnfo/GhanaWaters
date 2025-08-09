@@ -1,6 +1,6 @@
-# Snapper Admin Style Guide
+# Ghana Waters Admin Style Guide
 
-This document outlines the coding standards and UI patterns for the Snapper Admin application.
+This document outlines the coding standards and UI patterns for the Ghana Waters Admin application.
 
 ## Page Structure
 
@@ -71,7 +71,7 @@ The page-header styles are defined globally in `apps/admin/src/styles.css`:
 
 ### List Components
 
-When creating list components (e.g., vessels, routes, landing sites), use the shared `ResourceListComponent` from `@snapper/shared` for consistency.
+When creating list components (e.g., vessels, routes, landing sites), use the shared `ResourceListComponent` from `@ghanawaters/shared` for consistency.
 
 #### Standard Features
 - Search bar with icon
@@ -306,7 +306,7 @@ features/
 ### Shared Code
 - Place reusable components in `libs/shared`
 - Place shared models in `libs/shared-models`
-- Use Nx workspace aliases (`@snapper/shared`)
+- Use Nx workspace aliases (`@ghanawaters/shared`)
 
 ## Git Commit Guidelines
 

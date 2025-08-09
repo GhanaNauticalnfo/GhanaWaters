@@ -1,7 +1,7 @@
-# Android App Integration with Snapper API
+# Android App Integration with Ghana Waters API
 
 ## Overview
-This document describes the integration between the Android tracking app and the Snapper API.
+This document describes the integration between the Android tracking app and the Ghana Waters API.
 
 ## Authentication Flow
 

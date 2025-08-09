@@ -32,14 +32,6 @@ The API uses environment variables for configuration across different deployment
 | `DATABASE_SSL` | Enable SSL for database connection | `false` (local), `true` (prod) | `true`, `false` |
 | `TYPEORM_LOGGING` | Enable TypeORM query logging | `true` (dev), `false` (prod) | `true`, `false` |
 
-### MQTT/NanoMQ Configuration
-
-| Variable | Description | Default | Example Values |
-|----------|-------------|---------|----------------|
-| `MQTT_ENABLED` | Enable MQTT functionality | `true` | `true`, `false` |
-| `MQTT_BROKER_URL` | MQTT broker connection URL | `mqtt://localhost:1883` | `mqtt://nanomq-service:1883` |
-| `MQTT_API_PASSWORD` | Password for MQTT API authentication | `mqtt_api_password` | `secure_mqtt_password` |
-
 ### Keycloak Authentication
 
 | Variable | Description | Default | Example Values |
@@ -64,9 +56,6 @@ DATABASE_PORT=5432
 DATABASE_USER=ghanawaters_user
 DATABASE_PASSWORD=ghanawaters_password
 DATABASE_NAME=ghanawaters_db
-MQTT_BROKER_URL=mqtt://localhost:1883
-MQTT_API_PASSWORD=mqtt_api_password
-MQTT_ENABLED=true
 KEYCLOAK_URL=http://localhost:8080
 KEYCLOAK_REALM=ghanawaters
 KEYCLOAK_CLIENT_ID=ghanawaters-api
@@ -75,33 +64,27 @@ KEYCLOAK_CLIENT_ID=ghanawaters-api
 ### Development Environment (Kubernetes)
 ```bash
 NODE_ENV=dev
-DATABASE_URL=postgresql://snapper_user:xxx@postgres-service.dev.svc.cluster.local:5432/snapper_db
+DATABASE_URL=postgresql://ghanawaters_user:xxx@postgres-service.dev.svc.cluster.local:5432/ghanawaters_db
 DATABASE_SSL=false
 TYPEORM_LOGGING=true
-MQTT_BROKER_URL=mqtt://ghanawaters-nanomq:1883
-MQTT_API_PASSWORD=<from-secret>
 ALLOWED_ORIGINS=https://ghanawaters-dev-admin.ghananautical.info,https://ghanawaters-dev.ghananautical.info
 ```
 
 ### Test Environment (Kubernetes)
 ```bash
 NODE_ENV=test
-DATABASE_URL=postgresql://snapper_user:xxx@postgres-service.test.svc.cluster.local:5432/snapper_db
+DATABASE_URL=postgresql://ghanawaters_user:xxx@postgres-service.test.svc.cluster.local:5432/ghanawaters_db
 DATABASE_SSL=true
 TYPEORM_LOGGING=false
-MQTT_BROKER_URL=mqtt://ghanawaters-nanomq:1883
-MQTT_API_PASSWORD=<from-secret>
 ALLOWED_ORIGINS=https://ghanawaters-test-admin.ghananautical.info,https://ghanawaters-test.ghananautical.info
 ```
 
 ### Production Environment (Kubernetes)
 ```bash
 NODE_ENV=prod
-DATABASE_URL=postgresql://snapper_user:xxx@postgres-service.prod.svc.cluster.local:5432/snapper_db
+DATABASE_URL=postgresql://ghanawaters_user:xxx@postgres-service.prod.svc.cluster.local:5432/ghanawaters_db
 DATABASE_SSL=true
 TYPEORM_LOGGING=false
-MQTT_BROKER_URL=mqtt://ghanawaters-nanomq:1883
-MQTT_API_PASSWORD=<from-secret>
 ALLOWED_ORIGINS=https://ghanawaters-admin.ghananautical.info,https://ghanawaters.ghananautical.info
 ```
 
@@ -137,11 +120,6 @@ kubectl create secret generic ghanawaters-postgres-secret \
 - Verify `DATABASE_URL` or individual database variables are set correctly
 - Check `DATABASE_SSL` setting matches your environment
 - Ensure database service is accessible from the pod
-
-### MQTT Connection Issues
-- Verify `MQTT_BROKER_URL` is correct
-- Check `MQTT_API_PASSWORD` matches NanoMQ configuration
-- Ensure NanoMQ service is running and accessible
 
 ### Authentication Issues
 - Verify Keycloak is accessible at `KEYCLOAK_URL`

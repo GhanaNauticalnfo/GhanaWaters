@@ -69,7 +69,7 @@ metadata:
   namespace: argocd
 spec:
   source:
-    repoURL: https://github.com/GhanaNauticalnfo/snapper.git
+    repoURL: https://github.com/GhanaNauticalnfo/GhanaWaters.git
     targetRevision: HEAD
     path: k8s/overlays/dev
   destination:

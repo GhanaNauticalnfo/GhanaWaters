@@ -5,7 +5,7 @@ A reusable boat icon component for displaying vessel types with their associated
 ## Usage
 
 ```typescript
-import { BoatIconComponent } from '@snapper/shared';
+import { BoatIconComponent } from '@ghanawaters/shared';
 ```
 
 ```html

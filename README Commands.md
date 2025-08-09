@@ -48,23 +48,23 @@ Deploy API
 
 
 
-kubectl create secret generic snapper-postgres-secret \
+kubectl create secret generic ghanawaters-postgres-secret \
   --namespace=test \
   --from-literal=POSTGRES_PASSWORD= \
-  --from-literal=POSTGRES_USER=snapper_user \
-  --from-literal=DATABASE_URL=postgresql://snapper_user:your-secure-password@postgres-service:5432/snapper_db
+  --from-literal=POSTGRES_USER=ghanawaters_user \
+  --from-literal=DATABASE_URL=postgresql://ghanawaters_user:your-secure-password@postgres-service:5432/ghanawaters_db
 
 
 # For test environment
-kubectl create secret generic snapper-postgres-secret \
+kubectl create secret generic ghanawaters-postgres-secret \
   --namespace=test \
   --from-literal=POSTGRES_PASSWORD=cvpFaddBk6UVRdepu3YGCc5r1Hnm9LcK \
-  --from-literal=POSTGRES_USER=snapper_user \
-  --from-literal=DATABASE_URL=postgresql://snapper_user:cvpFaddBk6UVRdepu3YGCc5r1Hnm9LcK@snapper-postgres-service:5432/snapper_db
+  --from-literal=POSTGRES_USER=ghanawaters_user \
+  --from-literal=DATABASE_URL=postgresql://ghanawaters_user:cvpFaddBk6UVRdepu3YGCc5r1Hnm9LcK@ghanawaters-postgres-service:5432/ghanawaters_db
 
 # For production environment
-kubectl create secret generic snapper-postgres-secret \
+kubectl create secret generic ghanawaters-postgres-secret \
   --namespace=prod \
   --from-literal=POSTGRES_PASSWORD=3TEquF/D6M4m+wWEB/8jC+qVTQvatab2 \
-  --from-literal=POSTGRES_USER=snapper_user \
-  --from-literal=DATABASE_URL=postgresql://snapper_user:3TEquF/D6M4m+wWEB/8jC+qVTQvatab2@snapper-postgres-service:5432/snapper_db
+  --from-literal=POSTGRES_USER=ghanawaters_user \
+  --from-literal=DATABASE_URL=postgresql://ghanawaters_user:3TEquF/D6M4m+wWEB/8jC+qVTQvatab2@ghanawaters-postgres-service:5432/ghanawaters_db

@@ -1,6 +1,6 @@
 # Sync Migration Guide
 
-This guide helps developers add sync functionality to existing features in the Snapper API.
+This guide helps developers add sync functionality to existing features in the Ghana Waters API.
 
 ## Prerequisites
 

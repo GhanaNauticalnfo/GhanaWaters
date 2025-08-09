@@ -2,7 +2,7 @@
 
 ## Overview
 
-The device management system enables (Android) devices to securely report vessel positions to the Snapper API. Each vessel can have at most **one active device** and **one pending device** at any time.
+The device management system enables (Android) devices to securely report vessel positions to the Ghana Waters API. Each vessel can have at most **one active device** and **one pending device** at any time.
 
 ## Key Concepts
 

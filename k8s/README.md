@@ -1,4 +1,4 @@
-# Kubernetes Manifests for Snapper
+# Kubernetes Manifests for Ghana Waters
 
 This directory contains Kubernetes manifests organized for ArgoCD deployment using Kustomize.
 
@@ -51,10 +51,10 @@ Migrations should be run manually after deployment:
 
 ```bash
 # For test environment
-kubectl create job --from=cronjob/snapper-api-migrations snapper-api-migrations-$(date +%s) -n ghanawaters-test
+kubectl create job --from=cronjob/ghanawaters-api-migrations ghanawaters-api-migrations-$(date +%s) -n ghanawaters-test
 
 # For prod environment
-kubectl create job --from=cronjob/snapper-api-migrations snapper-api-migrations-$(date +%s) -n ghanawaters-prod
+kubectl create job --from=cronjob/ghanawaters-api-migrations ghanawaters-api-migrations-$(date +%s) -n ghanawaters-prod
 ```
 
 ## Environment Differences
@@ -88,15 +88,15 @@ kubectl create job --from=cronjob/snapper-api-migrations snapper-api-migrations-
 
 ## Secrets
 
-Before deployment, create the following secrets:
+Before a new deployment, create the following secrets:
 
 ```bash
 # Database secret (all environments)
-kubectl create secret generic snapper-postgres-secret \
-  --from-literal=POSTGRES_USER=snapper_user \
+kubectl create secret generic ghanawaters-postgres-secret \
+  --from-literal=POSTGRES_USER=ghanawaters_user \
   --from-literal=POSTGRES_PASSWORD=<password> \
-  --from-literal=POSTGRES_DB=snapper_db \
-  --from-literal=DATABASE_URL=postgresql://snapper_user:<password>@snapper-postgres-service:5432/snapper_db \
+  --from-literal=POSTGRES_DB=ghanawaters_db \
+  --from-literal=DATABASE_URL=postgresql://ghanawaters_user:<password>@ghanawaters-postgres-service:5432/ghanawaters_db \
   -n <namespace>  # e.g., ghanawaters-dev, ghanawaters-test, ghanawaters-prod
 ```
 
@@ -106,7 +106,7 @@ Image tags are managed in the overlay kustomization.yaml files:
 
 ```yaml
 images:
-  - name: ghananauticalinfo/snapper-admin
+  - name: ghcr.io/ghananauticalnfo/ghanawaters-admin
     newTag: <new-tag>
 ```
 
@@ -114,5 +114,5 @@ For CI/CD integration, use:
 
 ```bash
 cd k8s/overlays/test
-kustomize edit set image ghananauticalinfo/snapper-api:test-$COMMIT_SHA
+kustomize edit set image ghcr.io/ghananauticalnfo/ghanawaters-api:test-$COMMIT_SHA
 ```

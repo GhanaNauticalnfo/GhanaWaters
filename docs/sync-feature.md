@@ -2,7 +2,7 @@
 
 ## Overview
 
-The Sync Feature provides offline-first data synchronization between the Snapper API and Android client applications. It enables maritime navigation apps to work reliably in areas with poor or no connectivity by caching map data locally and syncing changes when online.
+The Sync Feature provides offline-first data synchronization between the Ghana Waters API and Android client applications. It enables maritime navigation apps to work reliably in areas with poor or no connectivity by caching map data locally and syncing changes when online.
 
 ## Architecture
 
@@ -302,7 +302,7 @@ syncManager.getFeatureCollection("anchorage")?.let {
 ### Server Tests
 ```bash
 # Run sync-specific tests
-cd snapper
+cd GhanaWaters
 npx nx test api --testPathPattern=sync
 
 # Run E2E tests
@@ -311,7 +311,7 @@ npx nx e2e api-e2e --testPathPattern=sync
 
 ### Android Tests
 ```bash
-cd AndroidApp
+cd GhanaWatersAndroid
 # Unit tests
 ./gradlew testDebugUnitTest
 
