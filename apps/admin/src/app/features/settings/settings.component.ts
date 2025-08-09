@@ -97,9 +97,7 @@ export class SettingsComponent {
   
   activeTabIndex = signal(0); // Start with General Settings tab (index 0)
 
-  onTabChange(event: { value: string } | string): void {
-    // The new p-tabs component passes the tab value in event.value
-    const value = typeof event === 'object' ? event.value : event;
-    this.activeTabIndex.set(parseInt(value, 10));
+  onTabChange(event: any): void {
+    this.activeTabIndex.set(parseInt(event.value, 10));
   }
 }

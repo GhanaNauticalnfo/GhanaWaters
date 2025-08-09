@@ -122,19 +122,21 @@ export class GeoPointUtils {
 /**
  * Type guards for runtime type checking
  */
-export function isGeoPoint(obj: any): obj is GeoPoint {
-  return obj && 
-         obj.type === 'Point' && 
-         Array.isArray(obj.coordinates) && 
-         obj.coordinates.length === 2 &&
-         typeof obj.coordinates[0] === 'number' &&
-         typeof obj.coordinates[1] === 'number';
+export function isGeoPoint(obj: unknown): obj is GeoPoint {
+  const point = obj as GeoPoint;
+  return point && 
+         point.type === 'Point' && 
+         Array.isArray(point.coordinates) && 
+         point.coordinates.length === 2 &&
+         typeof point.coordinates[0] === 'number' &&
+         typeof point.coordinates[1] === 'number';
 }
 
-export function isLatLng(obj: any): obj is LatLng {
-  return obj && 
-         typeof obj.lat === 'number' && 
-         typeof obj.lng === 'number';
+export function isLatLng(obj: unknown): obj is LatLng {
+  const latlng = obj as LatLng;
+  return latlng && 
+         typeof latlng.lat === 'number' && 
+         typeof latlng.lng === 'number';
 }
 
 /**

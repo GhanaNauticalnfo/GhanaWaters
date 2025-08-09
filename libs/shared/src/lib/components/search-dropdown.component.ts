@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, signal, computed, OnInit, TemplateRef, ContentChild } from '@angular/core';
+import { Component, Input, Output, EventEmitter, signal, OnInit, TemplateRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
@@ -252,25 +252,28 @@ export class SearchDropdownComponent<T extends SearchDropdownItem> implements On
     if (!this.showDropdown() || items.length === 0) return;
     
     switch (event.key) {
-      case 'ArrowDown':
+      case 'ArrowDown': {
         event.preventDefault();
         const nextIndex = Math.min(this.selectedIndex() + 1, items.length - 1);
         this.selectedIndex.set(nextIndex);
         break;
+      }
         
-      case 'ArrowUp':
+      case 'ArrowUp': {
         event.preventDefault();
         const prevIndex = Math.max(this.selectedIndex() - 1, -1);
         this.selectedIndex.set(prevIndex);
         break;
+      }
         
-      case 'Enter':
+      case 'Enter': {
         event.preventDefault();
         const selectedIdx = this.selectedIndex();
         if (selectedIdx >= 0 && selectedIdx < items.length) {
           this.selectItem(items[selectedIdx]);
         }
         break;
+      }
         
       case 'Escape':
         event.preventDefault();

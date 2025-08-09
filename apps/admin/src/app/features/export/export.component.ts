@@ -64,7 +64,7 @@ import { ExportTabVesselTelemetryComponent } from './components/export-tab-vesse
 export class ExportComponent {
   activeTabIndex = signal('0');
 
-  onTabChange(event: { value: string }) {
+  onTabChange(event: any) {
     this.activeTabIndex.set(event.value);
   }
 }

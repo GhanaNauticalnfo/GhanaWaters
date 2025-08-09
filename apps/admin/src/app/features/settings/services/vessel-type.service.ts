@@ -2,7 +2,9 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
-import { VesselTypeResponse as VesselType, VesselTypeInput } from '@ghanawaters/shared-models';
+import { VesselTypeResponse, VesselTypeInput } from '@ghanawaters/shared-models';
+
+export type VesselType = VesselTypeResponse;
 
 @Injectable({
   providedIn: 'root'

@@ -11,7 +11,7 @@ import { TableModule } from 'primeng/table';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { SkeletonModule } from 'primeng/skeleton';
 import { ConfirmationService } from 'primeng/api';
-import { RouteResponse as Route, Waypoint } from '@ghanawaters/shared-models';
+import { RouteResponse as Route, RouteInput, Waypoint } from '@ghanawaters/shared-models';
 import { MapComponent, MapConfig, OSM_STYLE, RouteLayerService } from '@ghanawaters/map';
 import { WaypointEditorDialogComponent } from './waypoint-editor-dialog.component';
 import { RouteValidators } from '../validators/route.validators';
@@ -619,7 +619,7 @@ export class RouteFormComponent implements OnInit, OnDestroy, AfterViewInit {
       const currentRoute = this.route();
       
       // Only send fields that the API accepts
-      const route: Route = {
+      const routeData: any = {
         name: formValue.name,
         notes: formValue.notes,
         waypoints: this.waypoints(),
@@ -628,10 +628,10 @@ export class RouteFormComponent implements OnInit, OnDestroy, AfterViewInit {
       
       // Add ID if this is an update (parent needs it to know which route to update)
       if (currentRoute?.id) {
-        route.id = currentRoute.id;
+        routeData.id = currentRoute.id;
       }
       
-      this.save.emit(route);
+      this.save.emit(routeData);
       // Reset map state in case dialog closes
       this.mapReady.set(false);
       

@@ -574,9 +574,8 @@ export class VesselFormComponent implements OnInit, OnDestroy {
     }
   }
   
-  onTabChange(event: { value: string } | string): void {
-    const value = typeof event === 'object' ? event.value : event;
-    this.activeTabIndex.set(parseInt(value, 10));
+  onTabChange(event: any): void {
+    this.activeTabIndex.set(parseInt(event.value, 10));
     
     // Restore focus to dialog content so ESC key continues to work
     setTimeout(() => {

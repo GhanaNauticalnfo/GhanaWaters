@@ -35,5 +35,5 @@ export interface PositionUpdateEvent {
 export interface WebSocketErrorEvent {
   code?: string;
   message: string;
-  details?: any;
+  details?: unknown;
 }
