@@ -1,6 +1,6 @@
 # Shared Libraries
 
-This directory contains shared libraries used across the Ghana Waters monorepo applications. These libraries promote code reuse, maintain consistency, and ensure type safety between the API, admin dashboard, public frontend, and tracker applications.
+This directory contains shared libraries used across the Ghana Waters monorepo applications. These libraries promote code reuse, maintain consistency, and ensure type safety between the API, admin dashboard, and public frontend applications.
 
 ## Libraries Overview
 
@@ -9,19 +9,21 @@ Provides shared mapping functionality using MapLibre GL. This library contains a
 
 **Key Features:**
 - Core map service for managing MapLibre instances
-- Layer manager with plugin-based architecture for extensibility
-- Pre-built layers for AIS ships, depth data, navigation warnings, and routes
 - Reusable map component with consistent styling
 - OpenStreetMap (OSM) style configurations
+- Layer services for AIS vessels, depth data, navigation warnings (Niord), and routes
+- WebSocket integration for real-time vessel position updates
 
 ### @ghanawaters/shared-models
 Contains TypeScript interfaces, types, and data models shared between backend and frontend applications. This ensures type consistency across the entire codebase and prevents data structure mismatches.
 
 **Key Models:**
 - Geographic types with GeoJSON compliance (GeoPoint, LatLng, Coordinates)
-- Entity models (Vessel, VesselType, Device, Route, KmlDataset, VoltaDepth)
-- Settings and configuration interfaces
-- Integration models for external systems (Niord, vessel telemetry)
+- Entity models (Vessel, VesselType, Device, Route, LandingSite, TreeStub)
+- Vessel telemetry and tracking data structures
+- Settings and sync configuration interfaces
+- Integration models for external systems (Niord navigation warnings)
+- WebSocket event types for real-time updates
 - Utility classes for coordinate validation and Ghana boundary checks
 
 ### @ghanawaters/shared

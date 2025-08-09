@@ -1,6 +1,6 @@
-# Shared Models Library
+# Ghana Waters Shared Models Library
 
-This library contains shared TypeScript types and models used across all Snapper applications (API, Admin, Frontend, Tracker).
+This library contains shared TypeScript types and models used across all Ghana Waters applications (API, Admin, Frontend). This ensures type consistency across the entire codebase and prevents data structure mismatches.
 
 ## GeoPoint Types
 
@@ -39,7 +39,7 @@ Alternative coordinate format for compatibility with some frontend libraries.
 
 #### In Entities
 ```typescript
-import { GeoPoint } from '@snapper/shared-models';
+import { GeoPoint } from '@ghanawaters/shared-models';
 
 @Entity('tracking_point')
 export class TrackingPoint {
@@ -54,7 +54,7 @@ export class TrackingPoint {
 
 #### In DTOs
 ```typescript
-import { GeoPoint } from '@snapper/shared-models';
+import { GeoPoint } from '@ghanawaters/shared-models';
 
 export class VesselResponseDto {
   @ApiProperty({ 
@@ -67,7 +67,7 @@ export class VesselResponseDto {
 
 #### Converting Between Formats
 ```typescript
-import { GeoPointUtils, LatLng, GeoPoint } from '@snapper/shared-models';
+import { GeoPointUtils, LatLng, GeoPoint } from '@ghanawaters/shared-models';
 
 // LatLng to GeoPoint
 const latLng: LatLng = { lat: 5.5555, lng: -0.2058 };
@@ -82,7 +82,7 @@ const point: GeoPoint = GeoPointUtils.createGeoPoint(-0.2058, 5.5555);
 
 #### Validation
 ```typescript
-import { GeoPointUtils, isGeoPoint } from '@snapper/shared-models';
+import { GeoPointUtils, isGeoPoint } from '@ghanawaters/shared-models';
 
 // Validate coordinates
 const isValid = GeoPointUtils.isValidCoordinate(-0.2058, 5.5555);
@@ -150,8 +150,26 @@ const geoPoint = GeoPointUtils.createGeoPoint(
 
 ## Other Shared Models
 
-- **Niord Models** - Navigation warning data structures
-- **Vessel Type Models** - Vessel classification types
-- **Waypoint** - Route waypoint structure
+### Core Entity Models
+- **Vessel Models** - Vessel entities and DTOs with response/input types
+- **VesselType Models** - Vessel classification and categorization
+- **Device Models** - Device authentication and management
+- **Route Models** - Navigation routes with waypoints and sync support
+- **LandingSite Models** - Fishing and maritime landing locations
+- **TreeStub Models** - Navigation hazards and obstacles
 
-See individual model files for detailed documentation.
+### Integration Models
+- **Niord Models** - Navigation warning data structures from external system
+- **VesselTelemetry Models** - Real-time vessel tracking data
+- **Sync Models** - Offline-first data synchronization structures
+- **Settings Models** - Application configuration and user preferences
+
+### Communication Models
+- **WebSocket Events** - Real-time update event types for vessel positions
+- **PositionUpdate Events** - Structured position update data for WebSocket broadcasts
+
+### Utility Models
+- **ResourceSettings Models** - Dynamic resource configuration
+- **VoltaDepth Models** - Volta Lake bathymetric data structures
+
+See individual model files for detailed documentation and usage examples.

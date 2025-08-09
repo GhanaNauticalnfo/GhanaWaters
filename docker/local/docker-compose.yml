@@ -19,6 +19,7 @@ services:
       timeout: 5s
       retries: 5
 
+# Previously, the Martin tileserver was used, but we are now service maps directly from OSM.
 #  martin:
 #    image: ghcr.io/maplibre/martin:latest
 #    container_name: martin_tileserver
@@ -36,7 +37,7 @@ services:
 #    networks:
 #      - ghanawaters-network
       
- 
+ # Nanomq MQTT Broker was tested, but ended up with plain https because of time constraints
   # nanomq:
   #   image: emqx/nanomq:0.21-full
   #   container_name: ghanawaters-nanomq
