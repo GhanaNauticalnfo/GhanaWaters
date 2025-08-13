@@ -10,11 +10,11 @@ resources:
   - configs/api-config.yaml
 images:
   - name: ghcr.io/ghananauticalnfo/ghanawaters-api
-    newTag: c211069-73 # ← CI will overwrite
+    newTag: dceb3b5-116 # ← CI will overwrite
   - name: ghcr.io/ghananauticalnfo/ghanawaters-admin
-    newTag: c211069-73
+    newTag: dceb3b5-116
   - name: ghcr.io/ghananauticalnfo/ghanawaters-frontend
-    newTag: c211069-73
+    newTag: dceb3b5-116
 patches:
   - path: patches/ingress-hosts.yaml
   - path: patches/replicas.yaml
