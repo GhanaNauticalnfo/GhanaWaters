@@ -8,6 +8,7 @@ import { TableModule } from 'primeng/table';
 import { CardModule } from 'primeng/card';
 import { MessageService } from 'primeng/api';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
+import { environment } from '../../../../../environments/environment';
 
 interface DatabaseStatistics {
   retentionDays: number;
@@ -167,7 +168,7 @@ export class DatabaseSettingsComponent implements OnInit {
 
   loadDatabaseSettings() {
     this.loading = true;
-    this.http.get<DatabaseStatistics>('/api/settings/database').subscribe({
+    this.http.get<DatabaseStatistics>(`${environment.apiUrl}/settings/database`).subscribe({
       next: (data) => {
         this.statistics = data;
         this.retentionDays = data.retentionDays;
@@ -191,7 +192,7 @@ export class DatabaseSettingsComponent implements OnInit {
 
   saveChanges() {
     this.loading = true;
-    this.http.put('/api/settings/database', { retentionDays: this.retentionDays }).subscribe({
+    this.http.put(`${environment.apiUrl}/settings/database`, { retentionDays: this.retentionDays }).subscribe({
       next: () => {
         this.messageService.add({
           severity: 'success',
