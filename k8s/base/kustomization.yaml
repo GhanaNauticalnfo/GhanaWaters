@@ -7,4 +7,3 @@ resources:
   - frontend
   - database
   - jobs
-  - nanomq
