@@ -100,27 +100,35 @@ export class DatabaseService {
    * Get database statistics for display
    */
   async getDatabaseStatistics() {
-    // Get current size
-    const currentSize = await this.getCurrentSize();
-    
-    // Get retention days setting
-    const retentionDaysStr = await this.settingService.getSettingValue(
-      SETTING_KEYS.DATABASE_TELEMETRY_RETENTION_DAYS
-    );
-    const retentionDays = parseInt(retentionDaysStr, 10);
-    
-    // Get historical statistics limited to retention days
-    const statistics = await this.databaseStatisticsRepository.find({
-      order: {
-        date: 'DESC'
-      },
-      take: retentionDays
-    });
+    try {
+      // Get current size
+      const currentSize = await this.getCurrentSize();
+      this.logger.log(`Current database size: ${currentSize} GB`);
+      
+      // Get retention days setting
+      const retentionDaysStr = await this.settingService.getSettingValue(
+        SETTING_KEYS.DATABASE_TELEMETRY_RETENTION_DAYS
+      );
+      const retentionDays = parseInt(retentionDaysStr, 10);
+      this.logger.log(`Retention days setting: ${retentionDays}`);
+      
+      // Get historical statistics limited to retention days
+      const statistics = await this.databaseStatisticsRepository.find({
+        order: {
+          date: 'DESC'
+        },
+        take: retentionDays
+      });
+      this.logger.log(`Found ${statistics.length} historical statistics records`);
 
-    return {
-      currentSizeGb: currentSize,
-      history: statistics.map(stat => stat.toResponseDto())
-    };
+      return {
+        currentSizeGb: currentSize,
+        history: statistics.map(stat => stat.toResponseDto())
+      };
+    } catch (error) {
+      this.logger.error('Error getting database statistics', error);
+      throw error;
+    }
   }
 
   /**
