@@ -11,7 +11,7 @@ Provides shared mapping functionality using MapLibre GL. This library contains a
 - Core map service for managing MapLibre instances
 - Reusable map component with consistent styling
 - OpenStreetMap (OSM) style configurations
-- Layer services for vessels, depth data, navigation warnings (Niord), and routes
+- Layer services for vessels, depth data, navigation warnings, and routes
 - WebSocket integration for real-time vessel position updates
 
 ### @ghanawaters/shared-models
@@ -22,7 +22,7 @@ Contains TypeScript interfaces, types, and data models shared between backend an
 - Entity models (Vessel, VesselType, Device, Route, LandingSite, TreeStub)
 - Vessel telemetry and tracking data structures
 - Settings and sync configuration interfaces
-- Integration models for external systems (Niord navigation warnings)
+- Integration models for external systems
 - WebSocket event types for real-time updates
 - Utility classes for coordinate validation and Ghana boundary checks
 

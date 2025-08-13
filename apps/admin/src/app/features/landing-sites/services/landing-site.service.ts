@@ -2,7 +2,6 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
-import { LandingSiteWithEnabled as LandingSite } from '@ghanawaters/shared-models';
 import { CreateLandingSiteDto, UpdateLandingSiteDto, LandingSiteResponseDto } from '../models/landing-site.dto';
 import { environment } from '../../../../environments/environment';
 

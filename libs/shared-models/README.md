@@ -159,7 +159,6 @@ const geoPoint = GeoPointUtils.createGeoPoint(
 - **TreeStub Models** - Navigation hazards and obstacles
 
 ### Integration Models
-- **Niord Models** - Navigation warning data structures from external system
 - **VesselTelemetry Models** - Real-time vessel tracking data
 - **Sync Models** - Offline-first data synchronization structures
 - **Settings Models** - Application configuration and user preferences

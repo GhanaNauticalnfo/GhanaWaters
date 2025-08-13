@@ -4,12 +4,14 @@ export interface CreateLandingSiteDto {
   name: string;
   description?: string;
   location: GeoPoint;
+  active?: boolean;
 }
 
 export interface UpdateLandingSiteDto {
   name?: string;
   description?: string;
   location?: GeoPoint;
+  active?: boolean;
 }
 
 export interface LandingSiteResponseDto {
@@ -17,7 +19,7 @@ export interface LandingSiteResponseDto {
   name: string;
   description?: string;
   location: GeoPoint;
-  status: 'active' | 'inactive' | 'restricted';
+  active: boolean;
   created_at: string;
   updated_at: string;
   settings?: Record<string, string>;

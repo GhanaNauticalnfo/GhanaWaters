@@ -36,7 +36,6 @@ export const DEFAULT_MAP_CONFIG: MapConfig = {
   initialActiveLayers: [],
   layerNames: {
     'vessels': 'Vessels',
-    'niord': 'Niord',
     'depth': 'Depths',
     'nw-nm-layer': 'NW/NM',
     'nw-nm': 'NW/NM',

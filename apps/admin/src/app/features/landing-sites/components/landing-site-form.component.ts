@@ -11,7 +11,7 @@ import { CardModule } from 'primeng/card';
 import { SkeletonModule } from 'primeng/skeleton';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ConfirmationService } from 'primeng/api';
-import { LandingSiteWithEnabled as LandingSite } from '@ghanawaters/shared-models';
+import { LandingSiteResponse } from '@ghanawaters/shared-models';
 import { MapComponent, MapConfig, OSM_STYLE } from '@ghanawaters/map';
 import { GeoPoint } from '@ghanawaters/shared-models';
 import { Map as MaplibreMap, Marker, LngLatLike } from 'maplibre-gl';
@@ -145,7 +145,7 @@ import { Map as MaplibreMap, Marker, LngLatLike } from 'maplibre-gl';
 
             <div class="field-checkbox">
               <p-inputSwitch 
-                formControlName="enabled">
+                formControlName="active">
               </p-inputSwitch>
               <label class="ml-2">Active</label>
             </div>
@@ -336,9 +336,9 @@ export class LandingSiteFormComponent implements OnInit, OnDestroy, AfterViewIni
   });
 
   // Input/Output signals
-  landingSite = input<LandingSite | null>(null);
+  landingSite = input<LandingSiteResponse | null>(null);
   mode = input<'view' | 'edit' | 'create'>('view');
-  save = output<LandingSite>();
+  save = output<LandingSiteResponse>();
   cancel = output<void>();
   
   // Services
@@ -358,14 +358,14 @@ export class LandingSiteFormComponent implements OnInit, OnDestroy, AfterViewIni
   mapReady = signal(false);
   
   // Change tracking
-  currentFormValues = signal<{ name: string; description: string; enabled: boolean; latitude: number; longitude: number }>({ 
+  currentFormValues = signal<{ name: string; description: string; active: boolean; latitude: number; longitude: number }>({ 
     name: '', 
     description: '', 
-    enabled: true,
+    active: true,
     latitude: 5.6,
     longitude: -0.4
   });
-  originalFormValues = signal<{ name: string; description: string; enabled: boolean; latitude: number; longitude: number } | null>(null);
+  originalFormValues = signal<{ name: string; description: string; active: boolean; latitude: number; longitude: number } | null>(null);
   originalLocation = signal<GeoPoint | null>(null);
   
   private marker?: Marker;
@@ -386,7 +386,7 @@ export class LandingSiteFormComponent implements OnInit, OnDestroy, AfterViewIni
     this.landingSiteForm = this.fb.group({
       name: ['', Validators.required],
       description: [''],
-      enabled: [true],
+      active: [true],
       latitudeText: ['5.6', [Validators.required, this.latitudeValidator]],
       longitudeText: ['-0.4', [Validators.required, this.longitudeValidator]]
     });
@@ -413,7 +413,7 @@ export class LandingSiteFormComponent implements OnInit, OnDestroy, AfterViewIni
       this.currentFormValues.set({
         name: values.name,
         description: values.description,
-        enabled: values.enabled,
+        active: values.active,
         latitude: parseFloat(values.latitudeText) || 0,
         longitude: parseFloat(values.longitudeText) || 0
       });
@@ -455,7 +455,7 @@ export class LandingSiteFormComponent implements OnInit, OnDestroy, AfterViewIni
       const formChanged = (
         current.name !== originalForm.name ||
         current.description !== originalForm.description ||
-        current.enabled !== originalForm.enabled ||
+        current.active !== originalForm.active ||
         Math.abs(current.latitude - originalForm.latitude) > 0.000001 ||
         Math.abs(current.longitude - originalForm.longitude) > 0.000001
       );
@@ -481,7 +481,7 @@ export class LandingSiteFormComponent implements OnInit, OnDestroy, AfterViewIni
       const formData = {
         name: site.name || '',
         description: site.description || '',
-        enabled: site.enabled !== undefined ? site.enabled : true,
+        active: site.active !== undefined ? site.active : true,
         latitudeText: location.coordinates[1].toString(),
         longitudeText: location.coordinates[0].toString()
       };
@@ -498,14 +498,14 @@ export class LandingSiteFormComponent implements OnInit, OnDestroy, AfterViewIni
       this.currentFormValues.set({ 
         name: formData.name,
         description: formData.description,
-        enabled: formData.enabled,
+        active: formData.active,
         latitude: location.coordinates[1],
         longitude: location.coordinates[0]
       });
       this.originalFormValues.set({ 
         name: formData.name,
         description: formData.description,
-        enabled: formData.enabled,
+        active: formData.active,
         latitude: location.coordinates[1],
         longitude: location.coordinates[0]
       });
@@ -519,7 +519,7 @@ export class LandingSiteFormComponent implements OnInit, OnDestroy, AfterViewIni
       const formData = {
         name: '',
         description: '',
-        enabled: true,
+        active: true,
         latitudeText: defaultLocation.coordinates[1].toString(),
         longitudeText: defaultLocation.coordinates[0].toString()
       };
@@ -530,7 +530,7 @@ export class LandingSiteFormComponent implements OnInit, OnDestroy, AfterViewIni
       this.currentFormValues.set({ 
         name: '',
         description: '',
-        enabled: true,
+        active: true,
         latitude: defaultLocation.coordinates[1],
         longitude: defaultLocation.coordinates[0]
       });
@@ -716,10 +716,15 @@ export class LandingSiteFormComponent implements OnInit, OnDestroy, AfterViewIni
     if (this.canSave()) {
       const formValue = this.landingSiteForm.value;
       const site = this.landingSite();
-      const landingSite: LandingSite = {
-        ...site,
-        ...formValue,
-        location: this.currentLocation()
+      const landingSite: LandingSiteResponse = {
+        id: site?.id || 0,
+        name: formValue.name,
+        description: formValue.description,
+        active: formValue.active,
+        location: this.currentLocation(),
+        created_at: site?.created_at || new Date().toISOString(),
+        updated_at: site?.updated_at || new Date().toISOString(),
+        settings: site?.settings
       };
       this.save.emit(landingSite);
       // Reset map state in case dialog closes

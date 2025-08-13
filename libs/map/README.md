@@ -24,13 +24,11 @@ The `@ghanawaters/map` library provides shared mapping functionality using MapLi
 - `VesselLayerService`: Displays vessel positions with real-time updates via WebSocket
 - `RouteLayerService`: Renders navigation routes and waypoints
 - `DepthLayerService`: Displays depth contours and bathymetric data
-- `NiordLayerService`: Shows navigation warnings from Niord system
 - `NwNmLayerService`: Displays navigation warnings and notices to mariners
 
 ### Components
 
 - `MapComponent`: Primary map component with MapLibre integration
-- `NiordMessagesComponent`: Displays navigation warning details
 
 ## Usage
 

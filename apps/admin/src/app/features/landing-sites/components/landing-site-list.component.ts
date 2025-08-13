@@ -7,7 +7,7 @@ import { ResourceListComponent, ResourceListConfig, ResourceAction } from '@ghan
 import { LandingSiteService } from '../services/landing-site.service';
 import { LandingSiteResponseDto, CreateLandingSiteDto, UpdateLandingSiteDto } from '../models/landing-site.dto';
 import { LandingSiteFormComponent } from './landing-site-form.component';
-import { LandingSiteWithEnabled as LandingSite } from '@ghanawaters/shared-models';
+import { LandingSiteResponse } from '@ghanawaters/shared-models';
 
 @Component({
   selector: 'app-landing-site-list',
@@ -51,8 +51,8 @@ import { LandingSiteWithEnabled as LandingSite } from '@ghanawaters/shared-model
     
     <ng-template #statusTemplate let-item>
       <p-tag 
-        [value]="getStatusLabel(item.status)" 
-        [severity]="getStatusSeverity(item.status)">
+        [value]="item.active ? 'Active' : 'Inactive'" 
+        [severity]="item.active ? 'success' : 'secondary'">
       </p-tag>
     </ng-template>
     
@@ -86,7 +86,7 @@ export class LandingSiteListComponent implements OnInit, AfterViewInit {
   listConfig!: ResourceListConfig<LandingSiteResponseDto>;
   
   // Convert between DTO and model for the form
-  formLandingSite = signal<LandingSite | null>(null);
+  formLandingSite = signal<LandingSiteResponse | null>(null);
   
   ngOnInit() {
     // Initialize config without template references
@@ -100,7 +100,7 @@ export class LandingSiteListComponent implements OnInit, AfterViewInit {
         { field: 'name', header: 'Name', sortable: true },
         { field: 'description', header: 'Description', sortable: false },
         { field: 'location', header: 'Location', sortable: false },
-        { field: 'status', header: 'Status', sortable: true },
+        { field: 'active', header: 'Status', sortable: true },
         { field: 'updated_at', header: 'Last Updated', sortable: true }
       ],
       searchFields: ['name', 'description'],
@@ -162,14 +162,17 @@ export class LandingSiteListComponent implements OnInit, AfterViewInit {
   }
   
   showCreateDialog() {
-    const newSite: LandingSite = {
+    const newSite: LandingSiteResponse = {
+      id: 0,
       name: '',
       description: '',
       location: {
         type: 'Point',
         coordinates: [-0.4, 5.6] // Default to Ghana coast
       },
-      enabled: true
+      active: true,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
     };
     this.formLandingSite.set(newSite);
     this.selectedLandingSite.set(null);
@@ -191,12 +194,13 @@ export class LandingSiteListComponent implements OnInit, AfterViewInit {
     this.showDialog = true;
   }
   
-  saveLandingSite(site: LandingSite) {
+  saveLandingSite(site: LandingSiteResponse) {
     if (this.dialogMode() === 'create') {
       const createDto: CreateLandingSiteDto = {
         name: site.name,
         description: site.description,
-        location: site.location
+        location: site.location,
+        active: site.active
       };
       
       this.landingSiteService.create(createDto).subscribe({
@@ -222,7 +226,8 @@ export class LandingSiteListComponent implements OnInit, AfterViewInit {
       const updateDto: UpdateLandingSiteDto = {
         name: site.name,
         description: site.description,
-        location: site.location
+        location: site.location,
+        active: site.active
       };
       
       this.landingSiteService.update(this.selectedLandingSite()!.id, updateDto).subscribe({
@@ -281,34 +286,16 @@ export class LandingSiteListComponent implements OnInit, AfterViewInit {
   }
   
   // Convert DTO to model for form
-  private dtoToModel(dto: LandingSiteResponseDto): LandingSite {
+  private dtoToModel(dto: LandingSiteResponseDto): LandingSiteResponse {
     return {
       id: dto.id,
       name: dto.name,
       description: dto.description,
       location: dto.location,
-      enabled: dto.status === 'active',
-      created: new Date(dto.created_at),
-      last_updated: new Date(dto.updated_at)
+      active: dto.active,
+      created_at: dto.created_at,
+      updated_at: dto.updated_at,
+      settings: dto.settings
     };
-  }
-
-  // Status utility methods (kept as methods since they're used in templates with parameters)
-  getStatusLabel(status: string): string {
-    switch (status) {
-      case 'active': return 'Active';
-      case 'inactive': return 'Inactive';
-      case 'restricted': return 'Restricted';
-      default: return status;
-    }
-  }
-
-  getStatusSeverity(status: string): 'success' | 'danger' | 'warn' | 'info' {
-    switch (status) {
-      case 'active': return 'success';
-      case 'inactive': return 'danger';
-      case 'restricted': return 'warn';
-      default: return 'info';
-    }
   }
 }

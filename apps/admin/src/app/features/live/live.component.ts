@@ -5,7 +5,6 @@ import {
   MapComponent,
   LayerManagerService, 
   VesselLayerService, 
-  NiordLayerService,
   MapConfig,
   OSM_STYLE,
   DepthLayerService,
@@ -68,8 +67,7 @@ import {
   `],
   providers: [
     DepthLayerService,
-    VesselLayerService,
-    NiordLayerService
+    VesselLayerService
   ]
 })
 export class LiveComponent implements OnInit, AfterViewInit {
@@ -85,11 +83,10 @@ export class LiveComponent implements OnInit, AfterViewInit {
     height: '600px',
     showFullscreenControl: true,
     showControls: false, // Hide the map layers panel
-    availableLayers: ['vessels', 'niord', 'depth'],
+    availableLayers: ['vessels', 'depth'],
     initialActiveLayers: ['vessels'], // Automatically activate this layer on load
     layerNames: {
       'vessels': 'Vessels',
-      'niord': 'NW/NM',
       'depth': 'Depths'
     }
   };
@@ -99,7 +96,6 @@ export class LiveComponent implements OnInit, AfterViewInit {
     
     // Register available layers
     this.layerManager.registerLayer('vessels', VesselLayerService);
-    this.layerManager.registerLayer('niord', NiordLayerService);
     this.layerManager.registerLayer('depth', DepthLayerService);
     
     console.log('Live Component: All layers registered successfully');

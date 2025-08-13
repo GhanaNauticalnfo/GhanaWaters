@@ -18,9 +18,6 @@ export * from './lib/components/map/map.component';
 
 // Layer exports
 export * from './lib/layers/vessel/vessel-layer.service';
-export * from './lib/layers/niord/niord-layer.service';
 export * from './lib/layers/nwnm/nw-nm-layer.service';
 export * from './lib/layers/route/route-layer.service';
-
-export * from './lib/layers/niord/niord-messages.component';
 export * from './lib/layers/depth/depth-layer.service';
