@@ -24,6 +24,9 @@ export interface ResourceListConfig<T> {
     custom?: CustomAction[];
   };
   
+  // Action column width
+  actionColumnWidth?: string;
+  
   // Messages
   deleteConfirmMessage?: (item: T) => string;
   deleteConfirmHeader?: string;

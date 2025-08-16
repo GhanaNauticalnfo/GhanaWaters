@@ -33,5 +33,6 @@ export interface VesselResponse {
   latest_position_timestamp?: Date;
   latest_position_speed?: number;
   latest_position_heading?: number;
+  has_active_device?: boolean;
   settings?: Record<string, string>;
 }

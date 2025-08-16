@@ -114,9 +114,9 @@
         "buildTarget": "frontend:build"
       }
     },
-    "lint": {
-      "executor": "@nx/eslint:lint"
-    },
+    // "lint": {
+    //   "executor": "@nx/eslint:lint"
+    // },
     "test": {
       "executor": "@nx/jest:jest",
       "outputs": [

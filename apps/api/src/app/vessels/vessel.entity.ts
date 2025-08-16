@@ -3,8 +3,9 @@ import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateCol
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { VesselTelemetry } from './tracking/vessel-telemetry.entity';
 import { VesselType } from './type/vessel-type.entity';
+import { Device } from './device/device.entity';
 import { VesselResponseDto } from './dto/vessel-response.dto';
-import { GeoPoint } from '@ghanawaters/shared-models';
+import { GeoPoint, DeviceState } from '@ghanawaters/shared-models';
 
 @Entity()
 export class Vessel {
@@ -37,6 +38,10 @@ export class Vessel {
   @ApiPropertyOptional({ description: 'Latest tracking position for this vessel', type: () => VesselTelemetry })
   latest_position: VesselTelemetry;
 
+  @OneToMany(() => Device, device => device.vessel)
+  @ApiPropertyOptional({ description: 'Devices associated with this vessel', type: () => [Device] })
+  devices?: Device[];
+
   toResponseDto(coordinates?: GeoPoint): VesselResponseDto {
     const dto: VesselResponseDto = {
       id: this.id,
@@ -57,6 +62,10 @@ export class Vessel {
       }
     }
 
+    // Check if vessel has any active devices
+    if (this.devices) {
+      dto.has_active_device = this.devices.some(device => device.state === DeviceState.ACTIVE);
+    }
 
     return dto;
   }

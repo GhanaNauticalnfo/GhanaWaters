@@ -26,7 +26,7 @@ export class VesselService {
 
   async findAll(): Promise<VesselResponseDto[]> {
     const vessels = await this.vesselRepository.find({
-      relations: ['vessel_type'],
+      relations: ['vessel_type', 'devices'],
       order: {
         name: 'ASC'
       }
@@ -42,7 +42,7 @@ export class VesselService {
 
   async findAllWithLatestPositions(): Promise<VesselResponseDto[]> {
     const vessels = await this.vesselRepository.find({
-      relations: ['vessel_type', 'latest_position'],
+      relations: ['vessel_type', 'latest_position', 'devices'],
       order: {
         name: 'ASC'
       }
@@ -76,7 +76,7 @@ export class VesselService {
   async findOne(id: number): Promise<VesselResponseDto> {
     const vessel = await this.vesselRepository.findOne({ 
       where: { id },
-      relations: ['vessel_type', 'latest_position']
+      relations: ['vessel_type', 'latest_position', 'devices']
     });
     
     if (!vessel) return null;
@@ -104,7 +104,7 @@ export class VesselService {
   async findOneEntity(id: number): Promise<Vessel> {
     return this.vesselRepository.findOne({ 
       where: { id },
-      relations: ['vessel_type']
+      relations: ['vessel_type', 'devices']
     });
   }
 

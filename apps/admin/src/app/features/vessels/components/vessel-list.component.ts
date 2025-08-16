@@ -63,6 +63,14 @@ import { VesselDataset } from '@ghanawaters/shared-models';
       </span>
     </ng-template>
     
+    <ng-template #activeDeviceTemplate let-item>
+      <p-tag 
+        [value]="item.has_active_device ? 'Yes' : 'No'"
+        [severity]="item.has_active_device ? 'success' : 'danger'"
+        [icon]="item.has_active_device ? 'pi pi-check' : 'pi pi-times'">
+      </p-tag>
+    </ng-template>
+    
     <ng-template #lastSeenTemplate let-item>
       @if (item.latest_position_timestamp) {
         {{ item.latest_position_timestamp | date:'dd/MM/yyyy HH:mm:ss' }}
@@ -162,6 +170,7 @@ export class VesselListComponent implements OnInit, AfterViewInit {
   vesselFormComponent = viewChild<VesselFormComponent>('vesselForm');
   idTemplate = viewChild.required<TemplateRef<any>>('idTemplate');
   typeTemplate = viewChild.required<TemplateRef<any>>('typeTemplate');
+  activeDeviceTemplate = viewChild.required<TemplateRef<any>>('activeDeviceTemplate');
   lastSeenTemplate = viewChild.required<TemplateRef<any>>('lastSeenTemplate');
   
   // Signals for resource list
@@ -187,9 +196,10 @@ export class VesselListComponent implements OnInit, AfterViewInit {
       entityNameSingular: 'vessel',
       columns: [
         { field: 'id', header: 'ID', sortable: true, width: '10%' },
-        { field: 'name', header: 'Name', sortable: true, width: '30%' },
-        { field: 'vessel_type', header: 'Type', sortable: true, width: '15%' },
-        { field: 'latest_position_timestamp', header: 'Last Seen', sortable: true, width: '30%' }
+        { field: 'name', header: 'Name', sortable: true, width: '23%' },
+        { field: 'vessel_type', header: 'Type', sortable: true, width: '12%' },
+        { field: 'has_active_device', header: 'Active Device', sortable: true, width: '15%' },
+        { field: 'latest_position_timestamp', header: 'Last Seen', sortable: true, width: '20%' }
       ],
       searchFields: ['name'],
       actions: {
@@ -197,6 +207,7 @@ export class VesselListComponent implements OnInit, AfterViewInit {
         edit: this.hasRole('admin'),
         delete: this.hasRole('admin')
       },
+      actionColumnWidth: '20%',
       deleteConfirmMessage: (item) => `Are you sure you want to delete the vessel "${item.name}" (ID: ${item.id})?<br><br>This will permanently delete:<br><br><ul style="margin: 0; padding-left: 20px;"><li>The vessel record and all its information</li><li>All associated devices and their authentication tokens</li><li>All tracking data and position history</li></ul><br><strong>⚠️ This action cannot be undone and all data will be lost forever.</strong>`,
       deleteConfirmHeader: 'Delete Vessel - Permanent Action',
       emptyMessage: 'No vessels found',
@@ -211,7 +222,8 @@ export class VesselListComponent implements OnInit, AfterViewInit {
     // Now add the template references
     this.listConfig.columns[0].template = this.idTemplate();
     this.listConfig.columns[2].template = this.typeTemplate();
-    this.listConfig.columns[3].template = this.lastSeenTemplate();
+    this.listConfig.columns[3].template = this.activeDeviceTemplate();
+    this.listConfig.columns[4].template = this.lastSeenTemplate();
   }
   
   loadVessels() {

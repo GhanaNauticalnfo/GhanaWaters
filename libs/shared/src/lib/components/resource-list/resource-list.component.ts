@@ -81,7 +81,7 @@ import { ResourceListConfig, ResourceAction } from './resource-list.models';
               }
             }
             @if (config().actions) {
-              <th>Actions</th>
+              <th [style.width]="config().actionColumnWidth || '15%'">Actions</th>
             }
           </tr>
         </ng-template>
@@ -98,7 +98,7 @@ import { ResourceListConfig, ResourceAction } from './resource-list.models';
               </td>
             }
             @if (config().actions) {
-              <td>
+              <td [style.width]="config().actionColumnWidth || '15%'">
                 @if (config().actions?.view) {
                   <button 
                     pButton 

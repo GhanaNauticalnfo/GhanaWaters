@@ -30,4 +30,7 @@ export class VesselResponseDto implements VesselResponse {
   @ApiPropertyOptional({ description: 'Heading in degrees at latest position', example: 180.0 })
   latest_position_heading?: number;
 
+  @ApiPropertyOptional({ description: 'Whether the vessel has an active device', example: true })
+  has_active_device?: boolean;
+
 }

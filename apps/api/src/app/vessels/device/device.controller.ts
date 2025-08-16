@@ -48,7 +48,10 @@ export class DeviceController {
     const shouldIncludeRetired = includeRetired === true || includeRetired === 'true';
 
     if (!shouldIncludeExpired) {
-      query.andWhere('(device.expires_at IS NULL OR device.expires_at > :now)', { now: new Date() });
+      // Only filter out expired PENDING devices
+      // ACTIVE devices should always be included regardless of expires_at
+      query.andWhere('(device.state != :pendingState OR device.expires_at IS NULL OR device.expires_at > :now)', 
+        { pendingState: 'pending', now: new Date() });
     }
 
     if (!shouldIncludeRetired) {
