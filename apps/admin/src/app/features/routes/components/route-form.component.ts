@@ -12,7 +12,7 @@ import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { SkeletonModule } from 'primeng/skeleton';
 import { ConfirmationService } from 'primeng/api';
 import { RouteResponse as Route, RouteInput, Waypoint } from '@ghanawaters/shared-models';
-import { MapComponent, MapConfig, OSM_STYLE, RouteLayerService } from '@ghanawaters/map';
+import { MapComponent, MapConfig, OSM_STYLE, RouteLayerService } from '@ghanawaters/shared-map';
 import { WaypointEditorDialogComponent } from './waypoint-editor-dialog.component';
 import { RouteValidators } from '../validators/route.validators';
 import { environment } from '../../../../environments/environment';

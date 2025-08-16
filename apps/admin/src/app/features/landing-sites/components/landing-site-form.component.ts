@@ -12,7 +12,7 @@ import { SkeletonModule } from 'primeng/skeleton';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ConfirmationService } from 'primeng/api';
 import { LandingSiteResponse } from '@ghanawaters/shared-models';
-import { MapComponent, MapConfig, OSM_STYLE } from '@ghanawaters/map';
+import { MapComponent, MapConfig, OSM_STYLE } from '@ghanawaters/shared-map';
 import { GeoPoint } from '@ghanawaters/shared-models';
 import { Map as MaplibreMap, Marker, LngLatLike } from 'maplibre-gl';
 

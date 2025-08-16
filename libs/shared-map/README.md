@@ -2,7 +2,7 @@
 
 ## Overview
 
-The `@ghanawaters/map` library provides shared mapping functionality using MapLibre GL for maritime visualization across Ghana Waters applications. This library centralizes all map-related components, services, and layer implementations.
+The `@ghanawaters/shared-map` library provides shared mapping functionality using MapLibre GL for maritime visualization across Ghana Waters applications. This library centralizes all map-related components, services, and layer implementations.
 
 ## Key Features
 
@@ -35,7 +35,7 @@ The `@ghanawaters/map` library provides shared mapping functionality using MapLi
 ### Basic Map Setup
 
 ```typescript
-import { MapService } from '@ghanawaters/map';
+import { MapService } from '@ghanawaters/shared-map';
 
 @Component({
   selector: 'app-map',
@@ -53,7 +53,7 @@ export class MapComponent {
 ### Layer Management
 
 ```typescript
-import { LayerManagerService, VesselLayerService } from '@ghanawaters/map';
+import { LayerManagerService, VesselLayerService } from '@ghanawaters/shared-map';
 
 // Add vessel tracking layer
 this.layerManager.addLayer(this.vesselLayer);
@@ -82,11 +82,11 @@ The library uses custom OpenStreetMap-based styles optimized for maritime naviga
 
 ## Building
 
-Run `nx build map` to build the library.
+Run `nx build shared-map` to build the library.
 
 ## Running unit tests
 
-Run `nx test map` to execute the unit tests via [Jest](https://jestjs.io).
+Run `nx test shared-map` to execute the unit tests via [Jest](https://jestjs.io).
 
 ## Dependencies
 

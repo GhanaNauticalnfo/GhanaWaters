@@ -4,7 +4,7 @@ This directory contains shared libraries used across the Ghana Waters monorepo a
 
 ## Libraries Overview
 
-### @ghanawaters/map
+### @ghanawaters/shared-map
 Provides shared mapping functionality using MapLibre GL. This library contains all map-related components, services, and layer implementations used for maritime visualization.
 
 **Key Features:**
@@ -39,7 +39,7 @@ Provides reusable Angular components, pipes, services, and utilities for UI cons
 Import libraries using their workspace aliases:
 ```typescript
 import { Vessel, GeoPoint } from '@ghanawaters/shared-models';
-import { MapService } from '@ghanawaters/map';
+import { MapService } from '@ghanawaters/shared-map';
 import { TimeAgoPipe } from '@ghanawaters/shared';
 ```
 

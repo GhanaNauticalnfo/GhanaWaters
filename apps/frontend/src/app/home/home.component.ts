@@ -1,5 +1,5 @@
 import { Component, ViewChild, inject, AfterViewInit } from '@angular/core';
-import { MapComponent, MapConfig, OSM_STYLE, LayerManagerService, VesselLayerService, VesselWithLocation } from '@ghanawaters/map';
+import { MapComponent, MapConfig, OSM_STYLE, LayerManagerService, VesselLayerService, VesselWithLocation } from '@ghanawaters/shared-map';
 
 @Component({
   selector: 'app-home',

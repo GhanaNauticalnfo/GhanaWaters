@@ -9,7 +9,7 @@ import {
   OSM_STYLE,
   DepthLayerService,
   VesselWithLocation
-} from '@ghanawaters/map';
+} from '@ghanawaters/shared-map';
 
 @Component({
   selector: 'app-live',

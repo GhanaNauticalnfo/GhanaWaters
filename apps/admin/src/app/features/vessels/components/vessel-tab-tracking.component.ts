@@ -2,7 +2,7 @@ import { Component, Input, Output, EventEmitter, signal, OnInit, OnDestroy, OnCh
 import { CommonModule } from '@angular/common';
 import { VesselDataset } from '@ghanawaters/shared-models';
 import { VesselDatasetService } from '../services/vessel-dataset.service';
-import { OSM_STYLE, MapComponent, MapConfig } from '@ghanawaters/map';
+import { OSM_STYLE, MapComponent, MapConfig } from '@ghanawaters/shared-map';
 import { TimeAgoPipe } from '@ghanawaters/shared';
 import { PositionUpdateEvent } from '@ghanawaters/shared-models';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
