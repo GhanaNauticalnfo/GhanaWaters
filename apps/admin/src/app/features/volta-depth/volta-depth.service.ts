@@ -4,13 +4,12 @@ import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 
 import { TileInfo, UploadResponse } from '@ghanawaters/shared-models';
-import { environment } from '../../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class VoltaDepthService {
-  private apiUrlBase = `${environment.apiUrl}/volta-depth`;
+  private apiUrlBase = '/api/volta-depth';
 
   constructor(private http: HttpClient) {}
 

@@ -919,7 +919,7 @@ export class VesselTabTrackingComponent implements OnInit, OnDestroy, OnChanges,
       const speed = Math.random() * 5 + 8; // Speed between 8-13 knots
       
       // Send position update with heading that matches movement direction
-      this.http.post(`${environment.apiUrl}/vessels/${this.vessel?.id}/telemetry`, {
+      this.http.post(`/api/vessels/${this.vessel?.id}/telemetry`, {
         position: {
           type: 'Point',
           coordinates: [currentLng, currentLat]

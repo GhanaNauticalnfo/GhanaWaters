@@ -1,7 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { environment } from '../../../../environments/environment';
 import { VesselTypeResponse, VesselTypeInput } from '@ghanawaters/shared-models';
 
 export type VesselType = VesselTypeResponse;
@@ -11,7 +10,7 @@ export type VesselType = VesselTypeResponse;
 })
 export class VesselTypeService {
   private http = inject(HttpClient);
-  private baseUrl = `${environment.apiUrl}/vessels/types`;
+  private baseUrl = '/api/vessels/types';
 
   getAll(): Observable<VesselType[]> {
     return this.http.get<VesselType[]>(this.baseUrl);

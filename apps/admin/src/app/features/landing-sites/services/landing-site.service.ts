@@ -3,13 +3,12 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { CreateLandingSiteDto, UpdateLandingSiteDto, LandingSiteResponseDto } from '../models/landing-site.dto';
-import { environment } from '../../../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class LandingSiteService {
-  private apiUrl = `${environment.apiUrl}/landing-sites`;
+  private apiUrl = '/api/landing-sites';
 
   constructor(private http: HttpClient) {}
 
