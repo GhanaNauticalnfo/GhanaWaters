@@ -27,7 +27,6 @@ Ghana Waters provides real-time vessel tracking, navigation aids, and offline-ca
 - **Infrastructure**: Docker, Nx monorepo, TypeScript
 - **Real-time**: WebSocket (Socket.IO) for live vessel updates
 - **Authentication**: Keycloak (OAuth2/OIDC with PKCE)
-- **Maps**: MapLibre with offline-capable vector tiles
 
 ## Quick Start
 
