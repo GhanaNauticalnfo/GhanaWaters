@@ -24,5 +24,5 @@ export class KmlDatasetInputDto implements KmlDatasetInput {
     default: true,
   })
   @IsBoolean()
-  enabled: boolean = true;
+  enabled: true;
 }

@@ -1,5 +1,5 @@
 /**
- * Constants for application settings keys (Node.js compatible)
+ * Constants for application settings keys
  * 
  * This ensures type safety and consistency across frontend and backend
  * when working with settings. This file mirrors the shared-models constants

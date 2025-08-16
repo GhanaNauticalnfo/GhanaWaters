@@ -189,6 +189,7 @@ export class AppTopBarComponent implements OnDestroy {
             {
                 separator: true
             },
+            /*
             {
                 label: 'My Profile',
                 icon: 'pi pi-user',
@@ -197,9 +198,11 @@ export class AppTopBarComponent implements OnDestroy {
                     console.log('Profile page not yet implemented');
                 }
             },
+
             {
                 separator: true
             },
+            */
             {
                 label: 'Logout',
                 icon: 'pi pi-sign-out',

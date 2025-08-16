@@ -13,9 +13,7 @@ import { VesselTelemetry } from './tracking/vessel-telemetry.entity';
 import { TrackingService } from './tracking/tracking.service';
 import { TrackingController } from './tracking/tracking.controller';
 import { TrackingGateway } from './tracking/tracking.gateway';
-import { MqttTrackingService } from './tracking/mqtt-tracking.service';
 import { TelemetryExportService } from './tracking/telemetry-export.service';
-import { MqttAuthController } from './mqtt/mqtt-auth.controller';
 import { SyncModule } from '../sync/sync.module';
 
 @Module({
@@ -35,7 +33,6 @@ import { SyncModule } from '../sync/sync.module';
     TrackingService,
     TrackingGateway,
     DeviceGateway,
-    // MqttTrackingService, // Disabled - using WebSocket/HTTPS only
     TelemetryExportService,
   ],
   controllers: [
@@ -44,7 +41,6 @@ import { SyncModule } from '../sync/sync.module';
     TrackingController,
     QgisTrackingController,
     DeviceController,
-    // MqttAuthController // Disabled - using WebSocket/HTTPS only
   ],
   exports: [
     VesselService,

@@ -92,7 +92,12 @@ export class VesselLayerService extends BaseLayerService implements OnDestroy {
       ? `ship-icon-${color}-${vesselName.replace(/[^a-zA-Z0-9]/g, '-')}`
       : `ship-icon-${color}`;
     
-    // Check if icon already exists
+    // Check if icon already exists in MapLibre
+    if (this.map.hasImage(iconName)) {
+      return iconName;
+    }
+    
+    // Check if icon already exists in our cache
     const cacheKey = this.showVesselNames && vesselName ? `${color}-${vesselName}` : color;
     if (this.iconCache.has(cacheKey)) {
       return iconName;
@@ -182,7 +187,7 @@ export class VesselLayerService extends BaseLayerService implements OnDestroy {
         }
       };
       img.onerror = () => reject(new Error('Failed to load SVG'));
-      img.src = 'data:image/svg+xml;base64,' + btoa(svgString);
+      img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgString)));
     });
   }
   
@@ -786,6 +791,7 @@ export class VesselLayerService extends BaseLayerService implements OnDestroy {
     
     this.vesselPositions.clear();
     this.vesselPositions$.next([]);
+    this.iconCache.clear();
   }
   
   ngOnDestroy(): void {

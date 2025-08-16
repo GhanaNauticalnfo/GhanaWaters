@@ -55,7 +55,6 @@ async function bootstrap() {
     .addTag('settings', 'Application settings management')
     .addTag('resource-settings', 'Resource-specific settings management')
     .addTag('landing-sites', 'Landing site management')
-    .addTag('volta-depth', 'Volta Lake depth tiles')
     .addTag('sync', 'Offline data synchronization')
     .addTag('tree-stubs', 'Tree stub hazard management')
     .addTag('tree-stub-groups', 'Tree stub group management')
