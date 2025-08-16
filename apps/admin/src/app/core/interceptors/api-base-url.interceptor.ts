@@ -1,5 +1,5 @@
 import { HttpInterceptorFn } from '@angular/common/http';
-import { environment } from '../../environments/environment';
+import { environment } from '../../../environments/environment';
 
 export const apiBaseUrlInterceptor: HttpInterceptorFn = (req, next) => {
   // Only intercept relative URLs that start with /api
