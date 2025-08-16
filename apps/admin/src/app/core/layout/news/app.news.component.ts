@@ -1,5 +1,5 @@
-import News from '../../../assets/data/news.json';
-import { AppConfigService } from '../../service/appconfigservice';
+import News from '../../../../assets/data/news.json';
+import { AppConfigService } from '../../services/app-config.service';
 import { CommonModule } from '@angular/common';
 import { afterNextRender, ChangeDetectionStrategy, ChangeDetectorRef, Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';

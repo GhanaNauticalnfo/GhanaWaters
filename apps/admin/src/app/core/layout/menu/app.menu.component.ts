@@ -1,5 +1,5 @@
-import { default as MenuData } from '../../../assets/data/menu.json';
-import { AppConfigService } from '../../service/appconfigservice';
+import { default as MenuData } from '../../../../assets/data/menu.json';
+import { AppConfigService } from '../../services/app-config.service';
 import { CommonModule } from '@angular/common';
 import { afterNextRender, Component, computed, ElementRef, OnDestroy } from '@angular/core';
 import { NavigationEnd, Router, RouterModule } from '@angular/router';

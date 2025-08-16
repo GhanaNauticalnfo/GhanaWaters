@@ -8,7 +8,7 @@ import { MessageService, ConfirmationService } from 'primeng/api';
 import { DialogService } from 'primeng/dynamicdialog';
 import Noir from '../themes/app-theme';
 import { includeBearerTokenInterceptor } from 'keycloak-angular';
-import { provideKeycloakAngular } from './auth/keycloak.config';
+import { provideKeycloakAngular } from './core/auth/services/keycloak.config';
 
 export const appConfig: ApplicationConfig = {
   providers: [

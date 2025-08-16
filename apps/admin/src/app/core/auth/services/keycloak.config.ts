@@ -7,7 +7,7 @@ import {
   AutoRefreshTokenService,
   UserActivityService
 } from 'keycloak-angular';
-import { environment } from '../../environments/environment';
+import { environment } from '../../../../environments/environment';
 
 // Configure which URLs should receive Bearer tokens
 const apiCondition = createInterceptorCondition<IncludeBearerTokenCondition>({

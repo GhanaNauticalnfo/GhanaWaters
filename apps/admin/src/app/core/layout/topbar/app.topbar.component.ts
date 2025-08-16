@@ -1,4 +1,4 @@
-import { AppConfigService } from '../../service/appconfigservice';
+import { AppConfigService } from '../../services/app-config.service';
 import { CommonModule, DOCUMENT } from '@angular/common';
 import { afterNextRender, booleanAttribute, Component, computed, ElementRef, Inject, Input, OnDestroy, Renderer2, signal, inject, effect } from '@angular/core';
 import { FormsModule } from '@angular/forms';

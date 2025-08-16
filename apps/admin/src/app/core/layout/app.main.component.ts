@@ -8,7 +8,7 @@ import { AppTopBarComponent } from './topbar/app.topbar.component';
 import { AppMenuComponent } from './menu/app.menu.component';
 import { DomHandler } from 'primeng/dom';
 import { PrimeNG } from 'primeng/config';
-import { AppConfigService } from '../service/appconfigservice';
+import { AppConfigService } from '../services/app-config.service';
 
 @Component({
   selector: 'app-main',

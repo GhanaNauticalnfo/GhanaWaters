@@ -1,4 +1,4 @@
-import { AppState } from '../domain/appstate';
+import { AppState } from '../models/app-state.model';
 import { DOCUMENT, isPlatformBrowser } from '@angular/common';
 import { computed, effect, inject, Injectable, PLATFORM_ID, signal } from '@angular/core';
 
