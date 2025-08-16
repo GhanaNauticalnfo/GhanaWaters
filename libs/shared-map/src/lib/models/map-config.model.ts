@@ -37,7 +37,5 @@ export const DEFAULT_MAP_CONFIG: MapConfig = {
   layerNames: {
     'vessels': 'Vessels',
     'depth': 'Depths',
-    'nw-nm-layer': 'NW/NM',
-    'nw-nm': 'NW/NM',
   }
 };
