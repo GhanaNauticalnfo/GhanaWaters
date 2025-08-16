@@ -19,11 +19,10 @@ export interface VesselTelemetry {
  * Input DTO for reporting vessel telemetry
  */
 export interface VesselTelemetryInput {
-  timestamp: Date;
+  timestamp?: string;
   position: GeoPoint;
   speed_knots?: number;
   heading_degrees?: number;
-  device_id?: string;
   status?: string;
 }
 

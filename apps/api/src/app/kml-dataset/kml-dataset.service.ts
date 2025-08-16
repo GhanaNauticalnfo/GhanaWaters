@@ -3,6 +3,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { KmlDataset } from './kml-dataset.entity';
+import { KmlDatasetInputDto } from './dto';
 
 @Injectable()
 export class KmlDatasetService {
@@ -46,7 +47,7 @@ async create(kmlData: string, name: string, enabled = true): Promise<KmlDataset>
     return this.kmlDatasetRepository.save(kmlDataset);
   }
   
-  async update(id: number, data: { kml?: string, name?: string, enabled?: boolean }): Promise<KmlDataset> {
+  async update(id: number, data: KmlDatasetInputDto): Promise<KmlDataset> {
     const kmlDataset = await this.findOne(id);
     
     if (!kmlDataset) {

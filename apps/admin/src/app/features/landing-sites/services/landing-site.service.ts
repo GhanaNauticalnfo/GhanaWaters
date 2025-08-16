@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
-import { CreateLandingSiteDto, UpdateLandingSiteDto, LandingSiteResponseDto } from '../models/landing-site.dto';
+import { LandingSiteInput, LandingSiteResponse } from '@ghanawaters/shared-models';
 
 @Injectable({
   providedIn: 'root'
@@ -12,8 +12,8 @@ export class LandingSiteService {
 
   constructor(private http: HttpClient) {}
 
-  getAll(): Observable<LandingSiteResponseDto[]> {
-    return this.http.get<LandingSiteResponseDto[]>(this.apiUrl).pipe(
+  getAll(): Observable<LandingSiteResponse[]> {
+    return this.http.get<LandingSiteResponse[]>(this.apiUrl).pipe(
       catchError(error => {
         console.error('Error fetching landing sites:', error);
         console.error('Error details:', error.error);
@@ -22,16 +22,16 @@ export class LandingSiteService {
     );
   }
 
-  getOne(id: number): Observable<LandingSiteResponseDto> {
-    return this.http.get<LandingSiteResponseDto>(`${this.apiUrl}/${id}`);
+  getOne(id: number): Observable<LandingSiteResponse> {
+    return this.http.get<LandingSiteResponse>(`${this.apiUrl}/${id}`);
   }
 
-  create(data: CreateLandingSiteDto): Observable<LandingSiteResponseDto> {
-    return this.http.post<LandingSiteResponseDto>(this.apiUrl, data);
+  create(data: LandingSiteInput): Observable<LandingSiteResponse> {
+    return this.http.post<LandingSiteResponse>(this.apiUrl, data);
   }
 
-  update(id: number, data: UpdateLandingSiteDto): Observable<LandingSiteResponseDto> {
-    return this.http.put<LandingSiteResponseDto>(`${this.apiUrl}/${id}`, data);
+  update(id: number, data: LandingSiteInput): Observable<LandingSiteResponse> {
+    return this.http.put<LandingSiteResponse>(`${this.apiUrl}/${id}`, data);
   }
 
   delete(id: number): Observable<void> {

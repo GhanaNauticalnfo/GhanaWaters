@@ -1,7 +1,6 @@
 // apps/admin/src/app/app.component.ts
 import { Component } from '@angular/core';
 import { NavigationEnd, Router, RouterOutlet } from '@angular/router';
-import { User } from '@ghanawaters/shared-models';
 
 @Component({
   selector: 'app-root',

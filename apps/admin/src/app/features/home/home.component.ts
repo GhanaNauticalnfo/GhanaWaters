@@ -3,23 +3,7 @@ import { Component, signal, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
-
-interface VesselTypeCount {
-  id: number;
-  name: string;
-  color: string;
-  vessel_count: number;
-}
-
-interface Vessel {
-  id: number;
-  name: string;
-  vessel_type: {
-    id: number;
-    name: string;
-    color: string;
-  };
-}
+import { VesselResponse, VesselTypeResponse } from '@ghanawaters/shared-models';
 
 @Component({
   selector: 'app-home',
@@ -42,10 +26,10 @@ interface Vessel {
               <p class="stat-number text-4xl font-bold">{{ totalVessels() }}</p>
               <div class="vessel-types-list">
                 @for (type of vesselTypes(); track type.id) {
-                  @if (type.vessel_count > 0) {
+                  @if ((type.vessel_count ?? 0) > 0) {
                     <div class="vessel-type-item">
                       <span class="type-color" [style.background-color]="type.color"></span>
-                      <span class="type-name text-sm">{{ type.name }}: {{ type.vessel_count }}</span>
+                      <span class="type-name text-sm">{{ type.name }}: {{ type.vessel_count ?? 0 }}</span>
                     </div>
                   }
                 }
@@ -196,7 +180,7 @@ export class HomeComponent implements OnInit {
   private http = inject(HttpClient);
   
   totalVessels = signal(0);
-  vesselTypes = signal<VesselTypeCount[]>([]);
+  vesselTypes = signal<VesselTypeResponse[]>([]);
   totalRoutes = signal(0);
   totalLandingSites = signal(0);
 
@@ -206,27 +190,25 @@ export class HomeComponent implements OnInit {
 
   private loadStatistics() {
     // Fetch all vessels and count by type
-    this.http.get<Vessel[]>('/api/vessels').subscribe({
+    this.http.get<VesselResponse[]>('/api/vessels').subscribe({
       next: (vessels) => {
         // Set total vessel count
         this.totalVessels.set(vessels.length);
         
         // Group vessels by type and count them
-        const typeMap = new Map<number, VesselTypeCount>();
+        const typeMap = new Map<number, VesselTypeResponse>();
         
         vessels.forEach(vessel => {
           if (vessel.vessel_type) {
             const typeId = vessel.vessel_type.id;
             if (!typeMap.has(typeId)) {
               typeMap.set(typeId, {
-                id: typeId,
-                name: vessel.vessel_type.name,
-                color: vessel.vessel_type.color,
+                ...vessel.vessel_type,
                 vessel_count: 0
               });
             }
             const type = typeMap.get(typeId)!;
-            type.vessel_count++;
+            type.vessel_count = (type.vessel_count || 0) + 1;
           }
         });
         

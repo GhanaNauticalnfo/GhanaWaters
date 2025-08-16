@@ -5,9 +5,8 @@ import { MessageService } from 'primeng/api';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ResourceListComponent, ResourceListConfig, ResourceAction } from '@ghanawaters/shared';
 import { LandingSiteService } from '../services/landing-site.service';
-import { LandingSiteResponseDto, CreateLandingSiteDto, UpdateLandingSiteDto } from '../models/landing-site.dto';
+import { LandingSiteResponse, LandingSiteInput } from '@ghanawaters/shared-models';
 import { LandingSiteFormComponent } from './landing-site-form.component';
-import { LandingSiteResponse } from '@ghanawaters/shared-models';
 
 @Component({
   selector: 'app-landing-site-list',
@@ -77,15 +76,14 @@ export class LandingSiteListComponent implements OnInit, AfterViewInit {
   lastUpdatedTemplate = viewChild.required<TemplateRef<any>>('lastUpdatedTemplate');
   
   // Signals
-  landingSites = signal<LandingSiteResponseDto[]>([]);
-  selectedLandingSite = signal<LandingSiteResponseDto | null>(null);
+  landingSites = signal<LandingSiteResponse[]>([]);
+  selectedLandingSite = signal<LandingSiteResponse | null>(null);
   loading = signal(false);
   showDialog = false;
   dialogMode = signal<'view' | 'edit' | 'create'>('create');
   
-  listConfig!: ResourceListConfig<LandingSiteResponseDto>;
+  listConfig!: ResourceListConfig<LandingSiteResponse>;
   
-  // Convert between DTO and model for the form
   formLandingSite = signal<LandingSiteResponse | null>(null);
   
   ngOnInit() {
@@ -144,7 +142,7 @@ export class LandingSiteListComponent implements OnInit, AfterViewInit {
     });
   }
   
-  handleAction(action: ResourceAction<LandingSiteResponseDto>) {
+  handleAction(action: ResourceAction<LandingSiteResponse>) {
     switch (action.type) {
       case 'create':
         this.showCreateDialog();
@@ -180,23 +178,23 @@ export class LandingSiteListComponent implements OnInit, AfterViewInit {
     this.showDialog = true;
   }
   
-  viewLandingSite(site: LandingSiteResponseDto) {
+  viewLandingSite(site: LandingSiteResponse) {
     this.selectedLandingSite.set(site);
-    this.formLandingSite.set(this.dtoToModel(site));
+    this.formLandingSite.set(site);
     this.dialogMode.set('view');
     this.showDialog = true;
   }
   
-  editLandingSite(site: LandingSiteResponseDto) {
+  editLandingSite(site: LandingSiteResponse) {
     this.selectedLandingSite.set(site);
-    this.formLandingSite.set(this.dtoToModel(site));
+    this.formLandingSite.set(site);
     this.dialogMode.set('edit');
     this.showDialog = true;
   }
   
   saveLandingSite(site: LandingSiteResponse) {
     if (this.dialogMode() === 'create') {
-      const createDto: CreateLandingSiteDto = {
+      const createDto: LandingSiteInput = {
         name: site.name,
         description: site.description,
         location: site.location,
@@ -223,7 +221,7 @@ export class LandingSiteListComponent implements OnInit, AfterViewInit {
         }
       });
     } else if (this.dialogMode() === 'edit' && this.selectedLandingSite()?.id) {
-      const updateDto: UpdateLandingSiteDto = {
+      const updateDto: LandingSiteInput = {
         name: site.name,
         description: site.description,
         location: site.location,
@@ -254,7 +252,7 @@ export class LandingSiteListComponent implements OnInit, AfterViewInit {
     }
   }
   
-  deleteLandingSite(site: LandingSiteResponseDto) {
+  deleteLandingSite(site: LandingSiteResponse) {
     this.landingSiteService.delete(site.id).subscribe({
       next: () => {
         this.landingSites.update(sites => sites.filter(s => s.id !== site.id));
@@ -283,19 +281,5 @@ export class LandingSiteListComponent implements OnInit, AfterViewInit {
         formComponent.prepareMap();
       }
     }, 10); // Minimal delay since dialog now opens instantly
-  }
-  
-  // Convert DTO to model for form
-  private dtoToModel(dto: LandingSiteResponseDto): LandingSiteResponse {
-    return {
-      id: dto.id,
-      name: dto.name,
-      description: dto.description,
-      location: dto.location,
-      active: dto.active,
-      created_at: dto.created_at,
-      updated_at: dto.updated_at,
-      settings: dto.settings
-    };
   }
 }
