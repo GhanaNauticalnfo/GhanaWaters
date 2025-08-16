@@ -91,7 +91,7 @@ export interface VesselWithLocation {
               type="checkbox" 
               [checked]="showVesselNames()"
               (change)="toggleVesselNames()">
-            <span class="text-sm">Show names</span>
+            <span class="text-sm">Show Vessel names</span>
           </label>
         </div>
       </div>
