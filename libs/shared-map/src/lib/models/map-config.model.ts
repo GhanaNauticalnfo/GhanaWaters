@@ -22,6 +22,9 @@ export interface MapConfig {
   
   // Custom layer name mappings
   layerNames?: Record<string, string>;
+  
+  // API configuration
+  apiUrl?: string;
 }
 
 export const DEFAULT_MAP_CONFIG: MapConfig = {

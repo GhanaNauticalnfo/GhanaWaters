@@ -1,5 +1,6 @@
 import { Component, ViewChild, inject, AfterViewInit } from '@angular/core';
 import { MapComponent, MapConfig, OSM_STYLE, LayerManagerService, VesselLayerService, VesselWithLocation } from '@ghanawaters/shared-map';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-home',
@@ -35,7 +36,8 @@ export class HomeComponent implements AfterViewInit {
     showFullscreenControl: true,
     showControls: false, // Disable layer controls for simpler view
     availableLayers: ['vessels'], // Make vessel tracking layer available
-    initialActiveLayers: ['vessels'] // Automatically activate vessel tracking on load
+    initialActiveLayers: ['vessels'], // Automatically activate vessel tracking on load
+    apiUrl: environment.apiUrl
   };
 
   ngAfterViewInit() {

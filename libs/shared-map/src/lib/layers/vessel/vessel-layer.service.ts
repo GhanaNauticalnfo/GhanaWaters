@@ -6,6 +6,7 @@ import { BaseLayerService } from '../base-layer.service';
 import { firstValueFrom, BehaviorSubject, Observable } from 'rxjs';
 import { io, Socket } from 'socket.io-client';
 import { PositionUpdateEvent } from '@ghanawaters/shared-models';
+import { MapConfig } from '../../models/map-config.model';
 
 
 @Injectable({
@@ -19,6 +20,7 @@ export class VesselLayerService extends BaseLayerService implements OnDestroy {
   private syncSocket: Socket | null = null;
   private vesselPositions = new Map<number, PositionUpdateEvent>();
   private iconCache = new Set<string>();
+  private config: MapConfig | null = null;
   
   // Vessel filtering configuration
   private vesselFilter: number | null = null;
@@ -61,8 +63,11 @@ export class VesselLayerService extends BaseLayerService implements OnDestroy {
     }
   }
   
-  initialize(map: MapLibreMap): void {
+  initialize(map: MapLibreMap, config?: MapConfig): void {
     this.map = map;
+    if (config) {
+      this.config = config;
+    }
     console.log('Vessel Layer: Initializing vessels layer');
     
     // Initialize WebSocket connections
@@ -71,6 +76,10 @@ export class VesselLayerService extends BaseLayerService implements OnDestroy {
     
     // Initialize layers immediately
     this.initializeLayers();
+  }
+  
+  setConfig(config: MapConfig): void {
+    this.config = config;
   }
   
   private async ensureIconExists(color: string, vesselName?: string): Promise<string> {
@@ -785,6 +794,16 @@ export class VesselLayerService extends BaseLayerService implements OnDestroy {
   }
   
   private getWebSocketUrl(): string {
+    // Use API URL from config if provided
+    if (this.config?.apiUrl) {
+      // Remove /api suffix if present to get base URL
+      const baseUrl = this.config.apiUrl.endsWith('/api') 
+        ? this.config.apiUrl.slice(0, -4)
+        : this.config.apiUrl;
+      return baseUrl;
+    }
+    
+    // Fallback to window location logic for backward compatibility
     // Check if we're in a local development environment
     if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
       // For local development, connect to the local API server
@@ -816,6 +835,15 @@ export class VesselLayerService extends BaseLayerService implements OnDestroy {
   }
   
   private getApiUrl(): string {
+    // Use API URL from config if provided
+    if (this.config?.apiUrl) {
+      // Remove /api suffix if present to get base URL for consistency with WebSocket
+      const baseUrl = this.config.apiUrl.endsWith('/api') 
+        ? this.config.apiUrl.slice(0, -4)
+        : this.config.apiUrl;
+      return baseUrl;
+    }
+    
     // For HTTP requests, we use the same logic as WebSocket URL
     // This ensures consistency between WebSocket and HTTP connections
     return this.getWebSocketUrl();

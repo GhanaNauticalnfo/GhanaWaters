@@ -608,9 +608,9 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy, OnChanges
         if (this._config.initialActiveLayers && this._config.initialActiveLayers.length > 0) {
           this._config.initialActiveLayers.forEach(layerId => {
             this.layerManager.activateLayer(layerId);
-            // Apply vessel filter if this is the vessel layer
+            // Apply vessel filter and config if this is the vessel layer
             if (layerId === 'vessels') {
-              this.applyVesselFilter();
+              this.configureVesselLayer();
             }
           });
         }
@@ -681,23 +681,37 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy, OnChanges
       this.layerManager.deactivateLayer(layerId);
     } else {
       this.layerManager.activateLayer(layerId);
-      // Apply vessel filter if this is the vessel layer
+      // Apply vessel filter and config if this is the vessel layer
       if (layerId === 'vessels') {
-        this.applyVesselFilter();
+        this.configureVesselLayer();
       }
     }
   }
   
-  private applyVesselFilter(): void {
-    console.log('Map Component: applyVesselFilter called with', this._vesselFilter);
-    // Get the vessel layer and apply vessel filter
+  private configureVesselLayer(): void {
+    console.log('Map Component: configureVesselLayer called');
+    // Get the vessel layer and apply configuration
     const vesselLayer = this.layerManager.getLayer('vessels');
     console.log('Map Component: Vessel layer found:', !!vesselLayer);
-    if (vesselLayer && 'setVesselFilter' in vesselLayer) {
-      (vesselLayer as any).setVesselFilter(this._vesselFilter);
+    if (vesselLayer) {
+      // Set vessel filter if available
+      if ('setVesselFilter' in vesselLayer) {
+        console.log('Map Component: Setting vessel filter to', this._vesselFilter);
+        (vesselLayer as any).setVesselFilter(this._vesselFilter);
+      }
+      
+      // Set config if available and vessel layer supports it
+      if ('setConfig' in vesselLayer && this._config.apiUrl) {
+        console.log('Map Component: Setting vessel layer config with apiUrl:', this._config.apiUrl);
+        (vesselLayer as any).setConfig(this._config);
+      }
     } else {
-      console.log('Map Component: Vessel layer not available for filtering');
+      console.log('Map Component: Vessel layer not available for configuration');
     }
+  }
+  
+  private applyVesselFilter(): void {
+    this.configureVesselLayer();
   }
   
   getLayerName(layerId: string): string {

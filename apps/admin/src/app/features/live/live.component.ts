@@ -9,6 +9,7 @@ import {
   OSM_STYLE,
   VesselWithLocation
 } from '@ghanawaters/shared-map';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-live',
@@ -85,7 +86,8 @@ export class LiveComponent implements OnInit, AfterViewInit {
     initialActiveLayers: ['vessels'], // Automatically activate this layer on load
     layerNames: {
       'vessels': 'Vessels'
-    }
+    },
+    apiUrl: environment.apiUrl
   };
   
   ngOnInit() {
