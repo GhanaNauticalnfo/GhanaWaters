@@ -8,7 +8,7 @@ import { ColorPickerModule } from 'primeng/colorpicker';
 import { MessageModule } from 'primeng/message';
 import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
-import { VesselTypeService, VesselType } from '../services/vessel-type.service';
+import { VesselTypeService, VesselType } from './vessel-type.service';
 import { BoatIconComponent } from '@ghanawaters/shared';
 
 @Component({

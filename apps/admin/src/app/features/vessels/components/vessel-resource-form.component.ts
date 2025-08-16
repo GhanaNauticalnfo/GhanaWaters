@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
 import { ButtonModule } from 'primeng/button';
-import { VesselTypeService, VesselType } from '../../settings/services/vessel-type.service';
+import { VesselTypeService, VesselType } from '../../settings/vessel-types/vessel-type.service';
 import { Vessel } from '../models/vessel.dto';
 
 @Component({

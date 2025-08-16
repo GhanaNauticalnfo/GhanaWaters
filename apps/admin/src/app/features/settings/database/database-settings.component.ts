@@ -1,24 +1,14 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { HttpClient } from '@angular/common/http';
 import { ButtonModule } from 'primeng/button';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { TableModule } from 'primeng/table';
 import { CardModule } from 'primeng/card';
 import { MessageService } from 'primeng/api';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
-import { environment } from '../../../../../environments/environment';
-
-interface DatabaseStatistics {
-  retentionDays: number;
-  currentSizeGb: number;
-  history: Array<{
-    date: string;
-    vesselTelemetrySizeGb: number;
-    vesselTelemetryCount: number;
-  }>;
-}
+import { DatabaseStatistics } from '@ghanawaters/shared-models';
+import { DatabaseService } from './database.service';
 
 @Component({
   selector: 'app-database-settings',
@@ -34,11 +24,7 @@ interface DatabaseStatistics {
   ],
   template: `
     <div class="database-settings">
-      <div class="page-header">
-        <h2 class="text-2xl">Database Settings</h2>
-      </div>
-
-      <p-card class="mb-4">
+    <p-card class="mb-4">
         <ng-template pTemplate="header">
           <div class="flex align-items-center justify-content-between p-3">
             <span class="text-2xl font-semibold" *ngIf="statistics">
@@ -53,7 +39,7 @@ interface DatabaseStatistics {
           </label>
           <div class="col-12 md:col-4">
             <p-inputNumber 
-              id="retentionDays"
+              inputId="retentionDays"
               [(ngModel)]="retentionDays"
               [min]="1"
               [max]="3650"
@@ -157,10 +143,8 @@ export class DatabaseSettingsComponent implements OnInit {
   hasChanges: boolean = false;
   loading: boolean = false;
 
-  constructor(
-    private http: HttpClient,
-    private messageService: MessageService
-  ) {}
+  private readonly databaseService = inject(DatabaseService);
+  private readonly messageService = inject(MessageService);
 
   ngOnInit() {
     this.loadDatabaseSettings();
@@ -168,7 +152,7 @@ export class DatabaseSettingsComponent implements OnInit {
 
   loadDatabaseSettings() {
     this.loading = true;
-    this.http.get<DatabaseStatistics>(`${environment.apiUrl}/settings/database`).subscribe({
+    this.databaseService.getDatabaseStatistics().subscribe({
       next: (data) => {
         this.statistics = data;
         this.retentionDays = data.retentionDays;
@@ -192,7 +176,7 @@ export class DatabaseSettingsComponent implements OnInit {
 
   saveChanges() {
     this.loading = true;
-    this.http.put(`${environment.apiUrl}/settings/database`, { retentionDays: this.retentionDays }).subscribe({
+    this.databaseService.updateDatabaseSettings({ retentionDays: this.retentionDays }).subscribe({
       next: () => {
         this.messageService.add({
           severity: 'success',

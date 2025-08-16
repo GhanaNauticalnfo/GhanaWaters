@@ -133,7 +133,7 @@ export const routes: Route[] = [
   },
   {
     path: 'settings/vessel-types/:id',
-    loadComponent: () => import('./features/settings/components/vessel-type-detail.component')
+    loadComponent: () => import('./features/settings/vessel-types/vessel-type-detail.component')
       .then(m => m.VesselTypeDetailComponent),
     canActivate: [authGuard],
     data: { roles: ['admin'] }

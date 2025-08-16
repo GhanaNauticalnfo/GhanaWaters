@@ -10,13 +10,13 @@ import { MessageModule } from 'primeng/message';
 import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
 
-import { VesselTypeService, VesselType } from '../services/vessel-type.service';
+import { VesselTypeService, VesselType } from './vessel-type.service';
 import { BoatIconComponent } from '@ghanawaters/shared';
 import { VesselTypeFormDialogComponent } from './vessel-type-form-dialog.component';
 
 
 @Component({
-  selector: 'app-vessel-type-settings',
+  selector: 'app-vessel-type-list',
   standalone: true,
   imports: [
     CommonModule,
@@ -31,7 +31,7 @@ import { VesselTypeFormDialogComponent } from './vessel-type-form-dialog.compone
   template: `
     <p-toast></p-toast>
     
-    <div class="vessel-type-settings">
+    <div class="vessel-type-list">
       <div class="header">
         <p-button
           icon="pi pi-plus"
@@ -107,7 +107,7 @@ import { VesselTypeFormDialogComponent } from './vessel-type-form-dialog.compone
     /* Remove utility classes - using Tailwind CSS instead */
   `]
 })
-export class VesselTypeSettingsComponent implements OnInit {
+export class VesselTypeListComponent implements OnInit {
   private vesselTypeService = inject(VesselTypeService);
   private messageService = inject(MessageService);
   private router = inject(Router);

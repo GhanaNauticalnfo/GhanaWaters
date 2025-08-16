@@ -19,7 +19,7 @@ import { CheckboxModule } from 'primeng/checkbox';
 
 import { VesselDataset, TelemetryExportFilters, TelemetryExportStats } from '@ghanawaters/shared-models';
 import { VesselDatasetService } from '../../vessels/services/vessel-dataset.service';
-import { VesselTypeService, VesselType } from '../../settings/services/vessel-type.service';
+import { VesselTypeService, VesselType } from '../../settings/vessel-types/vessel-type.service';
 
 @Component({
   selector: 'app-export-tab-vessel-telemetry',

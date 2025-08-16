@@ -9,7 +9,7 @@ import { ButtonModule } from 'primeng/button';
 import { TabsModule } from 'primeng/tabs';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ConfirmationService } from 'primeng/api';
-import { VesselTypeService, VesselType } from '../../settings/services/vessel-type.service';
+import { VesselTypeService, VesselType } from '../../settings/vessel-types/vessel-type.service';
 import { VesselDataset } from '@ghanawaters/shared-models';
 import { VesselTabInfoComponent } from './vessel-tab-info.component';
 import { VesselTabDeviceComponent } from './vessel-tab-device.component';

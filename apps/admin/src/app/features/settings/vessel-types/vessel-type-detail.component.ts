@@ -14,7 +14,7 @@ import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { ColorPickerModule, ColorPicker } from 'primeng/colorpicker';
 import { MessageService, ConfirmationService } from 'primeng/api';
 
-import { VesselTypeService, VesselType } from '../services/vessel-type.service';
+import { VesselTypeService, VesselType } from './vessel-type.service';
 import { BoatIconComponent } from '@ghanawaters/shared';
 
 @Component({
