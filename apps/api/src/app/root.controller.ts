@@ -11,10 +11,4 @@ export class RootController {
   redirectToApi() {
     // This method redirects root path to /api
   }
-
-  @Get('health')
-  @Redirect('/api', 301)
-  redirectHealthToApi() {
-    // Legacy health endpoint redirect
-  }
 }

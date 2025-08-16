@@ -149,7 +149,7 @@ export class LandingSiteService {
     return filtered.map(site => site.toResponseDto());
   }
 
-  async findNearest(longitude: number, latitude: number, limit: number = 5): Promise<LandingSiteResponseDto[]> {
+  async findNearest(longitude: number, latitude: number, limit = 5): Promise<LandingSiteResponseDto[]> {
     // For now, just return all enabled sites sorted by name
     // TODO: Fix spatial query with proper ST_Distance
     const landingSites = await this.landingSiteRepository.find({

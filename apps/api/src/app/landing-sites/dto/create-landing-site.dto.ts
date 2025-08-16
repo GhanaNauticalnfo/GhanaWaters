@@ -6,7 +6,7 @@ import { GeoPoint, LandingSiteInput } from '@ghanawaters/shared-models';
 class GeoPointDto implements GeoPoint {
   @ApiProperty({ example: 'Point' })
   @IsString()
-  type: 'Point' = 'Point';
+  type = 'Point' as const;
 
   @ApiProperty({ 
     example: [-0.017, 5.619],

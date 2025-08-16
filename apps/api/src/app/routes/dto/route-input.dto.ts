@@ -5,7 +5,7 @@ import { Waypoint, RouteInput } from '@ghanawaters/shared-models';
 
 // Custom validator to ensure waypoint orders are unique
 export function HasUniqueWaypointOrders(validationOptions?: ValidationOptions) {
-  return function (object: Object, propertyName: string) {
+  return function (object: object, propertyName: string) {
     registerDecorator({
       name: 'hasUniqueWaypointOrders',
       target: object.constructor,
@@ -27,7 +27,7 @@ export function HasUniqueWaypointOrders(validationOptions?: ValidationOptions) {
 
 // Custom validator to ensure waypoints are not all at the same location
 export function HasDistinctWaypoints(validationOptions?: ValidationOptions) {
-  return function (object: Object, propertyName: string) {
+  return function (object: object, propertyName: string) {
     registerDecorator({
       name: 'hasDistinctWaypoints',
       target: object.constructor,

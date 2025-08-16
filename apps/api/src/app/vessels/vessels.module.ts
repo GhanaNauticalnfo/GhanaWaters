@@ -6,7 +6,6 @@ import { VesselType } from './type/vessel-type.entity';
 import { Device, DeviceAuthService, DeviceController, DeviceGateway } from './device';
 import { VesselService } from './vessel.service';
 import { VesselController } from './vessel.controller';
-import { QgisTrackingController } from './tracking/qgis-tracking.controller';
 import { VesselTypeController } from './type/vessel-type.controller';
 import { VesselTypeService } from './type/vessel-type.service';
 import { VesselTelemetry } from './tracking/vessel-telemetry.entity';
@@ -39,7 +38,6 @@ import { SyncModule } from '../sync/sync.module';
     VesselTypeController,
     VesselController,
     TrackingController,
-    QgisTrackingController,
     DeviceController,
   ],
   exports: [

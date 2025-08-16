@@ -36,8 +36,6 @@ export class Route {
       created: this.created.toISOString(),
       last_updated: this.last_updated.toISOString(),
     };
-
-
     return dto;
   }
 }
