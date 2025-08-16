@@ -7,11 +7,11 @@ import { MapComponent, MapConfig, OSM_STYLE, LayerManagerService, VesselLayerSer
   imports: [MapComponent],
   providers: [VesselLayerService],
   template: `
-    <div class="map-layout">
-      <div class="header text-center">
-        <h1 class="text-2xl">Ghana Maritime Authority - Vessel Tracking</h1>
+    <div class="p-0 h-screen flex flex-col">
+      <div class="bg-blue-900 text-white p-4 text-center">
+        <h1 class="text-2xl m-0">Ghana Waters by Ghana Maritime Authority</h1>
       </div>
-      <div class="map-wrapper">
+      <div class="flex-1 w-full">
         <lib-map 
           #mapComponent
           [config]="mapConfig"
@@ -20,32 +20,7 @@ import { MapComponent, MapConfig, OSM_STYLE, LayerManagerService, VesselLayerSer
         </lib-map>
       </div>
     </div>
-  `,
-  styles: [`
-    .map-layout {
-      padding: 0px;
-      height: 100vh;
-      display: flex;
-      flex-direction: column;
-    }
-    .header {
-      background: #1e3c72;
-      color: white;
-      padding: 1rem;
-    }
-    h1 {
-      margin: 0;
-    }
-    .map-wrapper {
-      flex: 1;
-      width: 100%;
-    }
-    
-    @media (max-width: 768px) {
-      h1 {
-      }
-    }
-  `]
+  `
 })
 export class HomeComponent implements AfterViewInit {
   @ViewChild('mapComponent') mapComponent!: MapComponent;
@@ -53,8 +28,8 @@ export class HomeComponent implements AfterViewInit {
 
   mapConfig: Partial<MapConfig> = {
     mapStyle: OSM_STYLE,
-    center: [-1.0, 6.5], // Ghana coordinates
-    zoom: 7,
+    center: [-0.0, 7.5], // Lake Volta coordinates
+    zoom: 8,
     height: '100%',
     showCoordinateDisplay: true, // Enable coordinate display
     showFullscreenControl: true,
@@ -64,12 +39,10 @@ export class HomeComponent implements AfterViewInit {
   };
 
   ngAfterViewInit() {
-    // Register the vessel layer to display vessel tracking
     this.layerManager.registerLayer('vessels', VesselLayerService);
   }
 
   onVesselSelected(vessel: VesselWithLocation) {
     console.log('Vessel selected:', vessel);
-    // Zooming and filtering is now handled by the MapWithSearch component
   }
 }

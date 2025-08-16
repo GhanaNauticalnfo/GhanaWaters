@@ -9,7 +9,7 @@ import { DialogService } from 'primeng/dynamicdialog';
 import Noir from '../themes/app-theme';
 import { includeBearerTokenInterceptor } from 'keycloak-angular';
 import { provideKeycloakAngular } from './core/auth/services/keycloak.config';
-import { apiBaseUrlInterceptor } from './interceptors/api-base-url.interceptor';
+import { apiBaseUrlInterceptor } from './core/interceptors/api-base-url.interceptor';
 
 export const appConfig: ApplicationConfig = {
   providers: [

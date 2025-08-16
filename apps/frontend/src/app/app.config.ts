@@ -5,7 +5,7 @@ import { appRoutes } from './app.routes';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 import { providePrimeNG } from 'primeng/config';
 import Aura from '@primeng/themes/aura';
-import { apiBaseUrlInterceptor } from './interceptors/api-base-url.interceptor';
+import { apiBaseUrlInterceptor } from './core/interceptors/api-base-url.interceptor';
 
 export const appConfig: ApplicationConfig = {
   providers: [

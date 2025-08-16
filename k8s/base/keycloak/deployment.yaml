@@ -20,16 +20,6 @@ spec:
         imagePullPolicy: IfNotPresent
         args: ["start"]
         env:
-        - name: KEYCLOAK_ADMIN
-          valueFrom:
-            secretKeyRef:
-              name: keycloak-admin-secret
-              key: KEYCLOAK_ADMIN
-        - name: KEYCLOAK_ADMIN_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: keycloak-admin-secret
-              key: KEYCLOAK_ADMIN_PASSWORD
         - name: KC_DB
           value: postgres
         - name: KC_DB_URL_HOST
