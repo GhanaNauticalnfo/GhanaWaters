@@ -51,7 +51,7 @@ import { RouteFormComponent } from './route-form.component';
     </ng-template>
     
     <ng-template #lastUpdatedTemplate let-item>
-      {{ item.last_updated | date:'short' }}
+      {{ item.last_updated | date:'dd/MM/yyyy HH:mm' }}
     </ng-template>
   `,
   host: {

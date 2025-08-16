@@ -56,7 +56,7 @@ import { LandingSiteFormComponent } from './landing-site-form.component';
     </ng-template>
     
     <ng-template #lastUpdatedTemplate let-item>
-      {{ item.updated_at | date:'short' }}
+      {{ item.updated_at | date:'dd/MM/yyyy HH:mm' }}
     </ng-template>
   `,
   host: {
