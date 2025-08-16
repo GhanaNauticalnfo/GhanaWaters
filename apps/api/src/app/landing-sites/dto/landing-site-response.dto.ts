@@ -29,9 +29,4 @@ export class LandingSiteResponseDto implements LandingSiteResponse {
   @ApiProperty()
   updated_at: string;
 
-  @ApiPropertyOptional({ 
-    description: 'Custom settings for this landing site', 
-    example: { '1': 'value1', '2': 'value2' } 
-  })
-  settings?: Record<string, string>;
 }

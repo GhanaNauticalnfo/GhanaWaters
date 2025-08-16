@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, BehaviorSubject, of } from 'rxjs';
 import { map, catchError, tap } from 'rxjs/operators';
-import { SETTING_KEYS, SETTING_DEFAULTS, SettingKey } from '@ghanawaters/shared-models';
+import { SETTING_DEFAULTS, SettingKey } from '@ghanawaters/shared-models';
 
 export interface Setting {
   key: string;
@@ -63,19 +63,6 @@ export class CentralSettingsService {
     );
   }
 
-  /**
-   * Get route color (convenience method)
-   */
-  getRouteColor(): Observable<string> {
-    return this.getSetting(SETTING_KEYS.ROUTE_COLOR);
-  }
-
-  /**
-   * Set route color (convenience method)
-   */
-  setRouteColor(color: string): Observable<Setting> {
-    return this.setSetting(SETTING_KEYS.ROUTE_COLOR, color);
-  }
 
   /**
    * Refresh a setting from the API

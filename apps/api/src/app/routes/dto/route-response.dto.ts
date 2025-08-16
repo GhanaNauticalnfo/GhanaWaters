@@ -23,9 +23,4 @@ export class RouteResponseDto implements RouteResponse {
   @ApiProperty({ description: 'Timestamp when the route was last updated', type: String })
   last_updated: string;
 
-  @ApiPropertyOptional({ 
-    description: 'Custom settings for this route', 
-    example: { '1': 'value1', '2': 'value2' } 
-  })
-  settings?: Record<string, string>;
 }

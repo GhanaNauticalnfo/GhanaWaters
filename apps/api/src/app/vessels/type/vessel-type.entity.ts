@@ -28,7 +28,7 @@ export class VesselType {
   @OneToMany(() => Vessel, vessel => vessel.vessel_type)
   vessels: Vessel[];
 
-  toResponseDto(settings?: Record<string, string>): VesselTypeResponseDto {
+  toResponseDto(): VesselTypeResponseDto {
     const dto: VesselTypeResponseDto = {
       id: this.id,
       name: this.name,
@@ -38,9 +38,6 @@ export class VesselType {
       vessel_count: this.vessels?.length || 0
     };
 
-    if (settings) {
-      dto.settings = settings;
-    }
 
     return dto;
   }

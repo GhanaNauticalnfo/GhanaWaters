@@ -20,9 +20,4 @@ export class VesselTypeResponseDto implements VesselTypeResponse {
   @ApiProperty({ description: 'Number of vessels using this type', example: 5 })
   vessel_count: number;
 
-  @ApiPropertyOptional({ 
-    description: 'Custom settings for this vessel type', 
-    example: { '1': 'value1', '2': 'value2' } 
-  })
-  settings?: Record<string, string>;
 }

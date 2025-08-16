@@ -5,7 +5,6 @@ import { NotFoundException } from '@nestjs/common';
 import { RouteService } from './route.service';
 import { Route } from './route.entity';
 import { SyncService } from '../sync/sync.service';
-import { ResourceSettingsService } from '../resource-settings/resource-settings.service';
 
 describe('RouteService', () => {
   let service: RouteService;
@@ -31,15 +30,20 @@ describe('RouteService', () => {
     create: jest.fn(),
     save: jest.fn(),
     remove: jest.fn(),
+    manager: {
+      transaction: jest.fn(),
+      findOne: jest.fn(),
+      create: jest.fn(),
+      save: jest.fn(),
+      remove: jest.fn(),
+    },
   };
 
   const mockSyncService = {
     logChange: jest.fn(),
+    logChangeInTransaction: jest.fn(),
   };
 
-  const mockResourceSettingsService = {
-    getSettingsForResource: jest.fn(),
-  };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -52,10 +56,6 @@ describe('RouteService', () => {
         {
           provide: SyncService,
           useValue: mockSyncService,
-        },
-        {
-          provide: ResourceSettingsService,
-          useValue: mockResourceSettingsService,
         },
       ],
     }).compile();
@@ -85,22 +85,18 @@ describe('RouteService', () => {
           enabled: true,
           created: '2025-01-01T12:00:00.000Z',
           last_updated: '2025-01-01T12:00:00.000Z',
-          settings: { '1': 'value1' },
         }),
       };
       const routes = [mockRouteEntity as Route];
       mockRepository.find.mockResolvedValue(routes);
-      mockResourceSettingsService.getSettingsForResource.mockResolvedValue({ '1': 'value1' });
 
       const result = await service.findAll();
 
       expect(repository.find).toHaveBeenCalledWith({
         order: { last_updated: 'DESC' },
       });
-      expect(mockResourceSettingsService.getSettingsForResource).toHaveBeenCalledWith('route', 1);
-      expect(mockRouteEntity.toResponseDto).toHaveBeenCalledWith({ '1': 'value1' });
+      expect(mockRouteEntity.toResponseDto).toHaveBeenCalledWith();
       expect(result).toHaveLength(1);
-      expect(result[0].settings).toEqual({ '1': 'value1' });
     });
   });
 
@@ -116,18 +112,14 @@ describe('RouteService', () => {
           enabled: true,
           created: '2025-01-01T12:00:00.000Z',
           last_updated: '2025-01-01T12:00:00.000Z',
-          settings: { '1': 'value1' },
         }),
       };
       mockRepository.findOne.mockResolvedValue(mockRouteEntity);
-      mockResourceSettingsService.getSettingsForResource.mockResolvedValue({ '1': 'value1' });
 
       const result = await service.findOne(1);
 
       expect(repository.findOne).toHaveBeenCalledWith({ where: { id: 1 } });
-      expect(mockResourceSettingsService.getSettingsForResource).toHaveBeenCalledWith('route', 1);
-      expect(mockRouteEntity.toResponseDto).toHaveBeenCalledWith({ '1': 'value1' });
-      expect(result.settings).toEqual({ '1': 'value1' });
+      expect(mockRouteEntity.toResponseDto).toHaveBeenCalledWith();
     });
 
     it('should throw NotFoundException when route not found', async () => {
@@ -141,19 +133,28 @@ describe('RouteService', () => {
     it('should create a route and log to sync', async () => {
       const createData = {
         name: 'New Route',
-        waypoints: [{ lat: 5.5, lng: -0.2, order: 1 }],
+        waypoints: [
+          { lat: 5.5, lng: -0.2, order: 1 },
+          { lat: 5.6, lng: -0.1, order: 2 }
+        ],
         enabled: true,
       };
       const createdRoute = { ...mockRoute, ...createData };
 
-      mockRepository.create.mockReturnValue(createdRoute);
-      mockRepository.save.mockResolvedValue(createdRoute);
+      // Mock the transaction behavior
+      mockRepository.manager.transaction.mockImplementation(async (callback) => {
+        const manager = {
+          create: jest.fn().mockReturnValue(createdRoute),
+          save: jest.fn().mockResolvedValue(createdRoute),
+        };
+        return await callback(manager);
+      });
 
       const result = await service.create(createData);
 
-      expect(repository.create).toHaveBeenCalledWith(createData);
-      expect(repository.save).toHaveBeenCalledWith(createdRoute);
-      expect(syncService.logChange).toHaveBeenCalledWith(
+      expect(mockRepository.manager.transaction).toHaveBeenCalled();
+      expect(mockSyncService.logChangeInTransaction).toHaveBeenCalledWith(
+        expect.any(Object),
         'route',
         '1',
         'create',
@@ -162,7 +163,7 @@ describe('RouteService', () => {
           id: 1,
           geometry: expect.objectContaining({
             type: 'LineString',
-            coordinates: [[-0.2, 5.5]],
+            coordinates: [[-0.2, 5.5], [-0.1, 5.6]],
           }),
           properties: expect.objectContaining({
             name: 'New Route',
@@ -178,14 +179,20 @@ describe('RouteService', () => {
       const updateData = { name: 'Updated Route', waypoints: mockRoute.waypoints || [], enabled: true };
       const updatedRoute = { ...mockRoute, ...updateData };
 
-      mockRepository.findOne.mockResolvedValue(mockRoute);
-      mockRepository.save.mockResolvedValue(updatedRoute);
+      // Mock the transaction behavior
+      mockRepository.manager.transaction.mockImplementation(async (callback) => {
+        const manager = {
+          findOne: jest.fn().mockResolvedValue(mockRoute),
+          save: jest.fn().mockResolvedValue(updatedRoute),
+        };
+        return await callback(manager);
+      });
 
       const result = await service.update(1, updateData);
 
-      expect(repository.findOne).toHaveBeenCalledWith({ where: { id: 1 } });
-      expect(repository.save).toHaveBeenCalledWith(expect.objectContaining(updateData));
-      expect(syncService.logChange).toHaveBeenCalledWith(
+      expect(mockRepository.manager.transaction).toHaveBeenCalled();
+      expect(mockSyncService.logChangeInTransaction).toHaveBeenCalledWith(
+        expect.any(Object),
         'route',
         '1',
         'update',
@@ -201,23 +208,39 @@ describe('RouteService', () => {
     });
 
     it('should throw NotFoundException when route not found', async () => {
-      mockRepository.findOne.mockResolvedValue(null);
+      const updateData = { name: 'Updated', waypoints: [
+        { lat: 5.5, lng: -0.2, order: 1 },
+        { lat: 5.6, lng: -0.1, order: 2 }
+      ], enabled: true };
       
-      const updateData = { name: 'Updated', waypoints: [], enabled: true };
+      // Mock the transaction behavior to throw NotFoundException
+      mockRepository.manager.transaction.mockImplementation(async (callback) => {
+        const manager = {
+          findOne: jest.fn().mockResolvedValue(null),
+        };
+        return await callback(manager);
+      });
+      
       await expect(service.update(999, updateData)).rejects.toThrow(NotFoundException);
     });
   });
 
   describe('remove', () => {
     it('should remove a route and log to sync', async () => {
-      mockRepository.findOne.mockResolvedValue(mockRoute);
-      mockRepository.remove.mockResolvedValue(mockRoute);
+      // Mock the transaction behavior
+      mockRepository.manager.transaction.mockImplementation(async (callback) => {
+        const manager = {
+          findOne: jest.fn().mockResolvedValue(mockRoute),
+          remove: jest.fn().mockResolvedValue(mockRoute),
+        };
+        return await callback(manager);
+      });
 
       await service.remove(1);
 
-      expect(repository.findOne).toHaveBeenCalledWith({ where: { id: 1 } });
-      expect(repository.remove).toHaveBeenCalledWith(mockRoute);
-      expect(syncService.logChange).toHaveBeenCalledWith(
+      expect(mockRepository.manager.transaction).toHaveBeenCalled();
+      expect(mockSyncService.logChangeInTransaction).toHaveBeenCalledWith(
+        expect.any(Object),
         'route',
         '1',
         'delete'
@@ -225,7 +248,13 @@ describe('RouteService', () => {
     });
 
     it('should throw NotFoundException when route not found', async () => {
-      mockRepository.findOne.mockResolvedValue(null);
+      // Mock the transaction behavior to throw NotFoundException
+      mockRepository.manager.transaction.mockImplementation(async (callback) => {
+        const manager = {
+          findOne: jest.fn().mockResolvedValue(null),
+        };
+        return await callback(manager);
+      });
 
       await expect(service.remove(999)).rejects.toThrow(NotFoundException);
     });
@@ -249,13 +278,20 @@ describe('RouteService', () => {
         toResponseDto: jest.fn(),
       };
 
-      mockRepository.create.mockReturnValue(testRoute);
-      mockRepository.save.mockResolvedValue(testRoute);
+      // Mock the transaction behavior
+      mockRepository.manager.transaction.mockImplementation(async (callback) => {
+        const manager = {
+          create: jest.fn().mockReturnValue(testRoute),
+          save: jest.fn().mockResolvedValue(testRoute),
+        };
+        return await callback(manager);
+      });
 
       await service.create(testRoute);
 
       // Check that sync was called with properly sorted waypoints
-      expect(syncService.logChange).toHaveBeenCalledWith(
+      expect(mockSyncService.logChangeInTransaction).toHaveBeenCalledWith(
+        expect.any(Object),
         'route',
         '1',
         'create',

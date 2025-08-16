@@ -5,7 +5,7 @@ import { DeviceResponse } from './device.model';
  */
 
 /**
- * Event emitted when a device is activated
+ * Event emitted when a device is activated in the admin UI
  */
 export interface DeviceActivatedEvent {
   vesselId: number;
@@ -13,7 +13,7 @@ export interface DeviceActivatedEvent {
 }
 
 /**
- * Event emitted when a vessel position is updated
+ * Event emitted when a vessel position is updated used by the shared-map component
  */
 export interface PositionUpdateEvent {
   vesselId: number;

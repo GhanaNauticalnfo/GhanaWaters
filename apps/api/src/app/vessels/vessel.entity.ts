@@ -37,7 +37,7 @@ export class Vessel {
   @ApiPropertyOptional({ description: 'Latest tracking position for this vessel', type: () => VesselTelemetry })
   latest_position: VesselTelemetry;
 
-  toResponseDto(coordinates?: GeoPoint, settings?: Record<string, string>): VesselResponseDto {
+  toResponseDto(coordinates?: GeoPoint): VesselResponseDto {
     const dto: VesselResponseDto = {
       id: this.id,
       created: this.created,
@@ -57,10 +57,6 @@ export class Vessel {
       }
     }
 
-    // Include settings if provided
-    if (settings) {
-      dto.settings = settings;
-    }
 
     return dto;
   }

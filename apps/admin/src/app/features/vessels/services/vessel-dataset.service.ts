@@ -2,7 +2,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Observable, map, Subject } from 'rxjs';
-import { VesselDataset, VesselTelemetry, TelemetryExportFilters, TelemetryExportStats } from '@ghanawaters/shared-models';
+import { VesselDataset, VesselTelemetryResponse, TelemetryExportFilters, TelemetryExportStats } from '@ghanawaters/shared-models';
 import Keycloak from 'keycloak-js';
 
 interface ApiVessel {
@@ -21,7 +21,7 @@ interface ApiVessel {
   home_port: string;
   created: string;
   last_updated: string;
-  vessel_telemetry?: VesselTelemetry[];
+  vessel_telemetry?: VesselTelemetryResponse[];
   // New position data from API
   latest_position_timestamp?: string;
   latest_position_speed?: string;

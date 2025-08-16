@@ -26,7 +26,7 @@ export class Route {
   @UpdateDateColumn()
   last_updated: Date;
 
-  toResponseDto(settings?: Record<string, string>): RouteResponseDto {
+  toResponseDto(): RouteResponseDto {
     const dto: RouteResponseDto = {
       id: this.id,
       name: this.name,
@@ -37,9 +37,6 @@ export class Route {
       last_updated: this.last_updated.toISOString(),
     };
 
-    if (settings) {
-      dto.settings = settings;
-    }
 
     return dto;
   }

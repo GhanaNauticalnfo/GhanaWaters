@@ -8,7 +8,6 @@ export * from './lib/vessel-type.model';
 export * from './lib/vessel-telemetry.model';
 export * from './lib/route.model';
 export * from './lib/settings.model';
-export * from './lib/resource-settings.model';
 export * from './lib/device.model';
 export * from './lib/kml-dataset.model';
 export * from './lib/websocket-events.model';

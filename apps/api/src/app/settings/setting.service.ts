@@ -5,7 +5,7 @@ import { Setting } from './setting.entity';
 import { ALLOWED_SETTING_KEYS, SettingKey } from './dto/setting-input.dto';
 import { UpdateSettingDto } from './dto/update-setting.dto';
 import { SettingResponseDto } from './dto/setting-response.dto';
-import { SETTING_KEYS, SETTING_DEFAULTS } from './constants/settings.constants';
+import { SETTING_DEFAULTS } from './constants/settings.constants';
 
 @Injectable()
 export class SettingService {
@@ -49,10 +49,6 @@ export class SettingService {
   }
 
 
-  async getRouteColor(): Promise<string> {
-    const setting = await this.settingRepository.findOne({ where: { key: SETTING_KEYS.ROUTE_COLOR } });
-    return setting?.value || SETTING_DEFAULTS[SETTING_KEYS.ROUTE_COLOR]; // Default fallback
-  }
 
   async getSettingValue(key: string): Promise<string> {
     if (!ALLOWED_SETTING_KEYS.includes(key as SettingKey)) {

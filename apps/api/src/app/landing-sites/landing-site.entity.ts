@@ -41,7 +41,7 @@ export class LandingSite {
   @UpdateDateColumn()
   updated_at: Date;
 
-  toResponseDto(settings?: Record<string, string>): LandingSiteResponseDto {
+  toResponseDto(): LandingSiteResponseDto {
     const dto: LandingSiteResponseDto = {
       id: this.id,
       name: this.name,
@@ -52,9 +52,6 @@ export class LandingSite {
       updated_at: this.updated_at.toISOString(),
     };
 
-    if (settings) {
-      dto.settings = settings;
-    }
 
     return dto;
   }

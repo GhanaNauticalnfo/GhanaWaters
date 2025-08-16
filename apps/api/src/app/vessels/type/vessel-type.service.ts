@@ -5,7 +5,6 @@ import { VesselType } from './vessel-type.entity';
 import { Vessel } from '../vessel.entity';
 import { VesselTypeInputDto } from './dto/vessel-type-input.dto';
 import { VesselTypeResponseDto } from './dto/vessel-type-response.dto';
-import { ResourceSettingsService } from '../../resource-settings/resource-settings.service';
 
 @Injectable()
 export class VesselTypeService {
@@ -14,7 +13,6 @@ export class VesselTypeService {
     private vesselTypeRepository: Repository<VesselType>,
     @InjectRepository(Vessel)
     private vesselRepository: Repository<Vessel>,
-    private resourceSettingsService: ResourceSettingsService,
   ) {}
 
   async findAll(): Promise<VesselTypeResponseDto[]> {
@@ -27,8 +25,7 @@ export class VesselTypeService {
 
     const result = [];
     for (const type of vesselTypes) {
-      const settings = await this.resourceSettingsService.getSettingsForResource('vessel_type', type.id);
-      result.push(type.toResponseDto(settings));
+      result.push(type.toResponseDto());
     }
 
     return result;
@@ -44,8 +41,7 @@ export class VesselTypeService {
       throw new BadRequestException(`Vessel type with ID ${id} not found`);
     }
     
-    const settings = await this.resourceSettingsService.getSettingsForResource('vessel_type', vesselType.id);
-    return vesselType.toResponseDto(settings);
+    return vesselType.toResponseDto();
   }
 
   async create(dto: VesselTypeInputDto): Promise<VesselTypeResponseDto> {

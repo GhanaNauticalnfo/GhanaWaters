@@ -30,9 +30,4 @@ export class VesselResponseDto implements VesselResponse {
   @ApiPropertyOptional({ description: 'Heading in degrees at latest position', example: 180.0 })
   latest_position_heading?: number;
 
-  @ApiPropertyOptional({ 
-    description: 'Custom settings for this vessel', 
-    example: { '1': '+233 20 123 4567', '2': 'owner@example.com' } 
-  })
-  settings?: Record<string, string>;
 }
