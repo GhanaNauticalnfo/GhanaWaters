@@ -54,12 +54,6 @@ export const routes: Route[] = [
         data: { roles: ['admin'] }
       },
       {
-        path: 'volta-depth',
-        loadComponent: () => import('./features/volta-depth/volta-depth.component')
-          .then(m => m.VoltaDepthComponent),
-        data: { roles: ['admin'] }
-      },
-      {
         path: 'routes', 
         component: RoutesComponent,
         data: { roles: ['admin'] }

@@ -7,7 +7,6 @@ import {
   VesselLayerService, 
   MapConfig,
   OSM_STYLE,
-  DepthLayerService,
   VesselWithLocation
 } from '@ghanawaters/shared-map';
 
@@ -66,8 +65,7 @@ import {
     }
   `],
   providers: [
-    DepthLayerService,
-    VesselLayerService
+      VesselLayerService
   ]
 })
 export class LiveComponent implements OnInit, AfterViewInit {
@@ -83,11 +81,10 @@ export class LiveComponent implements OnInit, AfterViewInit {
     height: '600px',
     showFullscreenControl: true,
     showControls: false, // Hide the map layers panel
-    availableLayers: ['vessels', 'depth'],
+    availableLayers: ['vessels'],
     initialActiveLayers: ['vessels'], // Automatically activate this layer on load
     layerNames: {
-      'vessels': 'Vessels',
-      'depth': 'Depths'
+      'vessels': 'Vessels'
     }
   };
   
@@ -96,7 +93,6 @@ export class LiveComponent implements OnInit, AfterViewInit {
     
     // Register available layers
     this.layerManager.registerLayer('vessels', VesselLayerService);
-    this.layerManager.registerLayer('depth', DepthLayerService);
     
     console.log('Live Component: All layers registered successfully');
   }

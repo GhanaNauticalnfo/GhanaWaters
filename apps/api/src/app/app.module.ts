@@ -6,7 +6,6 @@ import { AppController } from './app.controller';
 import { RootController } from './root.controller';
 import { AppService } from './app.service';
 import { KmlDatasetModule } from './kml-dataset/kml-dataset.module';
-import { VoltaDepthModule } from './volta-depth/volta-depth.module';
 // Import the CORRECT factory function from database.config.ts
 import { typeOrmModuleOptionsFactory } from '../config/database.config';
 // KmlDataset entity will be picked up by autoLoadEntities or by forFeature in its own module
@@ -53,7 +52,6 @@ import { AuthModule } from './auth/auth.module';
     // Register feature modules AFTER TypeOrmModule.forRootAsync
     VesselsModule,
     KmlDatasetModule,
-    VoltaDepthModule,
     RoutesModule,
     SyncModule,
     SettingsModule,
