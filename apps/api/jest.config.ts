@@ -1,5 +1,5 @@
 // apps/api/jest.config.ts (NEW FILE)
-/* eslint-disable */
+ 
 export default {
     displayName: 'api',
     preset: '../../jest.preset.js', // Inherit from root preset
