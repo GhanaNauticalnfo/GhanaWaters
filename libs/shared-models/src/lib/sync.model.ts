@@ -27,12 +27,26 @@ export interface EntityStats {
  * Recent sync log entry
  */
 export interface RecentEntry {
+  id: number;
   entityType: string;
   entityId: string;
   action: 'create' | 'update' | 'delete';
   dataSize: number;
   hasData: boolean;
   timestamp: string | null;
+}
+
+/**
+ * Detailed sync log entry with full data
+ */
+export interface SyncEntryDetail {
+  id: number;
+  entityType: string;
+  entityId: string;
+  action: 'create' | 'update' | 'delete';
+  data: any;
+  createdAt: string;
+  majorVersion: number;
 }
 
 /**

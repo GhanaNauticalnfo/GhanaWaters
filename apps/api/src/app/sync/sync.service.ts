@@ -40,11 +40,33 @@ export class SyncService {
       version: new Date().toISOString(),
       majorVersion,
       data: changes.map(change => ({
+        id: change.id,
         entity_type: change.entity_type,
         entity_id: change.entity_id,
         action: change.action,
         data: change.data,
+        created_at: change.created_at.toISOString(),
       })),
+    };
+  }
+
+  async getSyncEntryById(id: number) {
+    const entry = await this.syncLogRepository.findOne({
+      where: { id },
+    });
+    
+    if (!entry) {
+      return null;
+    }
+    
+    return {
+      id: entry.id,
+      entityType: entry.entity_type,
+      entityId: entry.entity_id,
+      action: entry.action,
+      data: entry.data,
+      createdAt: entry.created_at.toISOString(),
+      majorVersion: entry.major_version,
     };
   }
 

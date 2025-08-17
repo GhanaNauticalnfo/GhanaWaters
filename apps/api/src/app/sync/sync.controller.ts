@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Query } from '@nestjs/common';
+import { Controller, Get, Post, Query, Param, NotFoundException } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { Public } from '../auth/decorators';
 import { SyncService } from './sync.service';
@@ -74,12 +74,13 @@ export class SyncController {
     // Get recent entries (limited if specified)
     const maxLimit = limit ? parseInt(limit, 10) : 100;
     const recentEntries = data.data.slice(-maxLimit).reverse().map(item => ({
+      id: item.id,
       entityType: item.entity_type,
       entityId: item.entity_id,
       action: item.action,
       dataSize: item.data ? JSON.stringify(item.data).length : 0,
       hasData: !!item.data,
-      timestamp: item.data?.properties?.last_updated || item.data?.properties?.created || null
+      timestamp: item.created_at || item.data?.properties?.last_updated || item.data?.properties?.created || null
     }));
     
     const majorVersion = await this.syncService.getCurrentMajorVersion();
@@ -95,6 +96,21 @@ export class SyncController {
       entityStats,
       recentEntries
     };
+  }
+
+  @Get('sync/entry/:id')
+  async getSyncEntry(@Param('id') id: string) {
+    const entryId = parseInt(id, 10);
+    if (isNaN(entryId)) {
+      throw new NotFoundException('Invalid sync entry ID');
+    }
+    
+    const entry = await this.syncService.getSyncEntryById(entryId);
+    if (!entry) {
+      throw new NotFoundException('Sync entry not found');
+    }
+    
+    return entry;
   }
 
   @Post('sync/reset')
