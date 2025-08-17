@@ -2,7 +2,7 @@ import { Component, OnInit, AfterViewInit, TemplateRef, signal, viewChild, injec
 import { CommonModule } from '@angular/common';
 import { TagModule } from 'primeng/tag';
 import { MessageService } from 'primeng/api';
-import { ResourceListComponent, ResourceListConfig, ResourceAction, TimeAgoPipe, VesselIdPipe, BoatIconComponent } from '@ghanawaters/shared';
+import { ResourceListComponent, ResourceListConfig, ResourceAction, TimeAgoPipe, BoatIconComponent } from '@ghanawaters/shared';
 import { VesselService } from '../services/vessel.service';
 import { VesselResponseDto, CreateVesselDto, UpdateVesselDto } from '../models/vessel.dto';
 import { VesselFormComponent, VesselFormData } from './vessel-form.component';
@@ -21,7 +21,6 @@ import { VesselDataset } from '@ghanawaters/shared-models';
     VesselFormComponent,
     DialogModule,
     TimeAgoPipe,
-    VesselIdPipe,
     BoatIconComponent
   ],
   providers: [MessageService],
@@ -55,7 +54,7 @@ import { VesselDataset } from '@ghanawaters/shared-models';
     
     <!-- Column Templates -->
     <ng-template #idTemplate let-item>
-      <span class="font-mono text-sm">{{ item.id | vesselId }}</span>
+      <span class="font-mono text-sm">{{ item.id }}</span>
     </ng-template>
     
     <ng-template #typeTemplate let-item>

@@ -73,15 +73,19 @@ export class SyncController {
     
     // Get recent entries (limited if specified)
     const maxLimit = limit ? parseInt(limit, 10) : 100;
-    const recentEntries = data.data.slice(-maxLimit).reverse().map(item => ({
-      id: item.id,
-      entityType: item.entity_type,
-      entityId: item.entity_id,
-      action: item.action,
-      dataSize: item.data ? JSON.stringify(item.data).length : 0,
-      hasData: !!item.data,
-      timestamp: item.created_at || item.data?.properties?.last_updated || item.data?.properties?.created || null
-    }));
+    const recentEntries = data.data.slice(-maxLimit).reverse().map(item => {
+      console.log('Processing sync item:', item);
+      return {
+        majorVersion: item.major_version,
+        minorVersion: item.minor_version,
+        entityType: item.entity_type,
+        entityId: item.entity_id,
+        action: item.action,
+        dataSize: item.data ? JSON.stringify(item.data).length : 0,
+        hasData: !!item.data,
+        timestamp: item.created_at
+      };
+    });
     
     const majorVersion = await this.syncService.getCurrentMajorVersion();
     
@@ -98,14 +102,16 @@ export class SyncController {
     };
   }
 
-  @Get('sync/entry/:id')
-  async getSyncEntry(@Param('id') id: string) {
-    const entryId = parseInt(id, 10);
-    if (isNaN(entryId)) {
-      throw new NotFoundException('Invalid sync entry ID');
+  @Get('sync/entry/:major/:minor')
+  async getSyncEntry(@Param('major') major: string, @Param('minor') minor: string) {
+    const majorVersion = parseInt(major, 10);
+    const minorVersion = parseInt(minor, 10);
+    
+    if (isNaN(majorVersion) || isNaN(minorVersion)) {
+      throw new NotFoundException('Invalid sync entry version');
     }
     
-    const entry = await this.syncService.getSyncEntryById(entryId);
+    const entry = await this.syncService.getSyncEntryByVersion(majorVersion, minorVersion);
     if (!entry) {
       throw new NotFoundException('Sync entry not found');
     }

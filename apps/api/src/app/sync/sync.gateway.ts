@@ -7,7 +7,11 @@ import {
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { Logger } from '@nestjs/common';
-import { SyncNotification } from './mqtt-sync.service';
+
+interface SyncNotification {
+  major_version: number;
+  minor_version: number;
+}
 
 @WebSocketGateway({
   namespace: '/sync',

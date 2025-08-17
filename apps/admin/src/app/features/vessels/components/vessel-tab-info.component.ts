@@ -2,12 +2,11 @@ import { Component, Input, signal, OnInit, OnChanges, SimpleChanges } from '@ang
 import { CommonModule } from '@angular/common';
 import { VesselDataset } from '@ghanawaters/shared-models';
 import { VesselTypeService, VesselType } from '../../settings/vessel-types/vessel-type.service';
-import { VesselIdPipe } from '@ghanawaters/shared';
 
 @Component({
   selector: 'app-vessel-tab-info',
   standalone: true,
-  imports: [CommonModule, VesselIdPipe],
+  imports: [CommonModule],
   template: `
     <div class="view-dialog-content">
       @if (isLoading()) {
@@ -40,7 +39,7 @@ import { VesselIdPipe } from '@ghanawaters/shared';
             <div class="info-row">
               <label class="field-label text-base">ID</label>
               <div class="field-content">
-                <span class="field-value font-mono text-base">{{ vessel.id | vesselId }}</span>
+                <span class="field-value font-mono text-base">{{ vessel.id }}</span>
               </div>
             </div>
 

@@ -14,14 +14,14 @@ describe('SyncService', () => {
   let mockEntityManager: Partial<EntityManager>;
 
   const mockSyncLog = {
-    id: 1,
+    major_version: 1,
+    minor_version: 1,
     entity_type: 'route',
     entity_id: '123',
     action: 'create',
     data: { test: 'data' },
     created_at: new Date('2025-01-01T12:00:00Z'),
     is_latest: true,
-    major_version: 1,
   };
 
   const mockSyncVersion = {
@@ -36,7 +36,17 @@ describe('SyncService', () => {
       update: jest.fn().mockResolvedValue(undefined),
       save: jest.fn().mockResolvedValue(mockSyncLog),
       find: jest.fn().mockResolvedValue([mockSyncLog]),
-      findOne: jest.fn().mockResolvedValue(mockSyncVersion),
+      findOne: jest.fn()
+        .mockImplementation((entity, options) => {
+          if (entity === SyncVersion || options?.where?.is_current) {
+            return Promise.resolve(mockSyncVersion);
+          }
+          // For minor version lookup (when options.where has major_version)
+          if (options?.where?.major_version) {
+            return Promise.resolve(null); // No existing entries for this major version
+          }
+          return Promise.resolve(mockSyncVersion);
+        }),
     };
 
     const mockRepository = {
@@ -92,7 +102,7 @@ describe('SyncService', () => {
         },
         {
           ...mockSyncLog,
-          id: 2,
+          minor_version: 2,
           entity_id: '456',
           action: 'update',
           created_at: new Date('2025-01-01T13:00:00Z'),
@@ -106,21 +116,24 @@ describe('SyncService', () => {
       expect(repository.find).toHaveBeenCalledWith({
         where: {
           created_at: MoreThan(sinceDate),
-          is_latest: true,
           major_version: 1,
         },
         order: {
           created_at: 'ASC',
-          id: 'ASC',
+          major_version: 'ASC',
+          minor_version: 'ASC',
         },
       });
 
       expect(result.data).toHaveLength(2);
       expect(result.data[0]).toEqual({
+        major_version: 1,
+        minor_version: 1,
         entity_type: 'route',
         entity_id: '123',
         action: 'create',
         data: { test: 'data' },
+        created_at: '2025-01-01T12:00:00.000Z',
       });
       expect(result.version).toBeDefined();
       expect(new Date(result.version)).toBeInstanceOf(Date);
@@ -155,12 +168,13 @@ describe('SyncService', () => {
         { is_latest: false }
       );
       expect(mockEntityManager.save).toHaveBeenCalledWith(SyncLog, {
+        major_version: 1,
+        minor_version: 1,
         entity_type: entityType,
         entity_id: entityId,
         action: action,
         data: data,
         is_latest: true,
-        major_version: 1,
       });
       
       // Should emit WebSocket update after transaction
@@ -176,12 +190,13 @@ describe('SyncService', () => {
       await service.logChange(entityType, entityId, action, data);
 
       expect(mockEntityManager.save).toHaveBeenCalledWith(SyncLog, {
+        major_version: 1,
+        minor_version: 1,
         entity_type: entityType,
         entity_id: entityId,
         action: action,
         data: data,
         is_latest: true,
-        major_version: 1,
       });
     });
 
@@ -193,12 +208,13 @@ describe('SyncService', () => {
       await service.logChange(entityType, entityId, action);
 
       expect(mockEntityManager.save).toHaveBeenCalledWith(SyncLog, {
+        major_version: 1,
+        minor_version: 1,
         entity_type: entityType,
         entity_id: entityId,
         action: action,
         data: null,
         is_latest: true,
-        major_version: 1,
       });
     });
 
@@ -251,8 +267,8 @@ describe('SyncService', () => {
     it('should create new major version and reset sync log', async () => {
       const mockCurrentEntities = [
         { ...mockSyncLog, action: 'create' },
-        { ...mockSyncLog, id: 2, entity_id: '456', action: 'update' },
-        { ...mockSyncLog, id: 3, entity_id: '789', action: 'delete', data: null },
+        { ...mockSyncLog, minor_version: 2, entity_id: '456', action: 'update' },
+        { ...mockSyncLog, minor_version: 3, entity_id: '789', action: 'delete', data: null },
       ];
 
       mockEntityManager.find = jest.fn().mockResolvedValue(mockCurrentEntities);
@@ -341,6 +357,7 @@ describe('SyncService', () => {
 
       expect(manager.save).toHaveBeenCalledWith(SyncLog, expect.objectContaining({
         major_version: providedMajorVersion,
+        minor_version: 1,
       }));
       expect(syncGateway.emitSyncUpdate).toHaveBeenCalledWith(5, 1);
     });

@@ -32,7 +32,8 @@ export class SyncService {
       },
       order: {
         created_at: 'ASC',
-        id: 'ASC',
+        major_version: 'ASC',
+        minor_version: 'ASC',
       },
     });
 
@@ -40,7 +41,8 @@ export class SyncService {
       version: new Date().toISOString(),
       majorVersion,
       data: changes.map(change => ({
-        id: change.id,
+        major_version: change.major_version,
+        minor_version: change.minor_version,
         entity_type: change.entity_type,
         entity_id: change.entity_id,
         action: change.action,
@@ -50,9 +52,12 @@ export class SyncService {
     };
   }
 
-  async getSyncEntryById(id: number) {
+  async getSyncEntryByVersion(majorVersion: number, minorVersion: number) {
     const entry = await this.syncLogRepository.findOne({
-      where: { id },
+      where: { 
+        major_version: majorVersion,
+        minor_version: minorVersion 
+      },
     });
     
     if (!entry) {
@@ -60,13 +65,13 @@ export class SyncService {
     }
     
     return {
-      id: entry.id,
+      majorVersion: entry.major_version,
+      minorVersion: entry.minor_version,
       entityType: entry.entity_type,
       entityId: entry.entity_id,
       action: entry.action,
       data: entry.data,
       createdAt: entry.created_at.toISOString(),
-      majorVersion: entry.major_version,
     };
   }
 
@@ -88,7 +93,7 @@ export class SyncService {
         data,
         majorVersion
       );
-      minorVersion = result.id;
+      minorVersion = result.minor_version;
     });
 
     // Fire and forget WebSocket notification - don't await
@@ -118,28 +123,36 @@ export class SyncService {
       majorVersion = currentVersion?.major_version || 1;
     }
 
-    // Mark previous entries as not latest
+    // Calculate next minor version for this major version
+    const lastEntry = await manager.findOne(SyncLog, {
+      where: { major_version: majorVersion },
+      order: { minor_version: 'DESC' },
+    });
+    const minorVersion = lastEntry ? lastEntry.minor_version + 1 : 1;
+
+    // Mark previous entries for this entity as not latest
     await manager.update(
       SyncLog,
       { entity_id: entityId, entity_type: entityType, is_latest: true },
       { is_latest: false },
     );
 
-    // Insert new entry
+    // Insert new entry with composite primary key
     const syncLog = await manager.save(SyncLog, {
+      major_version: majorVersion,
+      minor_version: minorVersion,
       entity_type: entityType,
       entity_id: entityId,
       action: action,
       data: action === 'delete' ? null : data,
       is_latest: true,
-      major_version: majorVersion,
     });
 
     // Fire and forget WebSocket notification - don't await
     // This happens within the transaction but errors don't affect it
-    if (syncLog.id && this.syncGateway) {
+    if (this.syncGateway) {
       try {
-        this.syncGateway.emitSyncUpdate(majorVersion, syncLog.id);
+        this.syncGateway.emitSyncUpdate(majorVersion, minorVersion);
       } catch (err) {
         // Errors are already logged in SyncGateway, just catch to prevent any issues
       }
@@ -185,17 +198,21 @@ export class SyncService {
       );
 
       // Create new entries for all current entities with new major version
+      // Start minor version at 1 for the new major version
+      let minorVersion = 1;
       for (const entity of currentEntities) {
         // Only create entries for non-deleted entities
         if (entity.action !== 'delete' && entity.data) {
           await manager.save(SyncLog, {
+            major_version: newMajorVersion,
+            minor_version: minorVersion,
             entity_type: entity.entity_type,
             entity_id: entity.entity_id,
             action: 'create',
             data: entity.data,
             is_latest: true,
-            major_version: newMajorVersion,
           });
+          minorVersion++;
         }
       }
     });

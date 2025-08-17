@@ -8,6 +8,9 @@ describe('SyncController', () => {
 
   const mockSyncService = {
     getChangesSince: jest.fn(),
+    getSyncEntryByVersion: jest.fn(),
+    getCurrentMajorVersion: jest.fn(),
+    resetSync: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -37,12 +40,16 @@ describe('SyncController', () => {
     it('should call service with date from query parameter', async () => {
       const mockResponse = {
         version: '2025-01-01T12:00:00Z',
+        majorVersion: 1,
         data: [
           {
+            major_version: 1,
+            minor_version: 1,
             entity_type: 'route',
             entity_id: '123',
             action: 'create',
             data: { test: 'data' },
+            created_at: '2025-01-01T12:00:00.000Z',
           },
         ],
       };
@@ -58,6 +65,7 @@ describe('SyncController', () => {
     it('should use epoch date when no since parameter provided', async () => {
       const mockResponse = {
         version: '2025-01-01T12:00:00Z',
+        majorVersion: 1,
         data: [],
       };
       mockSyncService.getChangesSince.mockResolvedValue(mockResponse);
@@ -71,6 +79,7 @@ describe('SyncController', () => {
     it('should handle invalid date strings', async () => {
       const mockResponse = {
         version: '2025-01-01T12:00:00Z',
+        majorVersion: 1,
         data: [],
       };
       mockSyncService.getChangesSince.mockResolvedValue(mockResponse);

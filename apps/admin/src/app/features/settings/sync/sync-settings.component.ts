@@ -37,42 +37,46 @@ import { SyncManageResponse, EntityStats, RecentEntry, SyncEntryDetail } from '@
         </div>
       } @else {
         @if (syncData()) {
-          <div class="grid">
-            <!-- Summary Card -->
-            <div class="col-12">
-              <p-card>
-              <ng-template pTemplate="header">
-                <div class="flex align-items-center justify-content-between w-full">
-                  <span>Sync Summary</span>
-                  <p-button 
-                    label="Reset Sync" 
-                    icon="pi pi-refresh" 
-                    severity="danger" 
-                    [loading]="resetting()"
-                    (onClick)="confirmReset()">
-                  </p-button>
+          <div class="flex gap-3 align-items-stretch">
+            <!-- Sync Management Card -->
+            <div class="flex-1">
+              <p-card header="Sync Management" [style]="{'height': '100%'}">
+                <div class="sync-management-content">
+                  <div class="field mb-3">
+                    <span class="text-600 text-sm">Major Version: </span>
+                    <span class="text-900">v{{ syncData()!.majorVersion }}</span>
+                  </div>
+                  
+                  <div class="field mb-3">
+                    <span class="text-600 text-sm">Last Sync Version: </span>
+                    <span class="text-900">{{ formatDate(syncData()!.summary.lastSyncVersion) }}</span>
+                  </div>
+                  
+                  <div class="field mb-4">
+                    <span class="text-600 text-sm">Total Sync Entries: </span>
+                    <span class="text-900">{{ syncData()!.summary.totalEntries }}</span>
+                  </div>
+                  
+                  <div class="mt-4 pt-3 border-top-1 surface-border">
+                    <p class="text-600 text-sm mb-3">
+                      Reset sync creates a new baseline and compacts all sync entries. 
+                      Mobile apps will reset their local data on next sync.
+                    </p>
+                    <p-button 
+                      label="Reset Sync" 
+                      icon="pi pi-refresh" 
+                      severity="danger" 
+                      [loading]="resetting()"
+                      (onClick)="confirmReset()">
+                    </p-button>
+                  </div>
                 </div>
-              </ng-template>
-              <div class="flex justify-content-around align-items-start flex-wrap gap-3">
-                <div class="text-center">
-                  <div class="text-600 text-sm">Major Version</div>
-                  <div class="text-900 text-2xl font-bold">v{{ syncData()!.majorVersion }}</div>
-                </div>
-                <div class="text-center">
-                  <div class="text-600 text-sm">Last Sync Version</div>
-                  <div class="text-900 text-xl font-medium">{{ formatDate(syncData()!.summary.lastSyncVersion) }}</div>
-                </div>
-                <div class="text-center">
-                  <div class="text-600 text-sm">Total Sync Entries</div>
-                  <div class="text-900 text-xl font-medium">{{ syncData()!.summary.totalEntries }}</div>
-                </div>
-              </div>
-            </p-card>
-          </div>
+              </p-card>
+            </div>
 
-          <!-- Sync Entries -->
-          <div class="col-12">
-            <p-card header="Sync Entries">
+            <!-- Sync Entries Card -->
+            <div class="flex-1">
+            <p-card header="Sync Entries" [style]="{'height': '100%'}">
               <p-table 
                 [value]="syncData()!.recentEntries" 
                 [scrollable]="true" 
@@ -84,14 +88,13 @@ import { SyncManageResponse, EntityStats, RecentEntry, SyncEntryDetail } from '@
                 currentPageReportTemplate="Showing {first} to {last} of {totalRecords} entries">
                 <ng-template pTemplate="header">
                   <tr>
-                    <th>ID</th>
+                    <th>Minor Version</th>
                     <th>Timestamp</th>
                     <th>Size</th>
-                    <th class="text-center">Details</th>
                   </tr>
                 </ng-template>
                 <ng-template pTemplate="body" let-entry>
-                  <tr>
+                  <tr class="cursor-pointer" (click)="entry.id && showDetails(entry.id)">
                     <td>{{ entry.id }}</td>
                     <td>
                       @if (entry.timestamp) {
@@ -107,21 +110,11 @@ import { SyncManageResponse, EntityStats, RecentEntry, SyncEntryDetail } from '@
                         <span class="text-600">-</span>
                       }
                     </td>
-                    <td class="text-center">
-                      <p-button 
-                        icon="pi pi-info-circle" 
-                        severity="info" 
-                        size="small"
-                        [text]="true"
-                        (onClick)="showDetails(entry.id)"
-                        pTooltip="View details">
-                      </p-button>
-                    </td>
                   </tr>
                 </ng-template>
                 <ng-template pTemplate="emptymessage">
                   <tr>
-                    <td colspan="4" class="text-center text-600">No sync entries found</td>
+                    <td colspan="3" class="text-center text-600">No sync entries found</td>
                   </tr>
                 </ng-template>
               </p-table>
@@ -255,6 +248,19 @@ import { SyncManageResponse, EntityStats, RecentEntry, SyncEntryDetail } from '@
     .sync-entry-details .field:last-child {
       margin-bottom: 0;
     }
+    
+    .sync-management-content .field {
+      display: block;
+      line-height: 1.5;
+    }
+    
+    .cursor-pointer {
+      cursor: pointer;
+    }
+    
+    .cursor-pointer:hover {
+      background-color: var(--surface-100);
+    }
   `],
   host: {
     class: 'sync-settings-host'
@@ -297,6 +303,8 @@ export class SyncSettingsComponent implements OnInit, OnChanges {
     
     this.syncService.getSyncManageData().subscribe({
       next: (data) => {
+        console.log('Sync data received:', data);
+        console.log('Recent entries:', data.recentEntries);
         this.syncData.set(data);
         this.loading.set(false);
       },
@@ -321,7 +329,8 @@ export class SyncSettingsComponent implements OnInit, OnChanges {
       day: 'numeric',
       hour: '2-digit',
       minute: '2-digit',
-      second: '2-digit'
+      second: '2-digit',
+      hour12: false
     });
   }
 
@@ -331,7 +340,8 @@ export class SyncSettingsComponent implements OnInit, OnChanges {
       month: 'short',
       day: 'numeric',
       hour: '2-digit',
-      minute: '2-digit'
+      minute: '2-digit',
+      hour12: false
     });
   }
 
