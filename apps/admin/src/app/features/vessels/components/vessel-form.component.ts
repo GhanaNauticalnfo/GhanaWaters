@@ -79,7 +79,6 @@ export interface VesselFormData {
                     optionValue="id"
                     placeholder="Select vessel type"
                     styleClass="w-full"
-                    [appendTo]="'body'"
                     [panelStyle]="{'max-height':'200px'}"
                   ></p-select>
                   @if (vesselForm.get('vessel_type_id')?.invalid && vesselForm.get('vessel_type_id')?.touched) {
@@ -168,7 +167,6 @@ export interface VesselFormData {
                           optionValue="id"
                           placeholder="Select vessel type"
                           styleClass="w-full"
-                          [appendTo]="'body'"
                           [panelStyle]="{'max-height':'200px'}"
                         ></p-select>
                         @if (vesselForm.get('vessel_type_id')?.invalid && vesselForm.get('vessel_type_id')?.touched) {

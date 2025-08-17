@@ -2,7 +2,7 @@ import { Component, OnInit, AfterViewInit, TemplateRef, signal, viewChild, injec
 import { CommonModule } from '@angular/common';
 import { TagModule } from 'primeng/tag';
 import { MessageService } from 'primeng/api';
-import { ResourceListComponent, ResourceListConfig, ResourceAction, TimeAgoPipe, VesselIdPipe } from '@ghanawaters/shared';
+import { ResourceListComponent, ResourceListConfig, ResourceAction, TimeAgoPipe, VesselIdPipe, BoatIconComponent } from '@ghanawaters/shared';
 import { VesselService } from '../services/vessel.service';
 import { VesselResponseDto, CreateVesselDto, UpdateVesselDto } from '../models/vessel.dto';
 import { VesselFormComponent, VesselFormData } from './vessel-form.component';
@@ -21,7 +21,8 @@ import { VesselDataset } from '@ghanawaters/shared-models';
     VesselFormComponent,
     DialogModule,
     TimeAgoPipe,
-    VesselIdPipe
+    VesselIdPipe,
+    BoatIconComponent
   ],
   providers: [MessageService],
   host: {
@@ -58,9 +59,16 @@ import { VesselDataset } from '@ghanawaters/shared-models';
     </ng-template>
     
     <ng-template #typeTemplate let-item>
-      <span [class]="'type-badge text-xs font-bold uppercase tracking-tight ' + getVesselTypeClass(item.vessel_type?.name)">
-        {{ item.vessel_type?.name || 'Unspecified' }}
-      </span>
+      <div class="vessel-type-display">
+        <app-boat-icon 
+          [color]="item.vessel_type?.color || '#757575'" 
+          [size]="16"
+          [title]="item.vessel_type?.name || 'Unspecified'">
+        </app-boat-icon>
+        <span class="type-text text-xs font-bold uppercase tracking-tight">
+          {{ item.vessel_type?.name || 'Unspecified' }}
+        </span>
+      </div>
     </ng-template>
     
     <ng-template #activeDeviceTemplate let-item>
@@ -97,65 +105,14 @@ import { VesselDataset } from '@ghanawaters/shared-models';
       white-space: nowrap;
     }
 
-    .type-badge {
-      border-radius: 4px;
-      padding: 0.25rem 0.5rem;
-      display: inline-block;
+    .vessel-type-display {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
     }
 
-    .type-canoe {
-      background-color: var(--blue-100, #BBDEFB);
-      color: var(--blue-700, #1565C0);
-    }
-
-    .type-cargo {
-      background-color: var(--indigo-100, #C5CAE9);
-      color: var(--indigo-700, #303F9F);
-    }
-
-    .type-tanker {
-      background-color: var(--purple-100, #E1BEE7);
-      color: var(--purple-700, #7B1FA2);
-    }
-
-    .type-passenger {
-      background-color: var(--teal-100, #B2DFDB);
-      color: var(--teal-700, #00796B);
-    }
-
-    .type-fishing {
-      background-color: var(--cyan-100, #B2EBF2);
-      color: var(--cyan-700, #0097A7);
-    }
-
-    .type-military {
-      background-color: var(--gray-200, #E0E0E0);
-      color: var(--gray-700, #616161);
-    }
-
-    .type-sailing {
-      background-color: var(--green-100, #C8E6C9);
-      color: var(--green-700, #388E3C);
-    }
-
-    .type-pleasure {
-      background-color: var(--pink-100, #F8BBD0);
-      color: var(--pink-700, #C2185B);
-    }
-
-    .type-tug {
-      background-color: var(--orange-100, #FFE0B2);
-      color: var(--orange-700, #E65100);
-    }
-
-    .type-other {
-      background-color: var(--yellow-100, #FFF9C4);
-      color: var(--yellow-800, #F57F17);
-    }
-
-    .type-unspecified {
-      background-color: var(--gray-100, #F5F5F5);
-      color: var(--gray-600, #757575);
+    .type-text {
+      color: var(--text-color);
     }
   `]
 })
@@ -414,34 +371,6 @@ export class VesselListComponent implements OnInit, AfterViewInit {
     this.loadVesselDatasets();
   }
 
-  // Get CSS class for vessel type badge
-  getVesselTypeClass(type: string): string {
-    switch (type?.toLowerCase()) {
-      case 'canoe':
-        return 'type-canoe';
-      case 'cargo':
-        return 'type-cargo';
-      case 'tanker':
-        return 'type-tanker';
-      case 'passenger':
-        return 'type-passenger';
-      case 'fishing':
-        return 'type-fishing';
-      case 'military':
-        return 'type-military';
-      case 'sailing':
-        return 'type-sailing';
-      case 'pleasure':
-        return 'type-pleasure';
-      case 'tug':
-        return 'type-tug';
-      case 'other':
-        return 'type-other';
-      case 'unspecified':
-      default:
-        return 'type-unspecified';
-    }
-  }
   
   private hasRole(role: string): boolean {
     const roles = this.keycloak.realmAccess?.roles || [];
