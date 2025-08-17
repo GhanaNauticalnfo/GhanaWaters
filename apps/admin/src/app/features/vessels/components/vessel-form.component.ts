@@ -1,5 +1,6 @@
 import { Component, input, output, OnInit, OnDestroy, signal, effect, computed, inject, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { TimestampPipe } from '@ghanawaters/shared';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { debounceTime } from 'rxjs/operators';
 import { Subscription } from 'rxjs';
@@ -38,7 +39,8 @@ export interface VesselFormData {
     VesselTabInfoComponent,
     VesselTabDeviceComponent,
     VesselTabTrackingComponent,
-    MapComponent
+    MapComponent,
+    TimestampPipe
   ],
   providers: [ConfirmationService],
   template: `
@@ -176,7 +178,7 @@ export interface VesselFormData {
                         
                         <div class="field">
                           <label class="block mb-2">Created</label>
-                          <div class="field-value">{{ vessel()!.created | date:'dd/MM/yyyy HH:mm' }}</div>
+                          <div class="field-value">{{ vessel()!.created | timestamp }}</div>
                         </div>
                         
                         <div class="field">
@@ -320,7 +322,7 @@ export interface VesselFormData {
                           
                           <div class="field">
                             <label class="block mb-2">Created</label>
-                            <div class="field-value">{{ vessel()!.created | date:'dd/MM/yyyy HH:mm' }}</div>
+                            <div class="field-value">{{ vessel()!.created | timestamp }}</div>
                           </div>
                           
                           <div class="field">

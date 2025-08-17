@@ -1,5 +1,6 @@
 import { Component, Input, Output, EventEmitter, signal, OnInit, OnChanges, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { TimestampPipe } from '@ghanawaters/shared';
 import { VesselDataset } from '@ghanawaters/shared-models';
 import { Device, DeviceResponse, DeviceState, DeviceActivatedEvent } from '@ghanawaters/shared-models';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
@@ -27,7 +28,8 @@ import { QRCodeComponent } from 'angularx-qrcode';
     PanelModule,
     TooltipModule,
     ConfirmDialogModule,
-    QRCodeComponent
+    QRCodeComponent,
+    TimestampPipe
   ],
   template: `
     <div class="view-dialog-content">
@@ -74,7 +76,7 @@ import { QRCodeComponent } from 'angularx-qrcode';
                 
                 <div class="device-row">
                   <span class="device-label text-sm">Activated:</span>
-                  <span class="detail-value text-sm">{{ activeDevice()!.activated_at | date:'dd/MM/yyyy HH:mm:ss' }}</span>
+                  <span class="detail-value text-sm">{{ activeDevice()!.activated_at | timestamp }}</span>
                 </div>
                 
                 @if (!viewMode) {
@@ -120,7 +122,7 @@ import { QRCodeComponent } from 'angularx-qrcode';
                     </div>
                     <div class="detail-row">
                       <span class="detail-label text-sm">Expires:</span>
-                      <span class="detail-value text-sm">{{ pendingDevice()!.expires_at | date:'dd/MM/yyyy HH:mm' }}</span>
+                      <span class="detail-value text-sm">{{ pendingDevice()!.expires_at | timestamp }}</span>
                     </div>
                   </div>
                 </div>

@@ -1,7 +1,7 @@
 import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn } from 'typeorm';
 
-@Entity('sync_version')
-export class SyncVersion {
+@Entity('sync_major_version')
+export class SyncMajorVersion {
   @PrimaryGeneratedColumn()
   id: number;
 

@@ -67,3 +67,21 @@ export interface SyncResetResponse {
   success: boolean;
   majorVersion: number;
 }
+
+/**
+ * Minor version information for sync overview
+ */
+export interface MinorVersionInfo {
+  minorVersion: number;
+  size: number;
+  timestamp: string;
+}
+
+/**
+ * Response from sync overview endpoint
+ */
+export interface SyncOverviewResponse {
+  majorVersion: number;
+  lastUpdate: string;
+  minorVersions: MinorVersionInfo[];
+}

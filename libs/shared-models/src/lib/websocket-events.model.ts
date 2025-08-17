@@ -30,6 +30,15 @@ export interface PositionUpdateEvent {
 }
 
 /**
+ * Event emitted when sync data is updated
+ */
+export interface SyncNotification {
+  major_version: number;
+  minor_version: number;
+  timestamp: Date;
+}
+
+/**
  * Generic error event for WebSocket connections
  */
 export interface WebSocketErrorEvent {

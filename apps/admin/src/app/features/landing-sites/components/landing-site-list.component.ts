@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { TagModule } from 'primeng/tag';
 import { MessageService } from 'primeng/api';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { ResourceListComponent, ResourceListConfig, ResourceAction } from '@ghanawaters/shared';
+import { ResourceListComponent, ResourceListConfig, ResourceAction, TimestampPipe } from '@ghanawaters/shared';
 import { LandingSiteService } from '../services/landing-site.service';
 import { LandingSiteResponse, LandingSiteInput } from '@ghanawaters/shared-models';
 import { LandingSiteFormComponent } from './landing-site-form.component';
@@ -15,7 +15,8 @@ import { LandingSiteFormComponent } from './landing-site-form.component';
     CommonModule,
     TagModule,
     ResourceListComponent,
-    LandingSiteFormComponent
+    LandingSiteFormComponent,
+    TimestampPipe
   ],
   providers: [MessageService],
   template: `
@@ -56,7 +57,7 @@ import { LandingSiteFormComponent } from './landing-site-form.component';
     </ng-template>
     
     <ng-template #lastUpdatedTemplate let-item>
-      {{ item.updated_at | date:'dd/MM/yyyy HH:mm' }}
+      {{ item.updated_at | timestamp }}
     </ng-template>
   `,
   host: {

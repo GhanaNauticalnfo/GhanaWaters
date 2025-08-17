@@ -2,7 +2,7 @@ import { Component, OnInit, AfterViewInit, ChangeDetectionStrategy, TemplateRef,
 import { CommonModule } from '@angular/common';
 import { TagModule } from 'primeng/tag';
 import { MessageService } from 'primeng/api';
-import { ResourceListComponent, ResourceListConfig, ResourceAction } from '@ghanawaters/shared';
+import { ResourceListComponent, ResourceListConfig, ResourceAction, TimestampPipe } from '@ghanawaters/shared';
 import { RouteService } from '../services/route.service';
 import { RouteResponse as Route } from '@ghanawaters/shared-models';
 import { RouteFormComponent } from './route-form.component';
@@ -15,7 +15,8 @@ import { RouteFormComponent } from './route-form.component';
     CommonModule,
     TagModule,
     ResourceListComponent,
-    RouteFormComponent
+    RouteFormComponent,
+    TimestampPipe
   ],
   providers: [MessageService],
   template: `
@@ -51,7 +52,7 @@ import { RouteFormComponent } from './route-form.component';
     </ng-template>
     
     <ng-template #lastUpdatedTemplate let-item>
-      {{ item.last_updated | date:'dd/MM/yyyy HH:mm' }}
+      {{ item.last_updated | timestamp }}
     </ng-template>
   `,
   host: {

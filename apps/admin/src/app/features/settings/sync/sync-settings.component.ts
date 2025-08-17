@@ -1,5 +1,7 @@
-import { Component, OnInit, inject, signal, Input, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, OnInit, inject, signal, computed, Input, OnChanges, SimpleChanges } from '@angular/core';
+import { TimestampPipe } from '@ghanawaters/shared';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { CardModule } from 'primeng/card';
 import { TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
@@ -8,16 +10,18 @@ import { ToastModule } from 'primeng/toast';
 import { ButtonModule } from 'primeng/button';
 import { TooltipModule } from 'primeng/tooltip';
 import { DialogModule } from 'primeng/dialog';
+import { TextareaModule } from 'primeng/textarea';
 import { MessageService, ConfirmationService } from 'primeng/api';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { SyncService } from './sync.service';
-import { SyncManageResponse, EntityStats, RecentEntry, SyncEntryDetail } from '@ghanawaters/shared-models';
+import { SyncManageResponse, EntityStats, RecentEntry, SyncEntryDetail, SyncOverviewResponse, MinorVersionInfo } from '@ghanawaters/shared-models';
 
 @Component({
   selector: 'app-sync-settings',
   standalone: true,
   imports: [
     CommonModule,
+    FormsModule,
     CardModule,
     TableModule,
     TagModule,
@@ -26,7 +30,9 @@ import { SyncManageResponse, EntityStats, RecentEntry, SyncEntryDetail } from '@
     ButtonModule,
     TooltipModule,
     DialogModule,
-    ConfirmDialogModule
+    TextareaModule,
+    ConfirmDialogModule,
+    TimestampPipe
   ],
   providers: [SyncService, MessageService, ConfirmationService],
   template: `
@@ -43,18 +49,13 @@ import { SyncManageResponse, EntityStats, RecentEntry, SyncEntryDetail } from '@
               <p-card header="Sync Management" [style]="{'height': '100%'}">
                 <div class="sync-management-content">
                   <div class="field mb-3">
-                    <span class="text-600 text-sm">Major Version: </span>
-                    <span class="text-900">v{{ syncData()!.majorVersion }}</span>
-                  </div>
-                  
-                  <div class="field mb-3">
-                    <span class="text-600 text-sm">Last Sync Version: </span>
-                    <span class="text-900">{{ formatDate(syncData()!.summary.lastSyncVersion) }}</span>
+                    <span class="text-600 text-sm">Current Version: </span>
+                    <span class="text-900">v{{ syncData()!.majorVersion }}.{{ syncData()!.minorVersions.length > 0 ? syncData()!.minorVersions[syncData()!.minorVersions.length - 1].minorVersion : 0 }}</span>
                   </div>
                   
                   <div class="field mb-4">
-                    <span class="text-600 text-sm">Total Sync Entries: </span>
-                    <span class="text-900">{{ syncData()!.summary.totalEntries }}</span>
+                    <span class="text-600 text-sm">Last Update: </span>
+                    <span class="text-900">{{ syncData()!.lastUpdate | timestamp }}</span>
                   </div>
                   
                   <div class="mt-4 pt-3 border-top-1 surface-border">
@@ -78,7 +79,7 @@ import { SyncManageResponse, EntityStats, RecentEntry, SyncEntryDetail } from '@
             <div class="flex-1">
             <p-card header="Sync Entries" [style]="{'height': '100%'}">
               <p-table 
-                [value]="syncData()!.recentEntries" 
+                [value]="syncData()!.minorVersions" 
                 [scrollable]="true" 
                 scrollHeight="250px"
                 [paginator]="true"
@@ -88,28 +89,16 @@ import { SyncManageResponse, EntityStats, RecentEntry, SyncEntryDetail } from '@
                 currentPageReportTemplate="Showing {first} to {last} of {totalRecords} entries">
                 <ng-template pTemplate="header">
                   <tr>
-                    <th>Minor Version</th>
+                    <th>Version</th>
                     <th>Timestamp</th>
                     <th>Size</th>
                   </tr>
                 </ng-template>
                 <ng-template pTemplate="body" let-entry>
-                  <tr class="cursor-pointer" (click)="entry.id && showDetails(entry.id)">
-                    <td>{{ entry.id }}</td>
-                    <td>
-                      @if (entry.timestamp) {
-                        {{ formatTimestamp(entry.timestamp) }}
-                      } @else {
-                        <span class="text-600">-</span>
-                      }
-                    </td>
-                    <td>
-                      @if (entry.hasData) {
-                        {{ formatBytes(entry.dataSize) }}
-                      } @else {
-                        <span class="text-600">-</span>
-                      }
-                    </td>
+                  <tr class="cursor-pointer" (click)="showDetails(syncData()!.majorVersion, entry.minorVersion)">
+                    <td>{{ syncData()!.majorVersion }}.{{ entry.minorVersion }}</td>
+                    <td>{{ entry.timestamp | timestamp }}</td>
+                    <td>{{ formatBytes(entry.size) }}</td>
                   </tr>
                 </ng-template>
                 <ng-template pTemplate="emptymessage">
@@ -143,58 +132,37 @@ import { SyncManageResponse, EntityStats, RecentEntry, SyncEntryDetail } from '@
       
       @if (selectedEntry()) {
         <div class="sync-entry-details">
-          <div class="grid">
-            <div class="col-12 md:col-6">
-              <div class="field">
-                <label class="font-semibold">ID:</label>
-                <div class="mt-1">{{ selectedEntry()!.id }}</div>
-              </div>
+          <div class="attributes-section mb-4">
+            <div class="attribute-row mb-2">
+              <span class="font-semibold">Major Version: </span>
+              <span>v{{ selectedEntry()!.majorVersion }}</span>
             </div>
-            <div class="col-12 md:col-6">
-              <div class="field">
-                <label class="font-semibold">Entity Type:</label>
-                <div class="mt-1">{{ formatEntityType(selectedEntry()!.entityType) }}</div>
-              </div>
+            <div class="attribute-row mb-2">
+              <span class="font-semibold">Minor Version: </span>
+              <span>{{ selectedEntry()!.id }}</span>
             </div>
-            <div class="col-12 md:col-6">
-              <div class="field">
-                <label class="font-semibold">Entity ID:</label>
-                <div class="mt-1">{{ selectedEntry()!.entityId }}</div>
-              </div>
+            <div class="attribute-row mb-2">
+              <span class="font-semibold">Created At: </span>
+              <span>{{ selectedEntry()!.createdAt | timestamp }}</span>
             </div>
-            <div class="col-12 md:col-6">
-              <div class="field">
-                <label class="font-semibold">Operation:</label>
-                <div class="mt-1">
-                  <p-tag 
-                    [severity]="getActionSeverity(selectedEntry()!.action)" 
-                    [value]="selectedEntry()!.action.toUpperCase()">
-                  </p-tag>
-                </div>
-              </div>
-            </div>
-            <div class="col-12 md:col-6">
-              <div class="field">
-                <label class="font-semibold">Created At:</label>
-                <div class="mt-1">{{ formatDate(selectedEntry()!.createdAt) }}</div>
-              </div>
-            </div>
-            <div class="col-12 md:col-6">
-              <div class="field">
-                <label class="font-semibold">Major Version:</label>
-                <div class="mt-1">v{{ selectedEntry()!.majorVersion }}</div>
-              </div>
-            </div>
-            <div class="col-12">
-              <div class="field">
-                <label class="font-semibold">Data:</label>
-                <div class="mt-2">
-                  @if (selectedEntry()!.data) {
-                    <pre class="data-display">{{ formatJsonData(selectedEntry()!.data) }}</pre>
-                  } @else {
-                    <span class="text-600">No data</span>
-                  }
-                </div>
+          </div>
+          
+          <div class="data-section">
+            <div class="field">
+              <label class="font-semibold">Data:</label>
+              <div class="mt-2">
+                @if (selectedEntry()!.data) {
+                  <textarea
+                    pTextarea
+                    [ngModel]="formattedJsonData()"
+                    [readonly]="true"
+                    [rows]="15"
+                    class="w-full font-mono text-sm"
+                    placeholder="No data">
+                  </textarea>
+                } @else {
+                  <span class="text-600">No data</span>
+                }
               </div>
             </div>
           </div>
@@ -275,13 +243,20 @@ export class SyncSettingsComponent implements OnInit, OnChanges {
   
   loading = signal(false);
   resetting = signal(false);
-  syncData = signal<SyncManageResponse | null>(null);
+  syncData = signal<SyncOverviewResponse | null>(null);
   dataLoaded = false;
   
   // Detail dialog properties
   detailDialogVisible = false;
   loadingDetails = signal(false);
   selectedEntry = signal<SyncEntryDetail | null>(null);
+  
+  // Computed signal for formatted JSON data
+  formattedJsonData = computed(() => {
+    const entry = this.selectedEntry();
+    if (!entry?.data) return '';
+    return JSON.stringify(entry.data, null, 2);
+  });
 
   ngOnInit() {
     // Load data immediately when component initializes
@@ -301,19 +276,19 @@ export class SyncSettingsComponent implements OnInit, OnChanges {
     this.loading.set(true);
     this.dataLoaded = true; // Mark as loaded to prevent re-fetching
     
-    this.syncService.getSyncManageData().subscribe({
+    this.syncService.getSyncOverview().subscribe({
       next: (data) => {
-        console.log('Sync data received:', data);
-        console.log('Recent entries:', data.recentEntries);
+        console.log('Sync overview received:', data);
+        console.log('Minor versions:', data.minorVersions);
         this.syncData.set(data);
         this.loading.set(false);
       },
       error: (error) => {
-        console.error('Error loading sync data:', error);
+        console.error('Error loading sync overview:', error);
         this.messageService.add({
           severity: 'error',
           summary: 'Error',
-          detail: 'Failed to load sync data'
+          detail: 'Failed to load sync overview'
         });
         this.loading.set(false);
         this.dataLoaded = false; // Allow retry on error
@@ -321,29 +296,7 @@ export class SyncSettingsComponent implements OnInit, OnChanges {
     });
   }
 
-  formatDate(dateString: string): string {
-    const date = new Date(dateString);
-    return date.toLocaleString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
-      hour12: false
-    });
-  }
 
-  formatTimestamp(timestamp: string): string {
-    const date = new Date(timestamp);
-    return date.toLocaleString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: false
-    });
-  }
 
   formatEntityType(type: string): string {
     return type.split('_')
@@ -372,14 +325,36 @@ export class SyncSettingsComponent implements OnInit, OnChanges {
     }
   }
 
-  showDetails(entryId: number) {
+  showDetails(majorVersion: number, minorVersion: number) {
     this.detailDialogVisible = true;
     this.loadingDetails.set(true);
     this.selectedEntry.set(null);
     
-    this.syncService.getSyncEntryById(entryId).subscribe({
-      next: (entry) => {
-        this.selectedEntry.set(entry);
+    // Use the regular sync endpoint with specific major/minor version and limit=1
+    this.syncService.getSyncData(majorVersion, minorVersion - 1, 1).subscribe({
+      next: (syncResponse) => {
+        console.log('Sync detail response:', syncResponse);
+        if (syncResponse && syncResponse.entities && syncResponse.entities.length > 0) {
+          const entity = syncResponse.entities[0];
+          // Transform sync entity to match expected detail format
+          const entryDetail: SyncEntryDetail = {
+            id: minorVersion,
+            entityType: entity.entityType,
+            entityId: entity.entityId,
+            action: entity.entityAction,
+            data: entity.entityData,
+            createdAt: syncResponse.lastUpdate,
+            majorVersion: majorVersion
+          };
+          this.selectedEntry.set(entryDetail);
+        } else {
+          this.messageService.add({
+            severity: 'warn',
+            summary: 'No Data',
+            detail: 'No sync data found for this version'
+          });
+          this.detailDialogVisible = false;
+        }
         this.loadingDetails.set(false);
       },
       error: (error) => {

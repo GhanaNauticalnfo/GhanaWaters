@@ -1,7 +1,9 @@
 export * from './lib/pipes/time-ago.pipe';
 export * from './lib/pipes/vessel-id.pipe';
+export * from './lib/pipes/timestamp.pipe';
 export * from './lib/components/search-dropdown.component';
 export * from './lib/components/boat-icon.component';
 export * from './lib/utils/vessel-id.util';
+export * from './lib/utils/date-format.util';
 export * from './lib/components/resource-list';
 

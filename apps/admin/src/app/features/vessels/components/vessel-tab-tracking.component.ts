@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { VesselDataset } from '@ghanawaters/shared-models';
 import { VesselDatasetService } from '../services/vessel-dataset.service';
 import { OSM_STYLE, MapComponent, MapConfig } from '@ghanawaters/shared-map';
-import { TimeAgoPipe } from '@ghanawaters/shared';
+import { TimeAgoPipe, TimestampPipe, formatTimestamp } from '@ghanawaters/shared';
 import { PositionUpdateEvent } from '@ghanawaters/shared-models';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { io, Socket } from 'socket.io-client';
@@ -22,6 +22,7 @@ import { DialogModule } from 'primeng/dialog';
     ButtonModule,
     ProgressSpinnerModule,
     TimeAgoPipe,
+    TimestampPipe,
     MapComponent,
     DialogModule
   ],
@@ -40,7 +41,7 @@ import { DialogModule } from 'primeng/dialog';
             <div class="stat-item">
               <span class="stat-label text-sm font-semibold">Last Report:</span>
               <span class="stat-value text-base">
-                {{ vessel?.last_seen | date:'dd/MM/yyyy HH:mm:ss' }}
+                {{ vessel?.last_seen | timestamp }}
                 <span class="time-ago text-xs">({{ vessel?.last_seen | timeAgo }})</span>
               </span>
             </div>
@@ -152,7 +153,7 @@ import { DialogModule } from 'primeng/dialog';
                   <div class="vessel-info-row text-sm">
                     <i class="pi pi-clock"></i>
                     <span>{{ vessel.last_seen | timeAgo }}</span>
-                    <span class="exact-time text-xs">({{ vessel.last_seen | date:'dd/MM HH:mm' }})</span>
+                    <span class="exact-time text-xs">({{ vessel.last_seen | timestamp }})</span>
                   </div>
                   <div class="vessel-info-row text-sm">
                     <i class="pi pi-compass"></i>
@@ -815,7 +816,7 @@ export class VesselTabTrackingComponent implements OnInit, OnDestroy, OnChanges,
         new this.maplibregl.Popup().setHTML(
           `<strong>${this.vessel.name}</strong> (Current)<br/>
            Type: ${this.vessel.type}<br/>
-           Last seen: ${this.vessel.last_seen ? new Date(this.vessel.last_seen).toLocaleString('en-GB', { hour12: false }) : 'Never'}`
+           Last seen: ${this.vessel.last_seen ? formatTimestamp(this.vessel.last_seen) : 'Never'}`
         )
       )
       .addTo(this.nearbyMap);
@@ -832,7 +833,7 @@ export class VesselTabTrackingComponent implements OnInit, OnDestroy, OnChanges,
           new this.maplibregl.Popup().setHTML(
             `<strong>${vessel.name}</strong><br/>
              Type: ${vessel.type}<br/>
-             Last seen: ${vessel.last_seen ? new Date(vessel.last_seen).toLocaleString('en-GB', { hour12: false }) : 'Never'}<br/>
+             Last seen: ${vessel.last_seen ? formatTimestamp(vessel.last_seen) : 'Never'}<br/>
              Distance: ${this.calculateDistance(
                this.vessel!.last_position!.latitude,
                this.vessel!.last_position!.longitude,

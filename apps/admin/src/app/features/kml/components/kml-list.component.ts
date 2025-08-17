@@ -1,6 +1,7 @@
 // features/kml/components/kml-list.component.ts
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { TimestampPipe } from '@ghanawaters/shared';
 import { RouterModule } from '@angular/router';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { KmlDatasetService } from '../services/kml-dataset.service';
@@ -39,7 +40,8 @@ import { SkeletonModule } from 'primeng/skeleton';
     TextareaModule,
     CheckboxModule,
     TooltipModule,
-    SkeletonModule
+    SkeletonModule,
+    TimestampPipe
   ],
   providers: [ConfirmationService, MessageService],
   template: `
@@ -96,8 +98,8 @@ import { SkeletonModule } from 'primeng/skeleton';
                 {{ dataset.enabled ? 'Yes' : 'No' }}
               </span>
             </td>
-            <td>{{ dataset.created | date:'medium' }}</td>
-            <td>{{ dataset.last_updated | date:'medium' }}</td>
+            <td>{{ dataset.created | timestamp }}</td>
+            <td>{{ dataset.last_updated | timestamp }}</td>
             <td>
               <p-button 
                 label="Details" 
@@ -191,14 +193,14 @@ import { SkeletonModule } from 'primeng/skeleton';
             <div class="col-12 md:col-6">
               <div class="detail-item">
                 <span class="detail-label font-semibold">Created:</span>
-                <span class="detail-value">{{ selectedDataset()?.created | date:'medium' }}</span>
+                <span class="detail-value">{{ selectedDataset()?.created | timestamp }}</span>
               </div>
             </div>
 
             <div class="col-12 md:col-6">
               <div class="detail-item">
                 <span class="detail-label font-semibold">Last Updated:</span>
-                <span class="detail-value">{{ selectedDataset()?.last_updated | date:'medium' }}</span>
+                <span class="detail-value">{{ selectedDataset()?.last_updated | timestamp }}</span>
               </div>
             </div>
           </div>

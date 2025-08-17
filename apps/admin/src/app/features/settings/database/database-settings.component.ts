@@ -1,4 +1,5 @@
 import { Component, OnInit, inject } from '@angular/core';
+import { formatTimestamp } from '@ghanawaters/shared';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
@@ -204,8 +205,7 @@ export class DatabaseSettingsComponent implements OnInit {
   }
 
   formatDate(dateStr: string): string {
-    const date = new Date(dateStr);
-    return date.toLocaleDateString();
+    return formatTimestamp(dateStr);
   }
 
   calculateGrowth(current: any, previous: any): string {

@@ -2,7 +2,7 @@ import { Component, OnInit, AfterViewInit, TemplateRef, signal, viewChild, injec
 import { CommonModule } from '@angular/common';
 import { TagModule } from 'primeng/tag';
 import { MessageService } from 'primeng/api';
-import { ResourceListComponent, ResourceListConfig, ResourceAction, TimeAgoPipe, BoatIconComponent } from '@ghanawaters/shared';
+import { ResourceListComponent, ResourceListConfig, ResourceAction, TimeAgoPipe, BoatIconComponent, TimestampPipe } from '@ghanawaters/shared';
 import { VesselService } from '../services/vessel.service';
 import { VesselResponseDto, CreateVesselDto, UpdateVesselDto } from '../models/vessel.dto';
 import { VesselFormComponent, VesselFormData } from './vessel-form.component';
@@ -21,7 +21,8 @@ import { VesselDataset } from '@ghanawaters/shared-models';
     VesselFormComponent,
     DialogModule,
     TimeAgoPipe,
-    BoatIconComponent
+    BoatIconComponent,
+    TimestampPipe
   ],
   providers: [MessageService],
   host: {
@@ -80,7 +81,7 @@ import { VesselDataset } from '@ghanawaters/shared-models';
     
     <ng-template #lastSeenTemplate let-item>
       @if (item.latest_position_timestamp) {
-        {{ item.latest_position_timestamp | date:'dd/MM/yyyy HH:mm:ss' }}
+        {{ item.latest_position_timestamp | timestamp }}
         <span class="text-muted text-sm"> ({{ item.latest_position_timestamp | timeAgo }})</span>
       } @else {
         <span class="text-muted text-sm">Never</span>
