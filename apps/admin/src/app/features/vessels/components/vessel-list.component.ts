@@ -168,7 +168,12 @@ export class VesselListComponent implements OnInit, AfterViewInit {
       deleteConfirmMessage: (item) => `Are you sure you want to delete the vessel "${item.name}" (ID: ${item.id})?<br><br>This will permanently delete:<br><br><ul style="margin: 0; padding-left: 20px;"><li>The vessel record and all its information</li><li>All associated devices and their authentication tokens</li><li>All tracking data and position history</li></ul><br><strong>⚠️ This action cannot be undone and all data will be lost forever.</strong>`,
       deleteConfirmHeader: 'Delete Vessel - Permanent Action',
       emptyMessage: 'No vessels found',
-      pageSize: 10
+      pageSize: 10,
+      dialogStyles: {
+        create: { width: '600px', height: 'auto' },
+        edit: { width: '90vw', height: '85vh' },
+        view: { width: '90vw', height: '85vh' }
+      }
     };
     
     this.loadVessels();
