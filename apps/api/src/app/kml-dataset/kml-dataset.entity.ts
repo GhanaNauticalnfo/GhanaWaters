@@ -7,10 +7,10 @@ export class KmlDataset {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ type: 'timestamptz' })
   created: Date;
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({ type: 'timestamptz' })
   last_updated: Date;
 
   @Column('text', { nullable: true })

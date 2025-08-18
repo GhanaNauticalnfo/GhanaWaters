@@ -35,10 +35,10 @@ export class LandingSite {
   @Column({ default: true })
   active: boolean;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ type: 'timestamptz' })
   created_at: Date;
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({ type: 'timestamptz' })
   updated_at: Date;
 
   toResponseDto(): LandingSiteResponseDto {

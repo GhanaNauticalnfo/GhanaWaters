@@ -34,11 +34,11 @@ export class Device {
   })
   state: DeviceState;
 
-  @Column({ type: 'timestamp', nullable: true })
+  @Column({ type: 'timestamptz', nullable: true })
   @ApiPropertyOptional({ description: 'Timestamp when device was activated', type: Date })
   activated_at: Date;
 
-  @Column({ type: 'timestamp', nullable: true })
+  @Column({ type: 'timestamptz', nullable: true })
   @ApiPropertyOptional({ description: 'Timestamp when device token expires', type: Date })
   expires_at: Date;
 
@@ -51,11 +51,11 @@ export class Device {
   @ApiPropertyOptional({ description: 'ID of the associated vessel', example: 1 })
   vessel_id: number;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ type: 'timestamptz' })
   @ApiProperty({ description: 'Timestamp when device was created', type: Date })
   created_at: Date;
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({ type: 'timestamptz' })
   @ApiProperty({ description: 'Timestamp when device was last updated', type: Date })
   updated_at: Date;
 

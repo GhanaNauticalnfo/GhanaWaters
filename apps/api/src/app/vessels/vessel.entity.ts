@@ -13,11 +13,11 @@ export class Vessel {
   @ApiProperty({ description: 'Unique identifier for the vessel', example: 1 })
   id: number;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ type: 'timestamptz' })
   @ApiProperty({ description: 'Timestamp when the vessel was created', type: Date })
   created: Date;
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({ type: 'timestamptz' })
   @ApiProperty({ description: 'Timestamp when the vessel was last updated', type: Date })
   last_updated: Date;
 

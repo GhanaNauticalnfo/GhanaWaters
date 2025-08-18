@@ -249,10 +249,10 @@ export class SyncService {
       }
 
       // Create new major version
-      await manager.save(SyncMajorVersion, {
-        major_version: newMajorVersion,
-        is_current: true,
-      });
+      const newMajorVersionEntity = new SyncMajorVersion();
+      newMajorVersionEntity.major_version = newMajorVersion;
+      newMajorVersionEntity.is_current = true;
+      await manager.save(newMajorVersionEntity);
 
       // Get all current routes from the database
       const routes = await manager.find(Route, {

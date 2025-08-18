@@ -8,7 +8,7 @@ export class SyncMajorVersion {
   @Column({ type: 'int', unique: true })
   major_version: number;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ type: 'timestamptz' })
   created_at: Date;
 
   @Column({ type: 'boolean', default: false })

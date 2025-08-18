@@ -20,10 +20,10 @@ export class Route {
   @Column({ default: true })
   enabled: boolean;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ type: 'timestamptz' })
   created: Date;
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({ type: 'timestamptz' })
   last_updated: Date;
 
   toResponseDto(): RouteResponseDto {

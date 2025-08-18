@@ -17,11 +17,11 @@ export class VesselType {
   @ApiProperty({ description: 'Color for the vessel type in hex format', example: '#3B82F6' })
   color: string;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ type: 'timestamptz' })
   @ApiProperty({ description: 'Timestamp when the vessel type was created', type: Date })
   created_at: Date;
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({ type: 'timestamptz' })
   @ApiProperty({ description: 'Timestamp when the vessel type was last updated', type: Date })
   updated_at: Date;
 

@@ -16,6 +16,6 @@ export class SyncMinorVersion {
   @Column({ type: 'int' })
   size: number;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ type: 'timestamptz' })
   created_at: Date;
 }
