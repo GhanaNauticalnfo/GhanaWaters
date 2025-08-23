@@ -4,6 +4,8 @@ import { Vessel } from '../vessel.entity';
 import { DeviceResponseDto } from './dto/device-response.dto';
 import { DeviceState } from '@ghanawaters/shared-models';
 
+export { DeviceState };
+
 @Entity('devices')
 export class Device {
   @PrimaryGeneratedColumn('uuid')

@@ -123,14 +123,18 @@ export class SyncService {
       minorVersion = result.minor_version;
     });
 
-    // Fire and forget WebSocket notification - don't await
-    // This happens outside the transaction so it doesn't affect sync reliability
+    // Only send WebSocket notification after successful transaction commit
+    // This ensures we don't notify about changes that weren't persisted
     if (minorVersion && this.syncGateway) {
-      try {
-        this.syncGateway.emitSyncUpdate(majorVersion, minorVersion);
-      } catch (err) {
-        // Errors are already logged in SyncGateway, just catch to prevent any issues
-      }
+      // Schedule notification asynchronously to not block the response
+      setImmediate(() => {
+        try {
+          this.syncGateway.emitSyncUpdate(majorVersion, minorVersion);
+        } catch (err) {
+          // Log WebSocket errors but don't affect the sync operation
+          console.warn('WebSocket notification failed:', err.message);
+        }
+      });
     }
   }
 
@@ -176,15 +180,8 @@ export class SyncService {
       size,
     });
 
-    // Fire and forget WebSocket notification - don't await
-    // This happens within the transaction but errors don't affect it
-    if (this.syncGateway) {
-      try {
-        this.syncGateway.emitSyncUpdate(majorVersion, minorVersion);
-      } catch (err) {
-        // Errors are already logged in SyncGateway, just catch to prevent any issues
-      }
-    }
+    // WebSocket notification is now handled after transaction commit in logChange()
+    // This ensures notifications are only sent for successfully persisted changes
 
     return syncMinorVersion;
   }

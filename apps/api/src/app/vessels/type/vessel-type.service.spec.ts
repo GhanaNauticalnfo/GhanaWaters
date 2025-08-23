@@ -14,12 +14,14 @@ describe('VesselTypeService', () => {
   const mockVesselType = {
     id: 1,
     name: 'Unspecified',
+    color: '#3B82F6',
     created_at: new Date('2024-01-01'),
     updated_at: new Date('2024-01-01'),
     vessels: [],
     toResponseDto: jest.fn().mockReturnValue({
       id: 1,
       name: 'Unspecified',
+      color: '#3B82F6',
       created_at: '2024-01-01T00:00:00.000Z',
       updated_at: '2024-01-01T00:00:00.000Z',
       vessel_count: 0
@@ -29,12 +31,14 @@ describe('VesselTypeService', () => {
   const mockVesselTypeCargo = {
     id: 2,
     name: 'Cargo',
+    color: '#10B981',
     created_at: new Date('2024-01-01'),
     updated_at: new Date('2024-01-01'),
     vessels: [],
     toResponseDto: jest.fn().mockReturnValue({
       id: 2,
       name: 'Cargo',
+      color: '#10B981',
       created_at: '2024-01-01T00:00:00.000Z',
       updated_at: '2024-01-01T00:00:00.000Z',
       vessel_count: 0
@@ -152,8 +156,8 @@ describe('VesselTypeService', () => {
     });
 
     it('should handle duplicate name errors', async () => {
-      const existingType = { ...mockVesselType, name: 'Fishing Vessel' };
-      repository.findOne.mockResolvedValue(existingType);
+      const existingType = { ...mockVesselType, name: 'Fishing Vessel', toResponseDto: jest.fn() };
+      repository.findOne.mockResolvedValue(existingType as any);
 
       await expect(service.create(createDto)).rejects.toThrow(ConflictException);
     });
@@ -177,6 +181,7 @@ describe('VesselTypeService', () => {
         toResponseDto: jest.fn().mockReturnValue({
           id: 2,
           name: 'Updated Cargo',
+          color: '#10B981',
           created_at: '2024-01-01T00:00:00.000Z',
           updated_at: '2024-01-02T00:00:00.000Z',
           vessel_count: 0

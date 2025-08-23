@@ -64,7 +64,7 @@ describe('TrackingController', () => {
           provide: TelemetryExportService,
           useValue: {
             getExportStats: jest.fn(),
-            exportGpx: jest.fn(),
+            streamTelemetryExport: jest.fn(),
           },
         },
       ],
@@ -256,15 +256,14 @@ describe('TrackingController', () => {
       const mockStats = {
         totalRecords: 1000,
         dateRange: {
-          earliest: new Date('2024-01-01'),
-          latest: new Date('2024-12-31')
-        },
-        vesselCount: 10
+          min: new Date('2024-01-01'),
+          max: new Date('2024-12-31')
+        }
       };
 
       jest.spyOn(telemetryExportService, 'getExportStats').mockResolvedValue(mockStats);
 
-      const result = await controller.getExportStats();
+      const result = await controller.getTelemetryExportStats();
 
       expect(result).toEqual(mockStats);
       expect(telemetryExportService.getExportStats).toHaveBeenCalled();
@@ -272,85 +271,21 @@ describe('TrackingController', () => {
   });
 
   describe('exportTelemetryData', () => {
-    it('should export telemetry data as GPX', async () => {
-      const mockGpxData = '<?xml version="1.0"?><gpx>...</gpx>';
-      const mockResponse = {
-        status: jest.fn().mockReturnThis(),
-        set: jest.fn().mockReturnThis(),
-        send: jest.fn().mockReturnThis(),
-      } as unknown as Response;
 
-      jest.spyOn(telemetryExportService, 'exportGpx').mockResolvedValue(mockGpxData);
-
-      await controller.exportTelemetryData(
-        'gpx',
-        '1,2,3',
-        '2024-01-01',
-        '2024-12-31',
-        '1000',
-        mockResponse
-      );
-
-      expect(telemetryExportService.exportGpx).toHaveBeenCalledWith({
-        vesselIds: [1, 2, 3],
-        startDate: new Date('2024-01-01'),
-        endDate: new Date('2024-12-31'),
-        limit: 1000
-      });
-
-      expect(mockResponse.status).toHaveBeenCalledWith(200);
-      expect(mockResponse.set).toHaveBeenCalledWith({
-        'Content-Type': 'application/gpx+xml',
-        'Content-Disposition': expect.stringMatching(/^attachment; filename="vessel-telemetry-\d{14}\.gpx"$/)
-      });
-      expect(mockResponse.send).toHaveBeenCalledWith(mockGpxData);
-    });
-
-    it('should handle invalid format', async () => {
+    it('should handle missing required parameters', async () => {
       const mockResponse = {
         status: jest.fn().mockReturnThis(),
         json: jest.fn().mockReturnThis(),
       } as unknown as Response;
 
-      await controller.exportTelemetryData(
-        'invalid',
-        '1',
-        '2024-01-01',
-        '2024-12-31',
-        '100',
-        mockResponse
-      );
-
-      expect(mockResponse.status).toHaveBeenCalledWith(400);
-      expect(mockResponse.json).toHaveBeenCalledWith({
-        error: 'Invalid format. Only "gpx" is supported.'
-      });
+      await expect(
+        controller.exportTelemetryData(
+          '', // empty startDate
+          '2024-12-31',
+          mockResponse
+        )
+      ).rejects.toThrow('startDate and endDate are required');
     });
 
-    it('should handle export errors', async () => {
-      const mockResponse = {
-        status: jest.fn().mockReturnThis(),
-        json: jest.fn().mockReturnThis(),
-      } as unknown as Response;
-
-      jest.spyOn(telemetryExportService, 'exportGpx').mockRejectedValue(
-        new Error('Export failed')
-      );
-
-      await controller.exportTelemetryData(
-        'gpx',
-        '1',
-        '2024-01-01',
-        '2024-12-31',
-        '100',
-        mockResponse
-      );
-
-      expect(mockResponse.status).toHaveBeenCalledWith(500);
-      expect(mockResponse.json).toHaveBeenCalledWith({
-        error: 'Failed to export telemetry data',
-        message: 'Export failed'
-      });
-    });
   });
 });

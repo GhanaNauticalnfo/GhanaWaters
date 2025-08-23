@@ -1,6 +1,21 @@
+import { IsString, IsIn, IsNotEmpty, IsOptional, ValidateIf, IsObject } from 'class-validator';
+
 export class SyncEntityDto {
+  @IsString()
+  @IsNotEmpty()
+  @IsIn(['route', 'landing_site'], { message: 'entityType must be either route or landing_site' })
   entityType: string;
+
+  @IsString()
+  @IsNotEmpty()
   entityId: string;
+
+  @IsString()
+  @IsIn(['create', 'update', 'delete'], { message: 'entityAction must be create, update, or delete' })
   entityAction: 'create' | 'update' | 'delete';
-  entityData: any;
+
+  @ValidateIf((obj) => obj.entityAction === 'create' || obj.entityAction === 'update')
+  @IsObject({ message: 'entityData is required for create and update actions' })
+  @IsOptional()
+  entityData?: any;
 }
