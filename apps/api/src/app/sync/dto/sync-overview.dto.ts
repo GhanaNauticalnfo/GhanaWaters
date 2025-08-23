@@ -1,8 +1,9 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsNumber, IsString, IsArray, ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
+import { MinorVersionInfo, SyncOverviewResponse } from '@ghanawaters/shared-models';
 
-export class MinorVersionInfoDto {
+export class MinorVersionInfoDto implements MinorVersionInfo {
   @ApiProperty({ description: 'Minor version number' })
   @IsNumber()
   minorVersion: number;
@@ -16,10 +17,10 @@ export class MinorVersionInfoDto {
   timestamp: string;
 }
 
-export class SyncOverviewResponseDto {
-  @ApiProperty({ description: 'Current major version' })
+export class SyncOverviewResponseDto implements SyncOverviewResponse {
+  @ApiProperty({ description: 'Current sync version' })
   @IsNumber()
-  majorVersion: number;
+  majorVersion: number; // Keep API field name for backward compatibility
 
   @ApiProperty({ description: 'Last update timestamp' })
   @IsString()

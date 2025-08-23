@@ -63,13 +63,13 @@ describe('SyncGateway', () => {
 
   describe('emitSyncUpdate', () => {
     it('should emit sync update to all connected clients', () => {
-      const majorVersion = 1;
+      const syncVersion = 1;
       const minorVersion = 123;
       
-      gateway.emitSyncUpdate(majorVersion, minorVersion);
+      gateway.emitSyncUpdate(syncVersion, minorVersion);
       
       expect(mockServer.emit).toHaveBeenCalledWith('sync-update', {
-        major_version: majorVersion,
+        major_version: syncVersion, // Keep API field name for backward compatibility
         minor_version: minorVersion,
         timestamp: expect.any(Date)
       });
@@ -78,17 +78,17 @@ describe('SyncGateway', () => {
     it('should log the sync update', () => {
       const logSpy = jest.spyOn(console, 'log').mockImplementation();
       const debugSpy = jest.spyOn(gateway['logger'], 'debug').mockImplementation();
-      const majorVersion = 2;
+      const syncVersion = 2;
       const minorVersion = 456;
       
-      gateway.emitSyncUpdate(majorVersion, minorVersion);
+      gateway.emitSyncUpdate(syncVersion, minorVersion);
       
       expect(logSpy).toHaveBeenCalledWith('🔄 [SYNC] Emitting sync update to /sync namespace:', {
-        majorVersion,
+        majorVersion: syncVersion,
         minorVersion,
         timestamp: expect.any(String),
       });
-      expect(debugSpy).toHaveBeenCalledWith(`Emitted sync update: v${majorVersion}.${minorVersion}`);
+      expect(debugSpy).toHaveBeenCalledWith(`Emitted sync update: v${syncVersion}.${minorVersion}`);
       logSpy.mockRestore();
       debugSpy.mockRestore();
     });

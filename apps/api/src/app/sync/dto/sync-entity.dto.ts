@@ -1,6 +1,7 @@
 import { IsString, IsIn, IsNotEmpty, IsOptional, ValidateIf, IsObject } from 'class-validator';
+import { SyncEntity } from '@ghanawaters/shared-models';
 
-export class SyncEntityDto {
+export class SyncEntityDto implements SyncEntity {
   @IsString()
   @IsNotEmpty()
   @IsIn(['route', 'landing_site'], { message: 'entityType must be either route or landing_site' })

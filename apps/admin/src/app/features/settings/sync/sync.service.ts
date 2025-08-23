@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { SyncManageResponse, SyncResetResponse, SyncEntryDetail, SyncOverviewResponse } from '@ghanawaters/shared-models';
+import { SyncResetResponse, SyncOverviewResponse } from '@ghanawaters/shared-models';
 
 @Injectable()
 export class SyncService {

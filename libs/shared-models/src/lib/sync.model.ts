@@ -3,61 +3,25 @@
  */
 
 /**
- * Summary of sync data
+ * Individual sync entity representing a change to a specific entity
  */
-export interface SyncSummary {
-  totalEntries: number;
-  lastSyncVersion: string;
-  entityTypes: number;
-}
-
-/**
- * Statistics for a specific entity type
- */
-export interface EntityStats {
-  entityType: string;
-  create: number;
-  update: number;
-  delete: number;
-  totalSize: number;
-  total: number;
-}
-
-/**
- * Recent sync log entry
- */
-export interface RecentEntry {
-  id: number;
+export interface SyncEntity {
   entityType: string;
   entityId: string;
-  action: 'create' | 'update' | 'delete';
-  dataSize: number;
-  hasData: boolean;
-  timestamp: string | null;
+  entityAction: 'create' | 'update' | 'delete';
+  entityData?: any;
 }
 
 /**
- * Detailed sync log entry with full data
+ * Sync entry representing a batch of changes within a version range
  */
-export interface SyncEntryDetail {
-  id: number;
-  entityType: string;
-  entityId: string;
-  action: 'create' | 'update' | 'delete';
-  data: any;
-  createdAt: string;
+export interface SyncEntry {
   majorVersion: number;
-}
-
-/**
- * Response from sync manage endpoint
- */
-export interface SyncManageResponse {
-  version: string;
-  majorVersion: number;
-  summary: SyncSummary;
-  entityStats: EntityStats[];
-  recentEntries: RecentEntry[];
+  fromMinorVersion: number;
+  toMinorVersion: number;
+  lastUpdate: string;
+  hasMoreEntities: boolean;
+  entities: SyncEntity[];
 }
 
 /**

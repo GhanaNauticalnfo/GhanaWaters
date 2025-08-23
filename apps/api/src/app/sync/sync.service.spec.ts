@@ -12,7 +12,7 @@ import { SyncEntryDto, SyncEntityDto } from './dto';
 describe('SyncService', () => {
   let service: SyncService;
   let minorVersionRepository: Repository<SyncMinorVersion>;
-  let majorVersionRepository: Repository<SyncMajorVersion>;
+  let syncMajorVersionRepository: Repository<SyncMajorVersion>;
   let routeRepository: Repository<Route>;
   let landingSiteRepository: Repository<LandingSite>;
   let syncGateway: jest.Mocked<SyncGateway>;
@@ -32,7 +32,6 @@ describe('SyncService', () => {
   };
 
   const mockSyncMajorVersion = {
-    id: 1,
     major_version: 1,
     created_at: new Date('2025-01-01T00:00:00Z'),
     is_current: true,
@@ -167,7 +166,7 @@ describe('SyncService', () => {
 
     service = module.get<SyncService>(SyncService);
     minorVersionRepository = module.get<Repository<SyncMinorVersion>>(getRepositoryToken(SyncMinorVersion));
-    majorVersionRepository = module.get<Repository<SyncMajorVersion>>(getRepositoryToken(SyncMajorVersion));
+    syncMajorVersionRepository = module.get<Repository<SyncMajorVersion>>(getRepositoryToken(SyncMajorVersion));
     routeRepository = module.get<Repository<Route>>(getRepositoryToken(Route));
     landingSiteRepository = module.get<Repository<LandingSite>>(getRepositoryToken(LandingSite));
     syncGateway = module.get(SyncGateway);
@@ -211,7 +210,7 @@ describe('SyncService', () => {
       expect(result!.majorVersion).toBe(1);
       expect(result!.fromMinorVersion).toBe(0);
       expect(result!.toMinorVersion).toBe(2);
-      expect(result!.isLatest).toBe(true);
+      expect(result!.hasMoreEntities).toBe(false);
       expect(result!.entities).toHaveLength(2);
       expect(result!.entities[0]).toEqual({
         entityType: 'route',
@@ -222,7 +221,7 @@ describe('SyncService', () => {
     });
 
     it('should return null when no major version exists', async () => {
-      jest.spyOn(majorVersionRepository, 'findOne').mockResolvedValue(null);
+      jest.spyOn(syncMajorVersionRepository, 'findOne').mockResolvedValue(null);
 
       const result = await service.getChangesByVersion(999, 0, 100);
 
@@ -245,7 +244,7 @@ describe('SyncService', () => {
 
       expect(result).toBeDefined();
       expect(result!.entities).toHaveLength(0);
-      expect(result!.isLatest).toBe(true);
+      expect(result!.hasMoreEntities).toBe(false);
     });
   });
 
@@ -342,20 +341,20 @@ describe('SyncService', () => {
     });
   });
 
-  describe('getCurrentMajorVersion', () => {
+  describe('getCurrentSyncVersion', () => {
     it('should return current major version', async () => {
-      const version = await service.getCurrentMajorVersion();
+      const version = await service.getCurrentSyncVersion();
       
-      expect(majorVersionRepository.findOne).toHaveBeenCalledWith({
+      expect(syncMajorVersionRepository.findOne).toHaveBeenCalledWith({
         where: { is_current: true },
       });
       expect(version).toBe(1);
     });
 
     it('should return 1 when no version exists', async () => {
-      jest.spyOn(majorVersionRepository, 'findOne').mockResolvedValue(null);
+      jest.spyOn(syncMajorVersionRepository, 'findOne').mockResolvedValue(null);
       
-      const version = await service.getCurrentMajorVersion();
+      const version = await service.getCurrentSyncVersion();
       
       expect(version).toBe(1);
     });
@@ -364,7 +363,7 @@ describe('SyncService', () => {
   describe('resetSync', () => {
     it('should query actual entities and create sync entries for routes and landing sites', async () => {
       mockEntityManager.save = jest.fn()
-        .mockResolvedValueOnce({ ...mockSyncMajorVersion, major_version: 2 })
+        .mockResolvedValueOnce({ ...mockSyncMajorVersion, sync_version: 2 })
         .mockResolvedValue(mockSyncMinorVersion);
 
       const result = await service.resetSync();
@@ -372,7 +371,7 @@ describe('SyncService', () => {
       // Should mark old version as not current
       expect(mockEntityManager.update).toHaveBeenCalledWith(
         SyncMajorVersion,
-        { id: 1 },
+        { major_version: 1 },
         { is_current: false }
       );
 
@@ -420,13 +419,13 @@ describe('SyncService', () => {
       expect(mockEntityManager.save).toHaveBeenCalledTimes(3);
       
       expect(result.success).toBe(true);
-      expect(result.majorVersion).toBe(1); // Returns from getCurrentMajorVersion
+      expect(result.syncVersion).toBe(1); // Returns from getCurrentSyncVersion
     });
 
     it('should handle first major version creation when no current version exists', async () => {
       mockEntityManager.findOne = jest.fn().mockResolvedValue(null);
       mockEntityManager.save = jest.fn()
-        .mockResolvedValueOnce({ ...mockSyncMajorVersion, major_version: 1 })
+        .mockResolvedValueOnce({ ...mockSyncMajorVersion, sync_version: 1 })
         .mockResolvedValue(mockSyncMinorVersion);
 
       const result = await service.resetSync();
@@ -453,7 +452,7 @@ describe('SyncService', () => {
       });
 
       mockEntityManager.save = jest.fn()
-        .mockResolvedValueOnce({ ...mockSyncMajorVersion, major_version: 2 })
+        .mockResolvedValueOnce({ ...mockSyncMajorVersion, sync_version: 2 })
         .mockResolvedValue(mockSyncMinorVersion);
 
       const result = await service.resetSync();
@@ -511,7 +510,7 @@ describe('SyncService', () => {
       });
 
       mockEntityManager.save = jest.fn()
-        .mockResolvedValueOnce({ ...mockSyncMajorVersion, major_version: 2 })
+        .mockResolvedValueOnce({ ...mockSyncMajorVersion, sync_version: 2 })
         .mockResolvedValue(mockSyncMinorVersion);
 
       const result = await service.resetSync();
@@ -553,7 +552,7 @@ describe('SyncService', () => {
       });
 
       mockEntityManager.save = jest.fn()
-        .mockResolvedValueOnce({ ...mockSyncMajorVersion, major_version: 2 })
+        .mockResolvedValueOnce({ ...mockSyncMajorVersion, sync_version: 2 })
         .mockResolvedValue(mockSyncMinorVersion);
 
       const result = await service.resetSync();

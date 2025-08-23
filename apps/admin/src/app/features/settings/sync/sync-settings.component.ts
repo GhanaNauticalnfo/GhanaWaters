@@ -14,7 +14,8 @@ import { TextareaModule } from 'primeng/textarea';
 import { MessageService, ConfirmationService } from 'primeng/api';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { SyncService } from './sync.service';
-import { SyncManageResponse, EntityStats, RecentEntry, SyncEntryDetail, SyncOverviewResponse, MinorVersionInfo } from '@ghanawaters/shared-models';
+import { SyncOverviewResponse } from '@ghanawaters/shared-models';
+import { SyncEntryDetail } from './sync.models';
 
 @Component({
   selector: 'app-sync-settings',

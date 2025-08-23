@@ -3,6 +3,7 @@ import { ApiTags, ApiOperation, ApiResponse, ApiQuery } from '@nestjs/swagger';
 import { Response } from 'express';
 import { Public, Roles } from '../auth/decorators';
 import { SyncService } from './sync.service';
+import { SyncEntry, SyncOverviewResponse } from '@ghanawaters/shared-models';
 import { SyncEntryDto, SyncOverviewResponseDto } from './dto';
 
 @ApiTags('sync')
@@ -43,7 +44,7 @@ export class SyncController {
     summary: 'Sync data',
     description: 'Returns sync entries for mobile apps and admin interface. Used for incremental data synchronization.'
   })
-  @ApiQuery({ name: 'majorVersion', required: false, description: 'Major version to sync from' })
+  @ApiQuery({ name: 'majorVersion', required: false, description: 'Sync version to sync from' })
   @ApiQuery({ name: 'fromMinorVersion', required: false, description: 'Minor version to sync from (exclusive)' })
   @ApiQuery({ name: 'limit', required: false, description: 'Maximum number of minor versions to return (default: 100)' })
   @ApiResponse({
@@ -57,16 +58,16 @@ export class SyncController {
   })
   async syncData(
     @Res() res: Response,
-    @Query('majorVersion') majorVersion?: string,
+    @Query('majorVersion') majorVersion?: string, // Keep API parameter name for backward compatibility
     @Query('fromMinorVersion') fromMinorVersion?: string,
     @Query('limit') limit?: string
   ): Promise<void> {
-    const parsedMajorVersion = majorVersion ? parseInt(majorVersion, 10) : undefined;
+    const parsedSyncVersion = majorVersion ? parseInt(majorVersion, 10) : undefined;
     const parsedFromMinorVersion = fromMinorVersion ? parseInt(fromMinorVersion, 10) : undefined;
     const parsedLimit = limit ? parseInt(limit, 10) : 100;
 
     const result = await this.syncService.getChangesByVersion(
-      parsedMajorVersion,
+      parsedSyncVersion,
       parsedFromMinorVersion,
       parsedLimit
     );

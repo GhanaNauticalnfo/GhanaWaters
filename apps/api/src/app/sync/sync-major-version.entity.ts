@@ -1,11 +1,8 @@
-import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn } from 'typeorm';
+import { Entity, Column, PrimaryColumn, CreateDateColumn } from 'typeorm';
 
 @Entity('sync_major_version')
 export class SyncMajorVersion {
-  @PrimaryGeneratedColumn()
-  id: number;
-
-  @Column({ type: 'int', unique: true })
+  @PrimaryColumn({ type: 'int' })
   major_version: number;
 
   @CreateDateColumn({ type: 'timestamptz' })

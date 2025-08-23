@@ -11,7 +11,7 @@ describe('SyncController', () => {
 
   const mockSyncService = {
     getChangesByVersion: jest.fn(),
-    getCurrentMajorVersion: jest.fn(),
+    getCurrentSyncVersion: jest.fn(),
     resetSync: jest.fn(),
   };
 
@@ -51,7 +51,7 @@ describe('SyncController', () => {
         fromMinorVersion: 0,
         toMinorVersion: 5,
         lastUpdate: '2025-01-01T12:00:00Z',
-        isLatest: true,
+        hasMoreEntities: false,
         entities: [
           {
             entityType: 'route',
@@ -80,7 +80,7 @@ describe('SyncController', () => {
         fromMinorVersion: 0,
         toMinorVersion: 3,
         lastUpdate: '2025-01-01T12:00:00Z',
-        isLatest: true,
+        hasMoreEntities: false,
         entities: [],
       };
       mockSyncService.getChangesByVersion.mockResolvedValue(mockSyncEntryDto);
@@ -111,7 +111,7 @@ describe('SyncController', () => {
         fromMinorVersion: 0,
         toMinorVersion: 1,
         lastUpdate: '2025-01-01T12:00:00Z',
-        isLatest: true,
+        hasMoreEntities: false,
         entities: [],
       };
       mockSyncService.getChangesByVersion.mockResolvedValue(mockSyncEntryDto);
