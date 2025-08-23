@@ -8,6 +8,7 @@ import { VesselTelemetryResponseDto } from './dto/vessel-telemetry-response.dto'
 import { HttpException, HttpStatus } from '@nestjs/common';
 import { GeoPoint } from '@ghanawaters/shared-models';
 import { Response } from 'express';
+import { DeviceAuthService } from '../device/device-auth.service';
 
 describe('TrackingController', () => {
   let controller: TrackingController;
@@ -65,6 +66,12 @@ describe('TrackingController', () => {
           useValue: {
             getExportStats: jest.fn(),
             streamTelemetryExport: jest.fn(),
+          },
+        },
+        {
+          provide: DeviceAuthService,
+          useValue: {
+            validateDeviceToken: jest.fn(),
           },
         },
       ],

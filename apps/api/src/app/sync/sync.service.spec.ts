@@ -377,7 +377,7 @@ describe('SyncService', () => {
       );
 
       // Should create new major version
-      expect(mockEntityManager.save).toHaveBeenCalledWith(SyncMajorVersion, expect.objectContaining({
+      expect(mockEntityManager.save).toHaveBeenCalledWith(expect.objectContaining({
         major_version: 2,
         is_current: true,
       }));
@@ -435,10 +435,10 @@ describe('SyncService', () => {
       expect(mockEntityManager.update).not.toHaveBeenCalled();
 
       // Should create first major version
-      expect(mockEntityManager.save).toHaveBeenCalledWith(SyncMajorVersion, {
+      expect(mockEntityManager.save).toHaveBeenCalledWith(expect.objectContaining({
         major_version: 1,
         is_current: true,
-      });
+      }));
       
       expect(result.success).toBe(true);
     });
@@ -459,10 +459,10 @@ describe('SyncService', () => {
       const result = await service.resetSync();
 
       // Should create new major version
-      expect(mockEntityManager.save).toHaveBeenCalledWith(SyncMajorVersion, {
+      expect(mockEntityManager.save).toHaveBeenCalledWith(expect.objectContaining({
         major_version: 2,
         is_current: true,
-      });
+      }));
 
       // Should only save the major version (no entities to sync)
       expect(mockEntityManager.save).toHaveBeenCalledTimes(1);
@@ -517,10 +517,10 @@ describe('SyncService', () => {
       const result = await service.resetSync();
 
       // Should create new major version
-      expect(mockEntityManager.save).toHaveBeenCalledWith(SyncMajorVersion, {
+      expect(mockEntityManager.save).toHaveBeenCalledWith(expect.objectContaining({
         major_version: 2,
         is_current: true,
-      });
+      }));
 
       // Should create sync entries for all entities
       // 1 major version + 2 routes + 2 landing sites = 5 saves

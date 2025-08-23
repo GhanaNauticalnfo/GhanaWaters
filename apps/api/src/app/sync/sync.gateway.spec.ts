@@ -34,7 +34,7 @@ describe('SyncGateway', () => {
 
   describe('afterInit', () => {
     it('should log initialization', () => {
-      const logSpy = jest.spyOn(console, 'log').mockImplementation();
+      const logSpy = jest.spyOn(gateway['logger'], 'log').mockImplementation();
       gateway.afterInit(mockServer as Server);
       expect(logSpy).toHaveBeenCalledWith('Sync WebSocket Gateway initialized');
       logSpy.mockRestore();

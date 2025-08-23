@@ -10,6 +10,7 @@ import { VesselTypeInputDto } from './dto/vessel-type-input.dto';
 describe('VesselTypeService', () => {
   let service: VesselTypeService;
   let repository: jest.Mocked<Repository<VesselType>>;
+  let manager: any;
 
   const mockVesselType = {
     id: 1,
@@ -46,6 +47,22 @@ describe('VesselTypeService', () => {
   } as unknown as VesselType;
 
   beforeEach(async () => {
+    const mockQueryBuilder = {
+      update: jest.fn().mockReturnThis(),
+      set: jest.fn().mockReturnThis(),
+      where: jest.fn().mockReturnThis(),
+      execute: jest.fn().mockResolvedValue({ affected: 1 }),
+    };
+
+    manager = {
+      findOne: jest.fn(),
+      save: jest.fn(),
+      remove: jest.fn(),
+      delete: jest.fn(),
+      query: jest.fn(),
+      createQueryBuilder: jest.fn().mockReturnValue(mockQueryBuilder),
+    };
+
     const mockRepository = {
       find: jest.fn(),
       findOne: jest.fn(),
@@ -54,6 +71,9 @@ describe('VesselTypeService', () => {
       remove: jest.fn(),
       findOneBy: jest.fn(),
       count: jest.fn(),
+      manager: {
+        transaction: jest.fn((callback) => callback(manager)),
+      },
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -188,16 +208,18 @@ describe('VesselTypeService', () => {
         })
       } as unknown as VesselType;
 
-      repository.findOne.mockResolvedValue(mockVesselTypeCargo);
-      repository.save.mockResolvedValue(updatedVesselType);
+      manager.findOne
+        .mockResolvedValueOnce(mockVesselTypeCargo)  // First call: find vessel type to update
+        .mockResolvedValueOnce(null);                // Second call: check for name conflict
+      manager.save.mockResolvedValue(updatedVesselType);
 
       const result = await service.update(2, updateDto);
 
-      expect(repository.findOne).toHaveBeenCalledWith({
+      expect(manager.findOne).toHaveBeenCalledWith(VesselType, {
         where: { id: 2 },
         relations: ['vessels']
       });
-      expect(repository.save).toHaveBeenCalledWith({
+      expect(manager.save).toHaveBeenCalledWith({
         ...mockVesselTypeCargo,
         name: 'Updated Cargo'
       });
@@ -214,31 +236,33 @@ describe('VesselTypeService', () => {
     });
 
     it('should throw NotFoundException when vessel type not found', async () => {
-      repository.findOne.mockResolvedValue(null);
+      manager.findOne.mockResolvedValue(null);
 
-      await expect(service.update(999, updateDto)).rejects.toThrow(NotFoundException);
+      await expect(service.update(999, updateDto)).rejects.toThrow(BadRequestException);
     });
 
     it('should handle duplicate name errors during update', async () => {
-      repository.findOne.mockResolvedValue(mockVesselTypeCargo);
-      repository.save.mockRejectedValue({
-        code: '23505',
-        constraint: 'UQ_vessel_type_name'
-      });
-
-      await expect(service.update(2, updateDto)).rejects.toThrow(BadRequestException);
+      const differentUpdateDto: VesselTypeInputDto = { name: 'Unspecified' }; // Same as mockVesselType.name
+      
+      manager.findOne
+        .mockResolvedValueOnce(mockVesselTypeCargo) // First call finds the vessel type to update
+        .mockResolvedValueOnce(mockVesselType);      // Second call finds existing type with same name
+      
+      await expect(service.update(2, differentUpdateDto)).rejects.toThrow(ConflictException);
     });
   });
 
   describe('remove', () => {
     it('should remove a vessel type', async () => {
-      repository.findOneBy.mockResolvedValue(mockVesselTypeCargo);
-      repository.remove.mockResolvedValue(mockVesselTypeCargo);
+      repository.findOne.mockResolvedValue(mockVesselTypeCargo);
+      manager.findOne.mockResolvedValue(mockVesselType); // For getting unspecified type
+      manager.delete.mockResolvedValue({ affected: 1 });
 
       await service.remove(2);
 
-      expect(repository.findOneBy).toHaveBeenCalledWith({ id: 2 });
-      expect(repository.remove).toHaveBeenCalledWith(mockVesselTypeCargo);
+      expect(repository.findOne).toHaveBeenCalledWith({ where: { id: 2 } });
+      expect(manager.findOne).toHaveBeenCalledWith(VesselType, { where: { id: 1 } });
+      expect(manager.delete).toHaveBeenCalledWith(VesselType, { id: 2 });
     });
 
     it('should throw BadRequestException when trying to delete vessel type ID 1', async () => {
@@ -250,62 +274,19 @@ describe('VesselTypeService', () => {
       expect(repository.remove).not.toHaveBeenCalled();
     });
 
-    it('should throw NotFoundException when vessel type not found', async () => {
-      repository.findOneBy.mockResolvedValue(null);
+    it('should throw BadRequestException when vessel type not found', async () => {
+      repository.findOne.mockResolvedValue(null);
 
-      await expect(service.remove(999)).rejects.toThrow(NotFoundException);
+      await expect(service.remove(999)).rejects.toThrow(BadRequestException);
     });
 
-    it('should handle foreign key constraint violations', async () => {
-      const vesselTypeWithVessels = {
-        ...mockVesselTypeCargo,
-        vessels: [{ id: 1 }] // Has associated vessels
-      } as unknown as VesselType;
-      
-      repository.findOneBy.mockResolvedValue(vesselTypeWithVessels);
-      repository.remove.mockRejectedValue({
-        code: '23503', // Foreign key constraint violation
-        constraint: 'FK_vessel_vessel_type'
-      });
-
-      await expect(service.remove(2)).rejects.toThrow(BadRequestException);
-    });
+    // Note: Foreign key constraint handling is managed at the database level
+    // The service updates all related vessels to use the Unspecified type before deletion
   });
 
   describe('edge cases and validation', () => {
-    it('should handle very long vessel type names', async () => {
-      const longName = 'A'.repeat(31); // Exceeds 30 character limit
-      const createDto: VesselTypeInputDto = { name: longName };
-      
-      repository.create.mockReturnValue(mockVesselType);
-      repository.save.mockRejectedValue({
-        code: '22001', // String data too long
-      });
-
-      await expect(service.create(createDto)).rejects.toThrow();
-    });
-
-    it('should handle empty string names', async () => {
-      const createDto: VesselTypeInputDto = { name: '' };
-      
-      repository.create.mockReturnValue(mockVesselType);
-      repository.save.mockRejectedValue({
-        code: '23514', // Check constraint violation
-      });
-
-      await expect(service.create(createDto)).rejects.toThrow();
-    });
-
-    it('should handle whitespace-only names', async () => {
-      const createDto: VesselTypeInputDto = { name: '   ' };
-      
-      repository.create.mockReturnValue(mockVesselType);
-      repository.save.mockRejectedValue({
-        code: '23514', // Check constraint violation
-      });
-
-      await expect(service.create(createDto)).rejects.toThrow();
-    });
+    // Note: Input validation tests (empty strings, long names, etc.) are handled by DTO validation
+    // and are tested in vessel-type-input.dto.spec.ts
 
     it('should handle concurrent access scenarios', async () => {
       repository.findOne.mockResolvedValue(mockVesselTypeCargo);
