@@ -46,7 +46,7 @@ apps/api/src/app/
 │   ├── device/             # Device authentication
 │   ├── tracking/           # Position tracking
 │   ├── type/               # Vessel types
-│   ├── mqtt/               # MQTT integration
+│   ├── websockets/         # WebSocket integration
 │   └── dto/                # Data transfer objects
 ├── routes/                 # Navigation routes
 ├── kml-dataset/            # KML data management
@@ -60,7 +60,7 @@ apps/api/src/app/
 - Each module follows NestJS structure: controller, service, entity, DTOs
 - TypeORM entities with PostGIS geography types
 - JWT authentication with Keycloak integration
-- MQTT service for real-time vessel tracking
+- WebSocket service for real-time vessel tracking
 - Comprehensive DTO pattern for API responses
 
 ### Admin Application (`apps/admin/`)
@@ -175,7 +175,6 @@ docker/local/
 ├── docker-compose.yml      # Main compose file
 ├── postgres/               # PostgreSQL configuration
 ├── keycloak/               # Keycloak setup and realms
-└── nanomq/                 # MQTT broker configuration
 ```
 
 ### Kubernetes Manifests (`k8s/`)
@@ -325,7 +324,7 @@ apps/admin/src/app/features/[feature]/
 
 ### Real-Time Features
 
-- **MQTT Integration**: Real-time vessel position updates
+- **WebSocket Integration**: Real-time vessel position updates
 - **WebSocket Events**: Live dashboard updates
 - **Event-Driven Architecture**: Pub/sub patterns for notifications
 

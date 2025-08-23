@@ -63,7 +63,7 @@ This document describes the integration between the Android tracking app and the
 - Tokens can be revoked by admin
 
 ## Future Enhancements
-- MQTT support for real-time tracking
+- Enhanced real-time tracking via WebSocket
 - Batch position reporting
 - Offline position buffering
 - Device management in admin UI

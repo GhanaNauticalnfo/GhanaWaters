@@ -8,7 +8,7 @@ Ghana Waters provides real-time vessel tracking, navigation aids, and offline-ca
 
 - **Admin Dashboard** - Vessel management and monitoring interface
 - **Public Frontend** - Public-facing map with navigation data
-- **API Backend** - RESTful API with real-time MQTT support
+- **API Backend** - RESTful API with real-time WebSocket support
 - **Android App** - Mobile vessel tracking and navigation (separate repository)
 
 ## Key Features

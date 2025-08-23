@@ -324,7 +324,7 @@ describe('SyncService', () => {
         service.logChange('route', '123', 'create', {})
       ).rejects.toThrow('Transaction failed');
       
-      // MQTT should not be called on transaction failure
+      // WebSocket should not be called on transaction failure
       expect(syncGateway.emitSyncUpdate).not.toHaveBeenCalled();
     });
 
@@ -572,7 +572,7 @@ describe('SyncService', () => {
   });
 
   describe('logChangeInTransaction', () => {
-    it('should publish MQTT notification within transaction', async () => {
+    it('should publish WebSocket notification within transaction', async () => {
       const manager = mockEntityManager as EntityManager;
       const entityType = 'route';
       const entityId = '999';
@@ -622,7 +622,7 @@ describe('SyncService', () => {
       // expect(syncGateway.emitSyncUpdate).toHaveBeenCalledWith(5, 1); // Asynchronous
     });
 
-    it('should handle MQTT errors within transaction gracefully', async () => {
+    it('should handle WebSocket errors within transaction gracefully', async () => {
       const manager = mockEntityManager as EntityManager;
       syncGateway.emitSyncUpdate.mockImplementation(() => {
         throw new Error('WebSocket failed');
@@ -636,7 +636,7 @@ describe('SyncService', () => {
         {}
       );
 
-      // Should still return the sync minor version even if MQTT fails
+      // Should still return the sync minor version even if WebSocket fails
       expect(result).toEqual(mockSyncMinorVersion);
       // expect(syncGateway.emitSyncUpdate).toHaveBeenCalled(); // Asynchronous
     });
