@@ -109,8 +109,8 @@ export class RouteLayerService extends BaseLayerService {
     const container = this.map.getContainer();
     if (!container || container.offsetWidth === 0 || container.offsetHeight === 0) {
       console.warn('Map container has no dimensions, skipping fitBounds');
-      // Try again after a delay
-      setTimeout(() => this.fitToRoute(), 200);
+      // Use requestAnimationFrame instead of setTimeout for smoother retries
+      requestAnimationFrame(() => this.fitToRoute());
       return;
     }
 
@@ -135,45 +135,70 @@ export class RouteLayerService extends BaseLayerService {
   private updateDisplay(): void {
     if (!this.map || !this.routeData) return;
 
-    this.clearMarkers();
-    this.clearRouteLine();
-
     if (this.routeData.waypoints.length > 0) {
+      // Update markers efficiently (reuse existing ones)
       this.addWaypointMarkers();
       
       if (this.routeData.waypoints.length >= 2) {
+        // Update route line efficiently (reuse existing source)
         this.addRouteLine();
+      } else {
+        // Clear route line if we have less than 2 waypoints
+        this.clearRouteLine();
       }
+    } else {
+      // Clear everything if no waypoints
+      this.clearMarkers();
+      this.clearRouteLine();
     }
   }
 
   private addWaypointMarkers(): void {
     if (!this.map || !this.routeData) return;
 
+    // Update existing markers or create new ones
     this.routeData.waypoints.forEach((waypoint, index) => {
-      const el = document.createElement('div');
-      el.className = 'waypoint-marker';
-      el.style.width = '30px';
-      el.style.height = '30px';
-      el.style.borderRadius = '50%';
-      el.style.backgroundColor = this.routeColor;
-      el.style.border = '3px solid white';
-      el.style.boxShadow = '0 2px 4px rgba(0,0,0,0.3)';
-      el.style.display = 'flex';
-      el.style.alignItems = 'center';
-      el.style.justifyContent = 'center';
-      el.style.color = 'white';
-      el.style.fontWeight = 'bold';
-      el.style.fontSize = '12px';
-      el.style.cursor = 'default';
-      el.textContent = (index + 1).toString();
-
-      const marker = new Marker({ element: el })
-        .setLngLat([waypoint.lng, waypoint.lat])
-        .addTo(this.map!);
+      let marker = this.markers[index];
       
-      this.markers.push(marker);
+      if (marker) {
+        // Update existing marker position and text
+        marker.setLngLat([waypoint.lng, waypoint.lat]);
+        const element = marker.getElement();
+        element.textContent = (index + 1).toString();
+      } else {
+        // Create new marker
+        const el = document.createElement('div');
+        el.className = 'waypoint-marker';
+        el.style.width = '30px';
+        el.style.height = '30px';
+        el.style.borderRadius = '50%';
+        el.style.backgroundColor = this.routeColor;
+        el.style.border = '3px solid white';
+        el.style.boxShadow = '0 2px 4px rgba(0,0,0,0.3)';
+        el.style.display = 'flex';
+        el.style.alignItems = 'center';
+        el.style.justifyContent = 'center';
+        el.style.color = 'white';
+        el.style.fontWeight = 'bold';
+        el.style.fontSize = '12px';
+        el.style.cursor = 'default';
+        el.textContent = (index + 1).toString();
+
+        marker = new Marker({ element: el })
+          .setLngLat([waypoint.lng, waypoint.lat])
+          .addTo(this.map!);
+        
+        this.markers[index] = marker;
+      }
     });
+    
+    // Remove excess markers if waypoints were reduced
+    while (this.markers.length > this.routeData.waypoints.length) {
+      const extraMarker = this.markers.pop();
+      if (extraMarker) {
+        extraMarker.remove();
+      }
+    }
   }
 
   private addRouteLine(): void {
@@ -186,33 +211,41 @@ export class RouteLayerService extends BaseLayerService {
     }
 
     const coordinates = this.routeData.waypoints.map(wp => [wp.lng, wp.lat]);
+    const geoJsonData = {
+      type: 'Feature',
+      properties: {},
+      geometry: {
+        type: 'LineString',
+        coordinates: coordinates
+      }
+    };
     
-    this.map.addSource('route-line', {
-      type: 'geojson',
-      data: {
-        type: 'Feature',
-        properties: {},
-        geometry: {
-          type: 'LineString',
-          coordinates: coordinates
-        }
-      }
-    });
+    // Check if source already exists and update it, otherwise add it
+    if (this.map.getSource('route-line')) {
+      // Update existing source data for smoother updates
+      (this.map.getSource('route-line') as any).setData(geoJsonData);
+    } else {
+      // Add source and layer for the first time
+      this.map.addSource('route-line', {
+        type: 'geojson',
+        data: geoJsonData
+      });
 
-    this.map.addLayer({
-      id: 'route-line-layer',
-      type: 'line',
-      source: 'route-line',
-      layout: {
-        'line-join': 'round',
-        'line-cap': 'round'
-      },
-      paint: {
-        'line-color': this.routeColor,
-        'line-width': 4,
-        'line-opacity': 0.8
-      }
-    });
+      this.map.addLayer({
+        id: 'route-line-layer',
+        type: 'line',
+        source: 'route-line',
+        layout: {
+          'line-join': 'round',
+          'line-cap': 'round'
+        },
+        paint: {
+          'line-color': this.routeColor,
+          'line-width': 4,
+          'line-opacity': 0.8
+        }
+      });
+    }
   }
 
   private clearMarkers(): void {

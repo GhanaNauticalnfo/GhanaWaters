@@ -189,11 +189,20 @@ npx nx run-many -t test
 
 ## Contributing
 
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+### PR Workflow
+
+**Daily work:**
+1. Create branch from `develop`
+2. Make changes
+3. PR to `develop` → auto-deploys to DEV
+4. Merge, done
+
+**When ready for testing:**
+1. PR: `develop` → `test` → auto-deploys to TEST
+2. QA tests it
+
+**When ready for production:**
+1. PR: `test` → `main` → deploys to PROD
 
 ### Code Style
 

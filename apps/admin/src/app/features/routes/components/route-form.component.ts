@@ -409,13 +409,20 @@ export class RouteFormComponent implements OnInit, OnDestroy, AfterViewInit {
 
   ngOnInit(): void {
     // Watch for form changes to update route display and current values signal
-    // Debounce to avoid excessive updates while typing
+    // Only debounce text fields (name/notes), not boolean fields like enabled
     this.routeForm.valueChanges
-      .pipe(debounceTime(300))
+      .pipe(debounceTime(150)) // Reduced from 300ms to 150ms for faster text updates
       .subscribe((values) => {
         this.currentFormValues.set(values);
-        this.updateRouteDisplay();
+        // Update route metadata (name, notes, enabled) without affecting map rendering performance
+        this.updateRouteMetadata();
       });
+    
+    // Watch for enabled field changes separately for immediate updates
+    this.routeForm.get('enabled')?.valueChanges.subscribe(() => {
+      // Update route display immediately for enabled/disabled changes
+      this.updateRouteDisplay();
+    });
   }
 
   ngAfterViewInit(): void {
@@ -464,27 +471,28 @@ export class RouteFormComponent implements OnInit, OnDestroy, AfterViewInit {
       // Update the display with current waypoints
       this.updateRouteDisplay();
       
-      // Delay fitting to waypoints to ensure map is fully ready
+      // Fit to waypoints immediately if we have them
       if (this.waypoints().length > 0) {
-        setTimeout(() => {
+        // Use requestAnimationFrame for smoother fitting
+        requestAnimationFrame(() => {
           this.fitMapToWaypoints();
-        }, 300);
+        });
       }
     };
     
     if (map.isStyleLoaded()) {
       initializeRoute();
       // Ensure map layout is correct after initialization
-      setTimeout(() => {
+      requestAnimationFrame(() => {
         mapComponentRef.resize();
-      }, 100);
+      });
     } else {
       map.once('styledata', () => {
         initializeRoute();
         // Ensure map layout is correct after initialization
-        setTimeout(() => {
+        requestAnimationFrame(() => {
           mapComponentRef.resize();
-        }, 100);
+        });
       });
     }
   }
@@ -532,10 +540,11 @@ export class RouteFormComponent implements OnInit, OnDestroy, AfterViewInit {
     // Update route display after form reset
     // Only update if map is ready, otherwise it will be updated when map initializes
     if (this.mapReady()) {
-      setTimeout(() => {
+      // Use requestAnimationFrame for smoother updates
+      requestAnimationFrame(() => {
         this.updateRouteDisplay();
         this.fitMapToWaypoints();
-      }, 100);
+      });
     }
   }
 
@@ -572,17 +581,46 @@ export class RouteFormComponent implements OnInit, OnDestroy, AfterViewInit {
     });
   }
 
+  private updateRouteMetadata(): void {
+    // Only update route metadata (name, notes) without forcing a full map redraw
+    // This is called for text field changes that don't affect the visual representation
+    const routeName = this.routeForm.get('name')?.value || 'Route';
+    const notes = this.routeForm.get('notes')?.value || '';
+    
+    // Only update if we have existing route data to avoid unnecessary operations
+    if (this.routeLayerService && this.waypoints().length > 0) {
+      // This will update metadata without triggering expensive map operations
+      const waypointList = this.waypoints();
+      const enabled = this.routeForm.get('enabled')?.value as boolean;
+      
+      const routeWaypoints = waypointList.map(wp => ({
+        id: wp.id || crypto.randomUUID(),
+        lat: wp.lat,
+        lng: wp.lng,
+        order: wp.order,
+        name: wp.name || `Waypoint ${wp.order + 1}`
+      }));
+      
+      this.routeLayerService.setRouteData({
+        id: this.route()?.id,
+        name: routeName,
+        notes: notes,
+        waypoints: routeWaypoints,
+        enabled: enabled
+      });
+    }
+  }
+
   private fitMapToWaypoints(): void {
     if (this.waypoints().length === 0) return;
     
-    // Add a small delay to ensure map is fully rendered
-    setTimeout(() => {
-      this.routeLayerService.fitToRoute();
-    }, 200);
+    // Fit immediately - the route layer service handles map readiness checks
+    this.routeLayerService.fitToRoute();
   }
 
   clearWaypoints(): void {
     this.waypoints.set([]);
+    // Immediate update for clearing waypoints
     this.updateRouteDisplay();
   }
 
@@ -592,8 +630,12 @@ export class RouteFormComponent implements OnInit, OnDestroy, AfterViewInit {
 
   onWaypointsChange(newWaypoints: Waypoint[]): void {
     this.waypoints.set(newWaypoints);
+    // Update route display immediately without debounce for waypoint changes
     this.updateRouteDisplay();
-    this.fitMapToWaypoints();
+    // Use requestAnimationFrame for smoother fitting
+    requestAnimationFrame(() => {
+      this.fitMapToWaypoints();
+    });
   }
 
   onCancel(): void {
