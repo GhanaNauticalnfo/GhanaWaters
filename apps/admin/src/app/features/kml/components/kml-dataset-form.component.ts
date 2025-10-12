@@ -11,6 +11,8 @@ import { TextareaModule } from 'primeng/textarea';
 import { CheckboxModule } from 'primeng/checkbox';
 import { ButtonModule } from 'primeng/button';
 import { SkeletonModule } from 'primeng/skeleton';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { ConfirmationService } from 'primeng/api';
 
 // Map imports
 import { MapComponent, MapConfig, OSM_STYLE, KmlLayerService } from '@ghanawaters/shared-map';
@@ -28,9 +30,10 @@ import { environment } from '../../../../environments/environment';
     CheckboxModule,
     ButtonModule,
     SkeletonModule,
-    MapComponent
+    MapComponent,
+    ConfirmDialogModule
   ],
-  providers: [KmlLayerService],
+  providers: [KmlLayerService, ConfirmationService],
   template: `
     <div class="kml-form-container">
       <form [formGroup]="kmlForm" class="flex gap-3" style="height: 100%;">
@@ -96,19 +99,15 @@ import { environment } from '../../../../environments/environment';
             </div>
 
             <div class="form-group flex-1">
-              <label for="kml" class="form-label">KML Content <span class="required-asterisk">*</span></label>
+              <label for="kml" class="form-label">KML Content</label>
               <textarea
                 pTextarea
                 id="kml"
                 formControlName="kml"
                 placeholder="Paste your KML content here"
                 class="w-full kml-textarea"
-                [ngClass]="{'ng-invalid ng-dirty': kmlForm.controls['kml'].invalid && kmlForm.controls['kml'].touched}"
                 [readonly]="mode() === 'view'"
               ></textarea>
-              @if (kmlForm.controls['kml'].invalid && kmlForm.controls['kml'].touched) {
-                <small class="p-error block mt-1 text-xs">KML content is required.</small>
-              }
             </div>
           </div>
 
@@ -116,8 +115,8 @@ import { environment } from '../../../../environments/environment';
             @if (mode() !== 'view') {
               <div class="flex items-center justify-between w-full">
                 <div class="text-sm text-gray-500">
-                  @if (mode() === 'create' && !kmlForm.valid) {
-                    <span class="text-orange-500">Please fill in required fields</span>
+                  @if (mode() === 'create' && !canSave()) {
+                    <span class="text-orange-500">Please enter a dataset name</span>
                   }
                 </div>
                 <div class="flex gap-2">
@@ -134,7 +133,7 @@ import { environment } from '../../../../environments/environment';
                     label="Save"
                     icon="pi pi-check"
                     (click)="onSave()"
-                    [disabled]="kmlForm.invalid || !isKmlValid()">
+                    [disabled]="!canSave()">
                   </button>
                 </div>
               </div>
@@ -150,6 +149,8 @@ import { environment } from '../../../../environments/environment';
           </div>
         </div>
       </form>
+
+      <p-confirmDialog></p-confirmDialog>
     </div>
   `,
   host: {
@@ -304,6 +305,7 @@ export class KmlDatasetFormComponent implements OnInit, OnDestroy, AfterViewInit
   private fb = inject(FormBuilder);
   private kmlLayerService = inject(KmlLayerService);
   private cdr = inject(ChangeDetectorRef);
+  private confirmationService = inject(ConfirmationService);
 
   // Inputs
   dataset = input<KmlDatasetResponse | null>(null);
@@ -322,37 +324,92 @@ export class KmlDatasetFormComponent implements OnInit, OnDestroy, AfterViewInit
   mapReady = signal(false);
   parseError = signal<string | null>(null);
 
+  // Change tracking
+  currentFormValues = signal<{ name: string; enabled: boolean; kml: string }>({
+    name: '',
+    enabled: true,
+    kml: ''
+  });
+  originalFormValues = signal<{ name: string; enabled: boolean; kml: string } | null>(null);
+
   // Computed signal for KML validity
   isKmlValid = computed(() => {
     const kml = this.kmlForm?.get('kml')?.value;
     const hasContent = kml && kml.trim().length > 0;
-    const hasNoErrors = this.parseError() === null;
-    return hasContent && hasNoErrors;
+
+    // For create mode, allow empty KML (user can save without KML)
+    if (this.mode() === 'create' && !hasContent) {
+      return true;
+    }
+
+    // For edit/view mode or when content exists, check for parsing errors
+    if (hasContent) {
+      return this.parseError() === null;
+    }
+
+    // Empty KML in edit mode is invalid
+    return false;
   });
 
-  // Effect to populate form when dataset changes
-  private datasetEffect = effect(() => {
-    const currentDataset = this.dataset();
-    if (currentDataset) {
-      this.kmlForm.patchValue({
-        name: currentDataset.name || '',
-        enabled: currentDataset.enabled,
-        kml: currentDataset.kml || ''
-      });
-    } else {
-      this.kmlForm.reset({
-        name: '',
-        enabled: true,
-        kml: ''
-      });
+  // Computed signal for overall form validity
+  canSave = computed(() => {
+    const mode = this.mode();
+    const current = this.currentFormValues();
+    const hasValidName = current.name && current.name.trim().length > 0;
+
+    // Must have valid name AND valid KML (empty or parseable)
+    if (!hasValidName || !this.isKmlValid()) {
+      return false;
     }
+
+    // For edit mode, also require changes
+    if (mode === 'edit') {
+      return this.hasChanges();
+    }
+
+    // For create mode, basic requirements are enough
+    return true;
   });
+
+  constructor() {
+    // Effects to watch for changes
+    effect(() => {
+      const currentMode = this.mode();
+      this.updateFormState();
+    });
+
+    effect(() => {
+      const currentDataset = this.dataset();
+      if (currentDataset !== null || this.mode() === 'create') {
+        this.resetFormWithDataset();
+      }
+    });
+  }
+
+  // Unified change detection method
+  private hasChanges(): boolean {
+    const current = this.currentFormValues();
+    const originalForm = this.originalFormValues();
+
+    // Check form changes
+    if (originalForm) {
+      const formChanged = (
+        current.name !== originalForm.name ||
+        current.enabled !== originalForm.enabled ||
+        current.kml !== originalForm.kml
+      );
+
+      if (formChanged) return true;
+    }
+
+    return false;
+  }
 
   ngOnInit() {
     this.kmlForm = this.fb.group({
       name: ['', Validators.required],
       enabled: [true],
-      kml: ['', Validators.required]
+      kml: [''] // No validator - KML is optional, validation handled by isKmlValid()
     });
 
     // Initialize map configuration
@@ -368,7 +425,13 @@ export class KmlDatasetFormComponent implements OnInit, OnDestroy, AfterViewInit
       initialActiveLayers: []
     });
 
-    // Watch for KML content changes
+    // Watch for all form changes to update currentFormValues signal
+    this.kmlForm.valueChanges
+      .subscribe((values) => {
+        this.currentFormValues.set(values);
+      });
+
+    // Watch for KML content changes to parse and display
     this.kmlForm.get('kml')?.valueChanges
       .pipe(debounceTime(500))
       .subscribe((kmlContent) => {
@@ -389,8 +452,63 @@ export class KmlDatasetFormComponent implements OnInit, OnDestroy, AfterViewInit
     this.mapReady.set(false);
   }
 
+  private updateFormState(): void {
+    // Enable/disable form based on mode
+    if (this.mode() === 'view') {
+      this.kmlForm.disable();
+    } else {
+      this.kmlForm.enable();
+    }
+  }
+
+  private resetFormWithDataset(): void {
+    const currentDataset = this.dataset();
+
+    if (currentDataset) {
+      // Reset form with dataset data
+      const formData = {
+        name: currentDataset.name || '',
+        enabled: currentDataset.enabled,
+        kml: currentDataset.kml || ''
+      };
+      this.kmlForm.reset(formData);
+
+      // Force change detection to ensure PrimeNG checkbox updates
+      this.cdr.detectChanges();
+
+      // Store both current and original values for change tracking
+      this.currentFormValues.set({ ...formData });
+      this.originalFormValues.set({ ...formData });
+    } else {
+      // Reset form to default values for create mode
+      const formData = {
+        name: '',
+        enabled: true,
+        kml: ''
+      };
+      this.kmlForm.reset(formData);
+
+      // For create mode, set current values and original to null
+      this.currentFormValues.set({ ...formData });
+      this.originalFormValues.set(null);
+    }
+
+    // Update map display after form reset
+    // Only update if map is ready, otherwise it will be updated when map initializes
+    if (this.mapReady()) {
+      // Use requestAnimationFrame for smoother updates
+      requestAnimationFrame(() => {
+        const currentKml = this.kmlForm.get('kml')?.value;
+        if (currentKml) {
+          this.parseAndDisplayKml(currentKml);
+        }
+      });
+    }
+  }
+
   // Public method to prepare the map - called by parent component when dialog is shown
   public prepareMap(): void {
+    console.log('[KML Form] prepareMap() called, mode:', this.mode(), 'mapReady:', this.mapReady());
     this.mapReady.set(true);
 
     // Force change detection to ensure map container renders with proper dimensions
@@ -398,18 +516,21 @@ export class KmlDatasetFormComponent implements OnInit, OnDestroy, AfterViewInit
 
     // Initialize map with minimal delay
     setTimeout(() => {
+      console.log('[KML Form] Calling initializeMapIntegration');
       this.initializeMapIntegration();
     }, 0);
   }
 
   private initializeMapIntegration(): void {
     const mapComponentRef = this.mapComponent();
+    console.log('[KML Form] initializeMapIntegration - mapComponent:', !!mapComponentRef, 'map:', !!mapComponentRef?.map);
     if (!mapComponentRef?.map) {
-      console.error('Map component not ready');
+      console.error('[KML Form] Map component not ready');
       return;
     }
 
     const map = mapComponentRef.map;
+    console.log('[KML Form] Map initialized successfully');
 
     // Wait for map style to be loaded
     const initializeKml = () => {
@@ -458,15 +579,29 @@ export class KmlDatasetFormComponent implements OnInit, OnDestroy, AfterViewInit
       const parser = new DOMParser();
       const kmlDom = parser.parseFromString(decodedKml, 'text/xml');
 
-      // Check for parsing errors
+      // Check for CRITICAL parsing errors (not namespace warnings)
       const parserError = kmlDom.querySelector('parsererror');
       if (parserError) {
-        const errorMsg = parserError.textContent || 'Invalid XML format';
-        throw new Error(errorMsg);
+        const errorText = parserError.textContent || '';
+
+        // Ignore namespace warnings - they don't prevent parsing
+        // Common warnings: "Namespace prefix xsi for schemaLocation on Document is not defined"
+        const isNamespaceWarning = errorText.includes('Namespace prefix') ||
+                                   errorText.includes('xmlns') ||
+                                   errorText.includes('schemaLocation');
+
+        if (!isNamespaceWarning) {
+          // This is a real structural error
+          throw new Error(errorText);
+        }
+        // If it's just a namespace warning, continue parsing
+        console.log('Ignoring namespace warning:', errorText);
       }
 
       // Verify it's actually KML (has a <kml> root element)
-      const kmlElement = kmlDom.getElementsByTagName('kml')[0];
+      // Try with and without namespace prefix
+      const kmlElement = kmlDom.getElementsByTagName('kml')[0] ||
+                         kmlDom.getElementsByTagNameNS('*', 'kml')[0];
       if (!kmlElement) {
         this.parseError.set('Not valid KML: missing <kml> root element');
         this.kmlLayerService.setFeatureData(null);
@@ -507,7 +642,7 @@ export class KmlDatasetFormComponent implements OnInit, OnDestroy, AfterViewInit
   }
 
   onSave() {
-    if (this.kmlForm.valid) {
+    if (this.canSave()) {
       const formValue = this.kmlForm.value;
       const dataset = this.dataset();
 
@@ -521,13 +656,34 @@ export class KmlDatasetFormComponent implements OnInit, OnDestroy, AfterViewInit
       this.save.emit(result);
       // Reset map state in case dialog closes
       this.mapReady.set(false);
+
+      // Update both current and original values to reflect the saved state
+      const savedFormValues = {
+        name: formValue.name,
+        enabled: formValue.enabled,
+        kml: formValue.kml
+      };
+      this.currentFormValues.set(savedFormValues);
+      this.originalFormValues.set({ ...savedFormValues });
     } else {
       this.kmlForm.markAllAsTouched();
     }
   }
 
   onCancel() {
-    this.mapReady.set(false);
-    this.cancel.emit();
+    if (this.mode() !== 'view' && this.hasChanges()) {
+      this.confirmationService.confirm({
+        message: 'You have unsaved changes. Are you sure you want to cancel?',
+        header: 'Unsaved Changes',
+        icon: 'pi pi-exclamation-triangle',
+        accept: () => {
+          this.mapReady.set(false);
+          this.cancel.emit();
+        }
+      });
+    } else {
+      this.mapReady.set(false);
+      this.cancel.emit();
+    }
   }
 }

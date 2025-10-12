@@ -1,4 +1,4 @@
-import { Component, OnInit, AfterViewInit, ChangeDetectionStrategy, TemplateRef, signal, viewChild, inject, effect } from '@angular/core';
+import { Component, OnInit, AfterViewInit, ChangeDetectionStrategy, TemplateRef, signal, viewChild, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { TagModule } from 'primeng/tag';
 import { MessageService } from 'primeng/api';
@@ -28,7 +28,8 @@ import { KmlDatasetFormComponent } from './kml-dataset-form.component';
       [selectedItem]="selectedDataset()"
       [showDialog]="showDialog"
       (showDialogChange)="showDialog = $event"
-      (action)="handleAction($event)">
+      (action)="handleAction($event)"
+      (dialogShown)="onDialogShow()">
 
       @if (showDialog) {
         <app-kml-dataset-form
@@ -77,20 +78,6 @@ export class KmlListComponent implements OnInit, AfterViewInit {
 
   listConfig!: ResourceListConfig<KmlDatasetResponse>;
 
-  constructor() {
-    // Watch for dialog opening to prepare map
-    effect(() => {
-      if (this.showDialog) {
-        // Wait for the form component to be available
-        setTimeout(() => {
-          const formComponent = this.datasetFormComponent();
-          if (formComponent) {
-            formComponent.prepareMap();
-          }
-        }, 0);
-      }
-    });
-  }
 
   ngOnInit() {
     // Initialize config without template references
@@ -244,5 +231,16 @@ export class KmlListComponent implements OnInit, AfterViewInit {
         }
       });
     }
+  }
+
+  onDialogShow() {
+    // Wait for dialog animation to complete, then prepare map
+    setTimeout(() => {
+      const formComponent = this.datasetFormComponent();
+      if (formComponent) {
+        // Initialize map after dialog is fully open
+        formComponent.prepareMap();
+      }
+    }, 10); // Minimal delay since dialog now opens instantly
   }
 }
