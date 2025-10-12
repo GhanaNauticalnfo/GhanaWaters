@@ -116,7 +116,15 @@ import { environment } from '../../../../environments/environment';
               <div class="flex items-center justify-between w-full">
                 <div class="text-sm text-gray-500">
                   @if (mode() === 'create' && !canSave()) {
-                    <span class="text-orange-500">Please enter a dataset name</span>
+                    <span class="text-orange-500">
+                      @if (!kmlForm.get('name')?.value || kmlForm.get('name')?.value.trim().length === 0) {
+                        Please enter a dataset name and valid KML content
+                      } @else if (!isKmlValid()) {
+                        Please enter valid KML content
+                      } @else {
+                        Please complete all required fields
+                      }
+                    </span>
                   }
                 </div>
                 <div class="flex gap-2">
@@ -337,18 +345,13 @@ export class KmlDatasetFormComponent implements OnInit, OnDestroy, AfterViewInit
     const kml = this.kmlForm?.get('kml')?.value;
     const hasContent = kml && kml.trim().length > 0;
 
-    // For create mode, allow empty KML (user can save without KML)
-    if (this.mode() === 'create' && !hasContent) {
-      return true;
+    // KML content is required in all modes
+    if (!hasContent) {
+      return false;
     }
 
-    // For edit/view mode or when content exists, check for parsing errors
-    if (hasContent) {
-      return this.parseError() === null;
-    }
-
-    // Empty KML in edit mode is invalid
-    return false;
+    // Content exists, check for parsing errors
+    return this.parseError() === null;
   });
 
   // Computed signal for overall form validity
