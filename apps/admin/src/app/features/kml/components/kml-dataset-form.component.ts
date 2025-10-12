@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, AfterViewInit, input, output, inject, signal, effect, viewChild, ChangeDetectorRef, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnInit, OnDestroy, AfterViewInit, input, output, inject, signal, effect, viewChild, ChangeDetectorRef, ChangeDetectionStrategy, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { KmlDatasetResponse } from '@ghanawaters/shared-models';
@@ -134,7 +134,7 @@ import { environment } from '../../../../environments/environment';
                     label="Save"
                     icon="pi pi-check"
                     (click)="onSave()"
-                    [disabled]="kmlForm.invalid">
+                    [disabled]="kmlForm.invalid || !isKmlValid()">
                   </button>
                 </div>
               </div>
@@ -322,6 +322,14 @@ export class KmlDatasetFormComponent implements OnInit, OnDestroy, AfterViewInit
   mapReady = signal(false);
   parseError = signal<string | null>(null);
 
+  // Computed signal for KML validity
+  isKmlValid = computed(() => {
+    const kml = this.kmlForm?.get('kml')?.value;
+    const hasContent = kml && kml.trim().length > 0;
+    const hasNoErrors = this.parseError() === null;
+    return hasContent && hasNoErrors;
+  });
+
   // Effect to populate form when dataset changes
   private datasetEffect = effect(() => {
     const currentDataset = this.dataset();
@@ -443,14 +451,26 @@ export class KmlDatasetFormComponent implements OnInit, OnDestroy, AfterViewInit
     }
 
     try {
+      // Decode HTML entities if present (e.g., &lt; to <, &gt; to >)
+      const decodedKml = this.decodeHtmlEntities(kmlContent);
+
       // Parse KML string to DOM
       const parser = new DOMParser();
-      const kmlDom = parser.parseFromString(kmlContent, 'text/xml');
+      const kmlDom = parser.parseFromString(decodedKml, 'text/xml');
 
       // Check for parsing errors
       const parserError = kmlDom.querySelector('parsererror');
       if (parserError) {
-        throw new Error('Invalid XML format');
+        const errorMsg = parserError.textContent || 'Invalid XML format';
+        throw new Error(errorMsg);
+      }
+
+      // Verify it's actually KML (has a <kml> root element)
+      const kmlElement = kmlDom.getElementsByTagName('kml')[0];
+      if (!kmlElement) {
+        this.parseError.set('Not valid KML: missing <kml> root element');
+        this.kmlLayerService.setFeatureData(null);
+        return;
       }
 
       // Convert KML to GeoJSON
@@ -472,9 +492,18 @@ export class KmlDatasetFormComponent implements OnInit, OnDestroy, AfterViewInit
       });
     } catch (error) {
       console.error('Error parsing KML:', error);
-      this.parseError.set('Invalid KML format');
+      // Extract more meaningful error message
+      const errorMessage = error instanceof Error ? error.message : 'Invalid KML format';
+      this.parseError.set(errorMessage);
       this.kmlLayerService.setFeatureData(null);
     }
+  }
+
+  private decodeHtmlEntities(text: string): string {
+    // Create a temporary DOM element to decode HTML entities
+    const textArea = document.createElement('textarea');
+    textArea.innerHTML = text;
+    return textArea.value;
   }
 
   onSave() {

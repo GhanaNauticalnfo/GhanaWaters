@@ -107,6 +107,7 @@
     "@types/archiver": "^6.0.3",
     "@types/maplibre-gl": "^1.13.2",
     "@types/socket.io-client": "^1.4.36",
+    "@xmldom/xmldom": "^0.8.11",
     "angular-oauth2-oidc": "^17.0.2",
     "angular-oauth2-oidc-jwks": "^17.0.0",
     "angularx-qrcode": "^19.0.0",
