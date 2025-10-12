@@ -35,7 +35,11 @@
           "node_modules/primeicons/primeicons.css",
           "apps/admin/src/styles.css"
         ],
-        "scripts": []
+        "scripts": [],
+        "allowedCommonJsDependencies": [
+          "maplibre-gl",
+          "qrcode"
+        ]
       },
       "configurations": {
         "prod": {

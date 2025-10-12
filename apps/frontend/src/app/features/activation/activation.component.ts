@@ -1,12 +1,11 @@
 import { Component, OnInit, signal } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { QRCodeComponent } from 'angularx-qrcode';
 
 @Component({
   selector: 'app-activation',
   standalone: true,
-  imports: [CommonModule, QRCodeComponent],
+  imports: [CommonModule],
   template: `
     <div class="min-h-screen bg-gradient-to-br from-blue-900 to-blue-700 flex items-center justify-center p-5 font-sans">
       <div class="bg-white rounded-xl shadow-2xl max-w-lg w-full overflow-hidden">

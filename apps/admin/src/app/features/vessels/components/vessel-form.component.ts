@@ -13,7 +13,6 @@ import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ConfirmationService } from 'primeng/api';
 import { VesselTypeService, VesselType } from '../../settings/vessel-types/vessel-type.service';
 import { VesselDataset, DeviceResponse, DeviceState } from '@ghanawaters/shared-models';
-import { VesselTabInfoComponent } from './vessel-tab-info.component';
 import { VesselTabDeviceComponent } from './vessel-tab-device.component';
 import { VesselTabTrackingComponent } from './vessel-tab-tracking.component';
 import { MapComponent, MapConfig, OSM_STYLE } from '@ghanawaters/shared-map';
@@ -36,7 +35,6 @@ export interface VesselFormData {
     ButtonModule,
     TabsModule,
     ConfirmDialogModule,
-    VesselTabInfoComponent,
     VesselTabDeviceComponent,
     VesselTabTrackingComponent,
     MapComponent,

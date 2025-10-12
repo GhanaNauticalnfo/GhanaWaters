@@ -30,7 +30,11 @@
           "node_modules/primeicons/primeicons.css",
           "node_modules/maplibre-gl/dist/maplibre-gl.css"
         ],
-        "scripts": []
+        "scripts": [],
+        "allowedCommonJsDependencies": [
+          "maplibre-gl",
+          "qrcode"
+        ]
       },
       "configurations": {
         "prod": {
