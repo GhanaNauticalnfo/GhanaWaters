@@ -188,7 +188,13 @@ export class KmlListComponent implements OnInit, AfterViewInit {
         }
       });
     } else if (this.dialogMode() === 'edit' && dataset.id) {
-      this.kmlDatasetService.update(dataset.id, dataset).subscribe({
+      // Extract only the fields the API expects (KmlDatasetInput)
+      const updateData = {
+        name: dataset.name,
+        enabled: dataset.enabled,
+        kml: dataset.kml
+      };
+      this.kmlDatasetService.update(dataset.id, updateData).subscribe({
         next: (updatedDataset) => {
           this.datasets.update(datasets =>
             datasets.map(d => d.id === updatedDataset.id ? updatedDataset : d)
@@ -207,6 +213,12 @@ export class KmlListComponent implements OnInit, AfterViewInit {
             detail: error.error?.message || error.message || 'Failed to update KML dataset'
           });
         }
+      });
+    } else {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Error',
+        detail: 'Cannot save: missing dataset ID for edit operation'
       });
     }
   }

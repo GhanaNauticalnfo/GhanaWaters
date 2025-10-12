@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, AfterViewInit, input, output, inject, signal, effect, viewChild, ChangeDetectorRef, ChangeDetectionStrategy, computed } from '@angular/core';
+import { Component, OnInit, OnDestroy, AfterViewInit, input, output, inject, signal, effect, viewChild, ChangeDetectorRef, ChangeDetectionStrategy, computed, untracked } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { KmlDatasetResponse } from '@ghanawaters/shared-models';
@@ -120,7 +120,11 @@ import { environment } from '../../../../environments/environment';
                       @if (!kmlForm.get('name')?.value || kmlForm.get('name')?.value.trim().length === 0) {
                         Please enter a dataset name and valid KML content
                       } @else if (!isKmlValid()) {
-                        Please enter valid KML content
+                        @if (parseError()) {
+                          {{ parseError() }}
+                        } @else {
+                          Please enter valid KML content
+                        }
                       } @else {
                         Please complete all required fields
                       }
@@ -378,13 +382,13 @@ export class KmlDatasetFormComponent implements OnInit, OnDestroy, AfterViewInit
     // Effects to watch for changes
     effect(() => {
       const currentMode = this.mode();
-      this.updateFormState();
+      untracked(() => this.updateFormState());
     });
 
     effect(() => {
       const currentDataset = this.dataset();
       if (currentDataset !== null || this.mode() === 'create') {
-        this.resetFormWithDataset();
+        untracked(() => this.resetFormWithDataset());
       }
     });
   }
@@ -436,7 +440,7 @@ export class KmlDatasetFormComponent implements OnInit, OnDestroy, AfterViewInit
 
     // Watch for KML content changes to parse and display
     this.kmlForm.get('kml')?.valueChanges
-      .pipe(debounceTime(500))
+      .pipe(debounceTime(100))
       .subscribe((kmlContent) => {
         this.parseAndDisplayKml(kmlContent);
       });
@@ -476,9 +480,6 @@ export class KmlDatasetFormComponent implements OnInit, OnDestroy, AfterViewInit
       };
       this.kmlForm.reset(formData);
 
-      // Force change detection to ensure PrimeNG checkbox updates
-      this.cdr.detectChanges();
-
       // Store both current and original values for change tracking
       this.currentFormValues.set({ ...formData });
       this.originalFormValues.set({ ...formData });
@@ -511,29 +512,22 @@ export class KmlDatasetFormComponent implements OnInit, OnDestroy, AfterViewInit
 
   // Public method to prepare the map - called by parent component when dialog is shown
   public prepareMap(): void {
-    console.log('[KML Form] prepareMap() called, mode:', this.mode(), 'mapReady:', this.mapReady());
     this.mapReady.set(true);
-
-    // Force change detection to ensure map container renders with proper dimensions
-    this.cdr.detectChanges();
 
     // Initialize map with minimal delay
     setTimeout(() => {
-      console.log('[KML Form] Calling initializeMapIntegration');
       this.initializeMapIntegration();
     }, 0);
   }
 
   private initializeMapIntegration(): void {
     const mapComponentRef = this.mapComponent();
-    console.log('[KML Form] initializeMapIntegration - mapComponent:', !!mapComponentRef, 'map:', !!mapComponentRef?.map);
     if (!mapComponentRef?.map) {
       console.error('[KML Form] Map component not ready');
       return;
     }
 
     const map = mapComponentRef.map;
-    console.log('[KML Form] Map initialized successfully');
 
     // Wait for map style to be loaded
     const initializeKml = () => {
@@ -647,14 +641,20 @@ export class KmlDatasetFormComponent implements OnInit, OnDestroy, AfterViewInit
   onSave() {
     if (this.canSave()) {
       const formValue = this.kmlForm.value;
-      const dataset = this.dataset();
+      const currentDataset = this.dataset();
+      const currentMode = this.mode();
 
-      const result: KmlDatasetResponse = {
-        ...formValue,
-        id: dataset?.id,
-        created: dataset?.created,
-        last_updated: dataset?.last_updated
+      // Build result object with API fields
+      const result: any = {
+        name: formValue.name,
+        enabled: formValue.enabled,
+        kml: formValue.kml
       };
+
+      // In edit mode, include the id so the list component can pass it to the API
+      if (currentMode === 'edit' && currentDataset?.id) {
+        result.id = currentDataset.id;
+      }
 
       this.save.emit(result);
       // Reset map state in case dialog closes
