@@ -212,10 +212,10 @@ export class RouteLayerService extends BaseLayerService {
 
     const coordinates = this.routeData.waypoints.map(wp => [wp.lng, wp.lat]);
     const geoJsonData = {
-      type: 'Feature',
+      type: 'Feature' as const,
       properties: {},
       geometry: {
-        type: 'LineString',
+        type: 'LineString' as const,
         coordinates: coordinates
       }
     };
