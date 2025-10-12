@@ -1,107 +1,261 @@
-import { Component, OnInit, input, output, inject, signal, effect } from '@angular/core';
+import { Component, OnInit, OnDestroy, AfterViewInit, input, output, inject, signal, effect, viewChild, ChangeDetectorRef, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { KmlDatasetResponse } from '@ghanawaters/shared-models';
+import { debounceTime } from 'rxjs/operators';
+import { kml } from '@tmcw/togeojson';
 
 // PrimeNG imports
 import { InputTextModule } from 'primeng/inputtext';
 import { TextareaModule } from 'primeng/textarea';
 import { CheckboxModule } from 'primeng/checkbox';
 import { ButtonModule } from 'primeng/button';
+import { SkeletonModule } from 'primeng/skeleton';
+
+// Map imports
+import { MapComponent, MapConfig, OSM_STYLE, KmlLayerService } from '@ghanawaters/shared-map';
+import { environment } from '../../../../environments/environment';
 
 @Component({
   selector: 'app-kml-dataset-form',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     CommonModule,
     ReactiveFormsModule,
     InputTextModule,
     TextareaModule,
     CheckboxModule,
-    ButtonModule
+    ButtonModule,
+    SkeletonModule,
+    MapComponent
   ],
+  providers: [KmlLayerService],
   template: `
-    <form [formGroup]="kmlForm" class="form-container">
-      <div class="form-group">
-        <label for="name" class="form-label">Name <span class="required-asterisk">*</span></label>
-        <span class="p-input-icon-left w-full">
-          <i class="pi pi-tag"></i>
-          <input
-            type="text"
-            pInputText
-            id="name"
-            formControlName="name"
-            placeholder="Enter a name for the KML dataset"
-            class="w-full"
-            [ngClass]="{'ng-invalid ng-dirty': kmlForm.controls['name'].invalid && kmlForm.controls['name'].touched}"
-            [readonly]="mode() === 'view'"
-          />
-        </span>
-        @if (kmlForm.controls['name'].invalid && kmlForm.controls['name'].touched) {
-          <small class="p-error block mt-1 text-xs">Name is required.</small>
-        }
-      </div>
+    <div class="kml-form-container">
+      <form [formGroup]="kmlForm" class="flex gap-3" style="height: 100%;">
+        <!-- Left side: Map -->
+        <div class="map-section" style="position: relative;">
+          @if (mapReady()) {
+            <lib-map
+              #mapComponent
+              [config]="mapConfig()">
+            </lib-map>
+          } @else {
+            <div class="map-skeleton">
+              <p-skeleton width="100%" height="100%"></p-skeleton>
+              <div class="loading-text">Loading map...</div>
+            </div>
+          }
 
-      <div class="form-group">
-        <label for="enabled" class="form-label">Status</label>
-        <div class="p-field-checkbox">
-          <p-checkbox
-            formControlName="enabled"
-            [binary]="true"
-            inputId="enabled"
-            [disabled]="mode() === 'view'"
-          ></p-checkbox>
-          <label for="enabled" class="ml-2">Enabled</label>
+          <!-- Parsing error overlay -->
+          @if (parseError()) {
+            <div class="parse-error-overlay">
+              <div class="parse-error-box">
+                <i class="pi pi-exclamation-triangle"></i>
+                <span>{{ parseError() }}</span>
+              </div>
+            </div>
+          }
         </div>
-      </div>
 
-      <div class="form-group">
-        <label for="kml" class="form-label">KML Content <span class="required-asterisk">*</span></label>
-        <textarea
-          pTextarea
-          id="kml"
-          formControlName="kml"
-          placeholder="Paste your KML content here"
-          rows="15"
-          class="w-full kml-textarea"
-          [ngClass]="{'ng-invalid ng-dirty': kmlForm.controls['kml'].invalid && kmlForm.controls['kml'].touched}"
-          [readonly]="mode() === 'view'"
-        ></textarea>
-        @if (kmlForm.controls['kml'].invalid && kmlForm.controls['kml'].touched) {
-          <small class="p-error block mt-1 text-xs">KML content is required.</small>
-        }
-      </div>
+        <!-- Right side: Form fields -->
+        <div class="form-panel">
+          <div class="form-content">
+            <div class="form-group">
+              <label for="name" class="form-label">Name <span class="required-asterisk">*</span></label>
+              <span class="p-input-icon-left w-full">
+                <i class="pi pi-tag"></i>
+                <input
+                  type="text"
+                  pInputText
+                  id="name"
+                  formControlName="name"
+                  placeholder="Enter a name for the KML dataset"
+                  class="w-full"
+                  [ngClass]="{'ng-invalid ng-dirty': kmlForm.controls['name'].invalid && kmlForm.controls['name'].touched}"
+                  [readonly]="mode() === 'view'"
+                />
+              </span>
+              @if (kmlForm.controls['name'].invalid && kmlForm.controls['name'].touched) {
+                <small class="p-error block mt-1 text-xs">Name is required.</small>
+              }
+            </div>
 
-      <div class="form-actions flex justify-end gap-2 mt-4">
-        @if (mode() !== 'view') {
-          <button
-            pButton
-            type="button"
-            label="Save"
-            icon="pi pi-check"
-            class="p-button-success"
-            (click)="onSave()"
-            [disabled]="kmlForm.invalid"
-          ></button>
-        }
-        <button
-          pButton
-          type="button"
-          label="Cancel"
-          icon="pi pi-times"
-          class="p-button-secondary"
-          (click)="onCancel()"
-        ></button>
-      </div>
-    </form>
+            <div class="form-group">
+              <label for="enabled" class="form-label">Status</label>
+              <div class="p-field-checkbox">
+                <p-checkbox
+                  formControlName="enabled"
+                  [binary]="true"
+                  inputId="enabled"
+                  [disabled]="mode() === 'view'"
+                ></p-checkbox>
+                <label for="enabled" class="ml-2">Enabled</label>
+              </div>
+            </div>
+
+            <div class="form-group flex-1">
+              <label for="kml" class="form-label">KML Content <span class="required-asterisk">*</span></label>
+              <textarea
+                pTextarea
+                id="kml"
+                formControlName="kml"
+                placeholder="Paste your KML content here"
+                class="w-full kml-textarea"
+                [ngClass]="{'ng-invalid ng-dirty': kmlForm.controls['kml'].invalid && kmlForm.controls['kml'].touched}"
+                [readonly]="mode() === 'view'"
+              ></textarea>
+              @if (kmlForm.controls['kml'].invalid && kmlForm.controls['kml'].touched) {
+                <small class="p-error block mt-1 text-xs">KML content is required.</small>
+              }
+            </div>
+          </div>
+
+          <div class="form-actions">
+            @if (mode() !== 'view') {
+              <div class="flex items-center justify-between w-full">
+                <div class="text-sm text-gray-500">
+                  @if (mode() === 'create' && !kmlForm.valid) {
+                    <span class="text-orange-500">Please fill in required fields</span>
+                  }
+                </div>
+                <div class="flex gap-2">
+                  <button
+                    pButton
+                    type="button"
+                    label="Cancel"
+                    class="p-button-text"
+                    (click)="onCancel()">
+                  </button>
+                  <button
+                    pButton
+                    type="button"
+                    label="Save"
+                    icon="pi pi-check"
+                    (click)="onSave()"
+                    [disabled]="kmlForm.invalid">
+                  </button>
+                </div>
+              </div>
+            } @else {
+              <button
+                pButton
+                type="button"
+                label="Close"
+                class="p-button-text"
+                (click)="onCancel()">
+              </button>
+            }
+          </div>
+        </div>
+      </form>
+    </div>
   `,
+  host: {
+    class: 'kml-form-host'
+  },
   styles: [`
-    .form-container {
-      padding: 0.5rem 0;
+    .kml-form-container {
+      height: 100%;
+      overflow: hidden;
+    }
+
+    .kml-form-container form {
+      height: 100%;
+    }
+
+    .map-section {
+      flex: 0 0 60%;
+      min-width: 300px;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    .map-section lib-map {
+      flex: 1;
+      min-height: 500px;
+      position: relative;
+      display: block;
+    }
+
+    .map-skeleton {
+      width: 100%;
+      height: 100%;
+      min-height: 500px;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .loading-text {
+      position: absolute;
+      color: var(--text-color-secondary);
+    }
+
+    .parse-error-overlay {
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 10;
+      pointer-events: none;
+    }
+
+    .parse-error-box {
+      background: var(--red-500);
+      color: white;
+      padding: 12px 20px;
+      border-radius: 4px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 14px;
+      max-width: 400px;
+    }
+
+    .parse-error-box i {
+      font-size: 18px;
+    }
+
+    .form-panel {
+      flex: 0 0 40%;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      background: var(--surface-card);
+      border-left: 1px solid var(--surface-border);
+    }
+
+    .form-content {
+      flex: 1;
+      padding: 1.5rem;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    .form-actions {
+      padding: 1rem 1.5rem;
+      border-top: 1px solid var(--surface-border);
+      display: flex;
+      justify-content: flex-end;
+      gap: 0.5rem;
     }
 
     .form-group {
-      margin-bottom: 1.5rem;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .form-group.flex-1 {
+      flex: 1;
+      min-height: 0;
     }
 
     .form-label {
@@ -117,7 +271,8 @@ import { ButtonModule } from 'primeng/button';
     .kml-textarea {
       font-family: var(--font-family-monospace, monospace);
       resize: vertical;
-      min-height: 150px;
+      min-height: 300px;
+      height: 100%;
     }
 
     .p-field-checkbox {
@@ -128,18 +283,28 @@ import { ButtonModule } from 'primeng/button';
     .w-full { width: 100%; }
     .ml-2 { margin-left: 0.5rem; }
     .mt-1 { margin-top: 0.25rem; }
-    .mt-4 { margin-top: 1rem; }
     .block { display: block; }
     .flex { display: flex; }
+    .items-center { align-items: center; }
+    .justify-between { justify-content: space-between; }
     .justify-end { justify-content: flex-end; }
     .gap-2 { gap: 0.5rem; }
+    .text-sm { font-size: 0.875rem; }
+    .text-xs { font-size: 0.75rem; }
+    .text-gray-500 { color: #6b7280; }
+    .text-orange-500 { color: #f97316; }
 
     .ng-invalid.ng-dirty {
       border-color: var(--red-500, #f44336);
     }
   `]
 })
-export class KmlDatasetFormComponent implements OnInit {
+export class KmlDatasetFormComponent implements OnInit, OnDestroy, AfterViewInit {
+  // Dependency injection
+  private fb = inject(FormBuilder);
+  private kmlLayerService = inject(KmlLayerService);
+  private cdr = inject(ChangeDetectorRef);
+
   // Inputs
   dataset = input<KmlDatasetResponse | null>(null);
   mode = input<'view' | 'edit' | 'create'>('create');
@@ -148,11 +313,14 @@ export class KmlDatasetFormComponent implements OnInit {
   save = output<KmlDatasetResponse>();
   cancel = output<void>();
 
-  // Services
-  private fb = inject(FormBuilder);
+  // View children
+  mapComponent = viewChild<MapComponent>('mapComponent');
 
-  // Form
+  // State
   kmlForm!: FormGroup;
+  mapConfig = signal<Partial<MapConfig>>({});
+  mapReady = signal(false);
+  parseError = signal<string | null>(null);
 
   // Effect to populate form when dataset changes
   private datasetEffect = effect(() => {
@@ -178,6 +346,135 @@ export class KmlDatasetFormComponent implements OnInit {
       enabled: [true],
       kml: ['', Validators.required]
     });
+
+    // Initialize map configuration
+    this.mapConfig.set({
+      mapStyle: OSM_STYLE,
+      center: [-0.4, 6.7], // Ghana region
+      zoom: 7,
+      height: '100%',
+      showControls: false,
+      showFullscreenControl: true,
+      showCoordinateDisplay: true,
+      availableLayers: [],
+      initialActiveLayers: []
+    });
+
+    // Watch for KML content changes
+    this.kmlForm.get('kml')?.valueChanges
+      .pipe(debounceTime(500))
+      .subscribe((kmlContent) => {
+        this.parseAndDisplayKml(kmlContent);
+      });
+  }
+
+  ngAfterViewInit(): void {
+    // Focus on the first input field
+    const firstInput = document.querySelector('#name') as HTMLInputElement;
+    if (firstInput) {
+      firstInput.focus();
+    }
+  }
+
+  ngOnDestroy(): void {
+    // Reset map state
+    this.mapReady.set(false);
+  }
+
+  // Public method to prepare the map - called by parent component when dialog is shown
+  public prepareMap(): void {
+    this.mapReady.set(true);
+
+    // Force change detection to ensure map container renders with proper dimensions
+    this.cdr.detectChanges();
+
+    // Initialize map with minimal delay
+    setTimeout(() => {
+      this.initializeMapIntegration();
+    }, 0);
+  }
+
+  private initializeMapIntegration(): void {
+    const mapComponentRef = this.mapComponent();
+    if (!mapComponentRef?.map) {
+      console.error('Map component not ready');
+      return;
+    }
+
+    const map = mapComponentRef.map;
+
+    // Wait for map style to be loaded
+    const initializeKml = () => {
+      // Initialize the KML layer with the map
+      this.kmlLayerService.initialize(map);
+
+      // Parse and display current KML content if any
+      const currentKml = this.kmlForm.get('kml')?.value;
+      if (currentKml) {
+        this.parseAndDisplayKml(currentKml);
+      }
+    };
+
+    if (map.isStyleLoaded()) {
+      initializeKml();
+      // Ensure map layout is correct after initialization
+      requestAnimationFrame(() => {
+        mapComponentRef.resize();
+      });
+    } else {
+      map.once('styledata', () => {
+        initializeKml();
+        // Ensure map layout is correct after initialization
+        requestAnimationFrame(() => {
+          mapComponentRef.resize();
+        });
+      });
+    }
+  }
+
+  private parseAndDisplayKml(kmlContent: string): void {
+    // Clear any previous error
+    this.parseError.set(null);
+
+    // If content is empty, clear the map
+    if (!kmlContent || kmlContent.trim() === '') {
+      this.kmlLayerService.setFeatureData(null);
+      return;
+    }
+
+    try {
+      // Parse KML string to DOM
+      const parser = new DOMParser();
+      const kmlDom = parser.parseFromString(kmlContent, 'text/xml');
+
+      // Check for parsing errors
+      const parserError = kmlDom.querySelector('parsererror');
+      if (parserError) {
+        throw new Error('Invalid XML format');
+      }
+
+      // Convert KML to GeoJSON
+      const geojson = kml(kmlDom);
+
+      // Check if we got valid features
+      if (!geojson.features || geojson.features.length === 0) {
+        this.parseError.set('No features found in KML');
+        this.kmlLayerService.setFeatureData(null);
+        return;
+      }
+
+      // Display features on map
+      this.kmlLayerService.setFeatureData(geojson);
+
+      // Fit map to features
+      requestAnimationFrame(() => {
+        this.kmlLayerService.fitToFeatures();
+      });
+    } catch (error) {
+      console.error('Error parsing KML:', error);
+      this.parseError.set('Invalid KML format');
+      this.kmlLayerService.setFeatureData(null);
+    }
   }
 
   onSave() {
@@ -193,12 +490,15 @@ export class KmlDatasetFormComponent implements OnInit {
       };
 
       this.save.emit(result);
+      // Reset map state in case dialog closes
+      this.mapReady.set(false);
     } else {
       this.kmlForm.markAllAsTouched();
     }
   }
 
   onCancel() {
+    this.mapReady.set(false);
     this.cancel.emit();
   }
 }

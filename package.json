@@ -102,6 +102,7 @@
     "@nestjs/typeorm": "^11.0.0",
     "@nestjs/websockets": "^10.4.18",
     "@primeng/themes": "^19.0.10",
+    "@tmcw/togeojson": "^7.1.2",
     "@turf/turf": "^7.2.0",
     "@types/archiver": "^6.0.3",
     "@types/maplibre-gl": "^1.13.2",

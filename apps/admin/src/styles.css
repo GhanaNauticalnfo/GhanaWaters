@@ -25,6 +25,30 @@
   position: relative;
 }
 
+/* Fix for MapLibre controls positioning in KML form dialogs */
+.kml-form-host .maplibregl-map {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.kml-form-host .maplibregl-ctrl-top-right,
+.kml-form-host .maplibregl-ctrl-bottom-right,
+.kml-form-host .maplibregl-ctrl-top-left,
+.kml-form-host .maplibregl-ctrl-bottom-left {
+  position: absolute;
+}
+
+.kml-form-host .maplibregl-ctrl-attrib {
+  background-color: rgba(255, 255, 255, 0.8);
+  margin: 0;
+}
+
+/* Ensure map container has proper dimensions */
+.kml-form-host .map-section {
+  position: relative;
+}
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;

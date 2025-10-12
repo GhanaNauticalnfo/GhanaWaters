@@ -1,4 +1,4 @@
-import { Component, OnInit, AfterViewInit, ChangeDetectionStrategy, TemplateRef, signal, viewChild, inject } from '@angular/core';
+import { Component, OnInit, AfterViewInit, ChangeDetectionStrategy, TemplateRef, signal, viewChild, inject, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { TagModule } from 'primeng/tag';
 import { MessageService } from 'primeng/api';
@@ -76,6 +76,21 @@ export class KmlListComponent implements OnInit, AfterViewInit {
   dialogMode = signal<'view' | 'edit' | 'create'>('create');
 
   listConfig!: ResourceListConfig<KmlDatasetResponse>;
+
+  constructor() {
+    // Watch for dialog opening to prepare map
+    effect(() => {
+      if (this.showDialog) {
+        // Wait for the form component to be available
+        setTimeout(() => {
+          const formComponent = this.datasetFormComponent();
+          if (formComponent) {
+            formComponent.prepareMap();
+          }
+        }, 0);
+      }
+    });
+  }
 
   ngOnInit() {
     // Initialize config without template references
