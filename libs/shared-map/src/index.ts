@@ -20,3 +20,4 @@ export * from './lib/components/map/map.component';
 export * from './lib/layers/vessel/vessel-layer.service';
 export * from './lib/layers/route/route-layer.service';
 export * from './lib/layers/kml/kml-layer.service';
+export * from './lib/layers/features/features-layer.service';

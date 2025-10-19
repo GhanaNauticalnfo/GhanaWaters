@@ -4,6 +4,7 @@ import { ApiTags, ApiResponse, ApiBody } from '@nestjs/swagger';
 import { KmlDatasetService } from './kml-dataset.service';
 import { KmlDataset } from './kml-dataset.entity';
 import { KmlDatasetInputDto, KmlDatasetResponseDto } from './dto';
+import { Public } from '../auth/decorators';
 
 @ApiTags('kml-datasets')
 @Controller('kml-datasets')
@@ -11,6 +12,7 @@ export class KmlDatasetController {
   constructor(private readonly kmlDatasetService: KmlDatasetService) {}
 
   @Get()
+  @Public() // Public access for frontend map to display enabled KML datasets
   @ApiResponse({ type: [KmlDatasetResponseDto] })
   async findAll(): Promise<KmlDatasetResponseDto[]> {
     const datasets = await this.kmlDatasetService.findAll();

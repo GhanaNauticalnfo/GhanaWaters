@@ -1,10 +1,12 @@
 // In your component (e.g., LiveComponent)
 import { Component, OnInit, inject, ViewChild, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { 
+import {
   MapComponent,
-  LayerManagerService, 
-  VesselLayerService, 
+  LayerManagerService,
+  VesselLayerService,
+  FeaturesLayerService,
+  KmlLayerService,
   MapConfig,
   OSM_STYLE,
   VesselWithLocation
@@ -21,10 +23,11 @@ import { environment } from '../../../environments/environment';
         <h2 class="text-2xl">Live</h2>
       </div>
       <div class="map-container">
-        <lib-map 
-          #mapComponent 
+        <lib-map
+          #mapComponent
           [config]="mapConfig"
           [vesselMode]="true"
+          [showFeaturesToggle]="true"
           (vesselSelected)="onVesselSelected($event)">
         </lib-map>
       </div>
@@ -66,7 +69,9 @@ import { environment } from '../../../environments/environment';
     }
   `],
   providers: [
-      VesselLayerService
+      VesselLayerService,
+      FeaturesLayerService,
+      KmlLayerService
   ]
 })
 export class LiveComponent implements OnInit, AfterViewInit {
@@ -92,10 +97,11 @@ export class LiveComponent implements OnInit, AfterViewInit {
   
   ngOnInit() {
     console.log('Live Component: Initializing live vessel tracking page');
-    
+
     // Register available layers
     this.layerManager.registerLayer('vessels', VesselLayerService);
-    
+    this.layerManager.registerLayer('features', FeaturesLayerService);
+
     console.log('Live Component: All layers registered successfully');
   }
   

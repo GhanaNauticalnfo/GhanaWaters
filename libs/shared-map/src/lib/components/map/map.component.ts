@@ -83,19 +83,28 @@ export interface VesselWithLocation {
         </lib-search-dropdown>
       </div>
       
-      <!-- Vessel Names Toggle -->
-      <div class="vessel-names-overlay" *ngIf="vesselMode">
-        <div class="vessel-names-toggle">
+      <!-- Vessel Names and Features Toggle -->
+      <div class="map-toggles-overlay" *ngIf="vesselMode || showFeaturesToggle">
+        <div class="vessel-names-toggle" *ngIf="vesselMode">
           <label>
-            <input 
-              type="checkbox" 
+            <input
+              type="checkbox"
               [checked]="showVesselNames()"
               (change)="toggleVesselNames()">
             <span class="text-sm">Show Vessel names</span>
           </label>
         </div>
+        <div class="features-toggle" *ngIf="showFeaturesToggle">
+          <label>
+            <input
+              type="checkbox"
+              [checked]="showFeatures()"
+              (change)="toggleFeatures()">
+            <span class="text-sm">Show Features</span>
+          </label>
+        </div>
       </div>
-      
+
       <!-- Vessel Item Template -->
       <ng-template #vesselItemTemplate let-vessel let-selected="selected">
         <div class="vessel-header">
@@ -293,21 +302,23 @@ export interface VesselWithLocation {
       width: 320px;
     }
     
-    .vessel-names-overlay {
+    .map-toggles-overlay {
       position: absolute;
       top: 10px;
       right: 10px;
       z-index: 1;
-    }
-    
-    .vessel-names-toggle {
       pointer-events: auto;
       background: white;
       border-radius: 4px;
       box-shadow: 0 0 10px rgba(0,0,0,0.1);
       padding: 8px 12px;
     }
-    
+
+    .vessel-names-toggle:not(:last-child),
+    .features-toggle:not(:last-child) {
+      margin-bottom: 8px;
+    }
+
     .vessel-names-toggle label {
       display: flex;
       align-items: center;
@@ -316,8 +327,21 @@ export interface VesselWithLocation {
       color: #333;
       white-space: nowrap;
     }
-    
+
     .vessel-names-toggle input[type="checkbox"] {
+      cursor: pointer;
+    }
+
+    .features-toggle label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      color: #333;
+      white-space: nowrap;
+    }
+
+    .features-toggle input[type="checkbox"] {
       cursor: pointer;
     }
 
@@ -391,8 +415,8 @@ export interface VesselWithLocation {
         width: 100%;
         box-sizing: border-box;
       }
-      
-      .vessel-names-overlay {
+
+      .map-toggles-overlay {
         top: auto;
         bottom: 10px;
         right: 10px;
@@ -459,7 +483,10 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy, OnChanges
   // Vessel search functionality
   @Input() vesselMode = false;
   @Output() vesselSelected = new EventEmitter<VesselWithLocation>();
-  
+
+  // Features toggle functionality
+  @Input() showFeaturesToggle = false;
+
   // Events
   @Output() mapClick = new EventEmitter<{longitude: number, latitude: number}>();
   @Output() mapLoad = new EventEmitter<Map>();
@@ -486,7 +513,10 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy, OnChanges
   
   // Show vessel names state
   showVesselNames = signal<boolean>(false);
-  
+
+  // Show features state
+  showFeatures = signal<boolean>(false);
+
   // Highlight tracking
   private highlightedVesselId: number | null = null;
   private highlightIntervals: any[] = [];
@@ -533,6 +563,20 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy, OnChanges
       if (savedPreference !== null) {
         this.showVesselNames.set(savedPreference === 'true');
       }
+    }
+
+    // Load show features preference from localStorage (default to true)
+    if (typeof window !== 'undefined' && window.localStorage) {
+      const savedPreference = localStorage.getItem('showFeatures');
+      if (savedPreference !== null) {
+        this.showFeatures.set(savedPreference === 'true');
+      } else {
+        // Default to true if no preference saved
+        this.showFeatures.set(true);
+      }
+    } else {
+      // Default to true if localStorage not available
+      this.showFeatures.set(true);
     }
   }
 
@@ -603,7 +647,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy, OnChanges
       
       this._map.on('load', () => {
         this.layerManager.initializeMap(this._map!);
-        
+
         // Activate initial layers if specified
         if (this._config.initialActiveLayers && this._config.initialActiveLayers.length > 0) {
           this._config.initialActiveLayers.forEach(layerId => {
@@ -612,12 +656,22 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy, OnChanges
             if (layerId === 'vessels') {
               this.configureVesselLayer();
             }
+            // Apply config if this is the features layer
+            if (layerId === 'features') {
+              this.configureFeaturesLayer();
+            }
           });
         }
-        
+
+        // Activate features layer if showFeatures is enabled (defaults to true)
+        if (this.showFeaturesToggle && this.showFeatures()) {
+          this.layerManager.activateLayer('features');
+          this.configureFeaturesLayer();
+        }
+
         // Emit map load event
         this.mapLoad.emit(this._map!);
-        
+
         // Initialize vessel search if enabled
         if (this.vesselMode) {
           this.initializeVesselSearch();
@@ -685,6 +739,10 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy, OnChanges
       if (layerId === 'vessels') {
         this.configureVesselLayer();
       }
+      // Apply config if this is the features layer
+      if (layerId === 'features') {
+        this.configureFeaturesLayer();
+      }
     }
   }
   
@@ -699,7 +757,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy, OnChanges
         console.log('Map Component: Setting vessel filter to', this._vesselFilter);
         (vesselLayer as any).setVesselFilter(this._vesselFilter);
       }
-      
+
       // Set config if available and vessel layer supports it
       if ('setConfig' in vesselLayer && this._config.apiUrl) {
         console.log('Map Component: Setting vessel layer config with apiUrl:', this._config.apiUrl);
@@ -707,6 +765,22 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy, OnChanges
       }
     } else {
       console.log('Map Component: Vessel layer not available for configuration');
+    }
+  }
+
+  private configureFeaturesLayer(): void {
+    console.log('Map Component: configureFeaturesLayer called');
+    // Get the features layer and apply configuration
+    const featuresLayer = this.layerManager.getLayer('features');
+    console.log('Map Component: Features layer found:', !!featuresLayer);
+    if (featuresLayer) {
+      // Set config if available and features layer supports it
+      if ('setConfig' in featuresLayer && this._config.apiUrl) {
+        console.log('Map Component: Setting features layer config with apiUrl:', this._config.apiUrl);
+        (featuresLayer as any).setConfig(this._config);
+      }
+    } else {
+      console.log('Map Component: Features layer not available for configuration');
     }
   }
   
@@ -931,18 +1005,36 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy, OnChanges
   toggleVesselNames(): void {
     const newValue = !this.showVesselNames();
     this.showVesselNames.set(newValue);
-    
+
     // Save preference to localStorage
     if (typeof window !== 'undefined' && window.localStorage) {
       localStorage.setItem('showVesselNames', newValue.toString());
     }
-    
+
     // Update the vessel layer if it exists
     if (this.vesselLayerService && 'setShowVesselNames' in this.vesselLayerService) {
       (this.vesselLayerService as any).setShowVesselNames(newValue);
     }
   }
-  
+
+  toggleFeatures(): void {
+    const newValue = !this.showFeatures();
+    this.showFeatures.set(newValue);
+
+    // Save preference to localStorage
+    if (typeof window !== 'undefined' && window.localStorage) {
+      localStorage.setItem('showFeatures', newValue.toString());
+    }
+
+    // Toggle the features layer
+    if (newValue) {
+      this.layerManager.activateLayer('features');
+      this.configureFeaturesLayer();
+    } else {
+      this.layerManager.deactivateLayer('features');
+    }
+  }
+
   private createHighlightEffect(vesselId: number, lng: number, lat: number): void {
     if (!this._map) return;
     
