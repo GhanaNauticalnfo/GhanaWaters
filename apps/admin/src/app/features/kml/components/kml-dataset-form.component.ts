@@ -12,6 +12,7 @@ import { CheckboxModule } from 'primeng/checkbox';
 import { ButtonModule } from 'primeng/button';
 import { SkeletonModule } from 'primeng/skeleton';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { FileUploadModule } from 'primeng/fileupload';
 import { ConfirmationService } from 'primeng/api';
 
 // Map imports
@@ -31,7 +32,8 @@ import { environment } from '../../../../environments/environment';
     ButtonModule,
     SkeletonModule,
     MapComponent,
-    ConfirmDialogModule
+    ConfirmDialogModule,
+    FileUploadModule
   ],
   providers: [KmlLayerService, ConfirmationService],
   template: `
@@ -100,12 +102,18 @@ import { environment } from '../../../../environments/environment';
 
             <div class="form-group flex-1">
               <label for="kml" class="form-label">KML Content</label>
+              @if (parseError()) {
+                <small class="p-error block mb-2">
+                  <i class="pi pi-exclamation-circle"></i> {{ parseError() }}
+                </small>
+              }
               <textarea
                 pTextarea
                 id="kml"
                 formControlName="kml"
                 placeholder="Paste your KML content here"
                 class="w-full kml-textarea"
+                [ngClass]="{'ng-invalid ng-dirty': parseError()}"
                 [readonly]="mode() === 'view'"
               ></textarea>
             </div>
@@ -114,22 +122,34 @@ import { environment } from '../../../../environments/environment';
           <div class="form-actions">
             @if (mode() !== 'view') {
               <div class="flex items-center justify-between w-full">
-                <div class="text-sm text-gray-500">
-                  @if (mode() === 'create' && !canSave()) {
-                    <span class="text-orange-500">
-                      @if (!kmlForm.get('name')?.value || kmlForm.get('name')?.value.trim().length === 0) {
-                        Please enter a dataset name and valid KML content
-                      } @else if (!isKmlValid()) {
-                        @if (parseError()) {
-                          {{ parseError() }}
+                <div class="flex items-center gap-3">
+                  <p-fileupload
+                    mode="basic"
+                    chooseLabel="Upload KML File"
+                    chooseIcon="pi pi-upload"
+                    accept=".kml"
+                    [customUpload]="true"
+                    (onSelect)="onFileSelect($event)"
+                    [auto]="true"
+                    [maxFileSize]="5000000">
+                  </p-fileupload>
+                  <div class="text-sm text-gray-500">
+                    @if (mode() === 'create' && !canSave()) {
+                      <span class="text-orange-500">
+                        @if (!kmlForm.get('name')?.value || kmlForm.get('name')?.value.trim().length === 0) {
+                          Please enter a dataset name and valid KML content
+                        } @else if (!isKmlValid()) {
+                          @if (parseError()) {
+                            {{ parseError() }}
+                          } @else {
+                            Please enter valid KML content
+                          }
                         } @else {
-                          Please enter valid KML content
+                          Please complete all required fields
                         }
-                      } @else {
-                        Please complete all required fields
-                      }
-                    </span>
-                  }
+                      </span>
+                    }
+                  </div>
                 </div>
                 <div class="flex gap-2">
                   <button
@@ -296,6 +316,7 @@ import { environment } from '../../../../environments/environment';
     .w-full { width: 100%; }
     .ml-2 { margin-left: 0.5rem; }
     .mt-1 { margin-top: 0.25rem; }
+    .mb-2 { margin-bottom: 0.5rem; }
     .block { display: block; }
     .flex { display: flex; }
     .items-center { align-items: center; }
@@ -561,10 +582,12 @@ export class KmlDatasetFormComponent implements OnInit, OnDestroy, AfterViewInit
   private parseAndDisplayKml(kmlContent: string): void {
     // Clear any previous error
     this.parseError.set(null);
+    this.cdr.markForCheck();
 
     // If content is empty, clear the map
     if (!kmlContent || kmlContent.trim() === '') {
       this.kmlLayerService.setFeatureData(null);
+      this.cdr.markForCheck();
       return;
     }
 
@@ -602,6 +625,7 @@ export class KmlDatasetFormComponent implements OnInit, OnDestroy, AfterViewInit
       if (!kmlElement) {
         this.parseError.set('Not valid KML: missing <kml> root element');
         this.kmlLayerService.setFeatureData(null);
+        this.cdr.markForCheck();
         return;
       }
 
@@ -612,11 +636,13 @@ export class KmlDatasetFormComponent implements OnInit, OnDestroy, AfterViewInit
       if (!geojson.features || geojson.features.length === 0) {
         this.parseError.set('No features found in KML');
         this.kmlLayerService.setFeatureData(null);
+        this.cdr.markForCheck();
         return;
       }
 
       // Display features on map
       this.kmlLayerService.setFeatureData(geojson);
+      this.cdr.markForCheck();
 
       // Fit map to features
       requestAnimationFrame(() => {
@@ -628,6 +654,7 @@ export class KmlDatasetFormComponent implements OnInit, OnDestroy, AfterViewInit
       const errorMessage = error instanceof Error ? error.message : 'Invalid KML format';
       this.parseError.set(errorMessage);
       this.kmlLayerService.setFeatureData(null);
+      this.cdr.markForCheck();
     }
   }
 
@@ -636,6 +663,35 @@ export class KmlDatasetFormComponent implements OnInit, OnDestroy, AfterViewInit
     const textArea = document.createElement('textarea');
     textArea.innerHTML = text;
     return textArea.value;
+  }
+
+  onFileSelect(event: any) {
+    // Get the first selected file
+    const file = event.files?.[0];
+    if (!file) {
+      return;
+    }
+
+    // Read the file contents
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const content = e.target?.result as string;
+      if (content) {
+        // Update the kml form control with file contents
+        this.kmlForm.patchValue({ kml: content });
+        // Mark the control as touched to trigger validation display
+        this.kmlForm.get('kml')?.markAsTouched();
+      }
+    };
+    reader.onerror = (error) => {
+      console.error('Error reading KML file:', error);
+      this.parseError.set('Failed to read file. Please try again.');
+      this.cdr.markForCheck();
+    };
+    reader.readAsText(file);
+
+    // Clear the file input so the same file can be selected again if needed
+    event.files = [];
   }
 
   onSave() {
