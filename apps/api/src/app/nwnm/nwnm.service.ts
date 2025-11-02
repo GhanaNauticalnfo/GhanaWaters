@@ -2,12 +2,37 @@ import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
 export interface NwNmMessagePart {
+  type?: string;
   geometry?: any;
+  eventDates?: any[];
 }
 
 export interface NwNmMessage {
+  // Core identifiers
   id: number | string;
+  shortId?: string;
+
+  // Type and status
   mainType: 'NW' | 'NM';
+  type?: string;
+  status?: string;
+
+  // Content
+  title?: string;
+  description?: string;
+
+  // Dates
+  publishDateFrom?: string;
+  publishDateTo?: string;
+  followUpDate?: string;
+
+  // Geographic info
+  areas?: any[];
+
+  // Multi-language content
+  descs?: any[];
+
+  // Parts
   parts?: NwNmMessagePart[];
 }
 
@@ -80,9 +105,35 @@ export class NwnmService {
         });
       }
 
+      // Get first description for primary content
+      const desc = msg.descs?.[0] || {};
+
       return {
-        id: msg.id || msg.shortId || '',
+        // Core identifiers
+        id: msg.id || '',
+        shortId: msg.shortId,
+
+        // Type and status
         mainType: msg.mainType || 'NW',
+        type: msg.type,
+        status: msg.status || 'PUBLISHED',
+
+        // Content (prefer description content)
+        title: desc.title || msg.title,
+        description: desc.details || msg.description,
+
+        // Dates
+        publishDateFrom: msg.publishDateFrom,
+        publishDateTo: msg.publishDateTo,
+        followUpDate: msg.followUpDate,
+
+        // Geographic info
+        areas: msg.areas || [],
+
+        // Multi-language content
+        descs: msg.descs || [],
+
+        // Parts
         parts: parts.length > 0 ? parts : undefined,
       };
     });

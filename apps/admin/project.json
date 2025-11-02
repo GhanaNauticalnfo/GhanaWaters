@@ -28,6 +28,11 @@
             "glob": "**/*",
             "input": "apps/admin/src/assets",
             "output": "/assets"
+          },
+          {
+            "glob": "**/*",
+            "input": "apps/admin/src/img",
+            "output": "img"
           }
         ],
         "styles": [

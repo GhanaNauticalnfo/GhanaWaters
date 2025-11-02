@@ -272,31 +272,62 @@ export class NwNmLayerService extends BaseLayerService {
 
         messages.forEach((message) => {
             message.parts?.forEach((part) => {
-                let geometry: Geometry | null = null;
-                let properties: Partial<NwNmFeatureProperties> = {};
+                // Create full message properties for popup display
+                const messageProperties: NwNmFeatureProperties = {
+                    // Core identifiers
+                    id: message.id,
+                    messageId: message.id,
+                    shortId: message.shortId,
 
+                    // Type and status
+                    mainType: message.mainType,
+                    type: message.type,
+                    status: message.status,
+
+                    // Content
+                    title: message.title,
+                    description: message.description,
+
+                    // Dates
+                    publishDateFrom: message.publishDateFrom,
+                    publishDateTo: message.publishDateTo,
+
+                    // Additional data
+                    areas: message.areas,
+                    descs: message.descs,
+                };
+
+                // Handle FeatureCollection (most common case from Niord API)
+                // Ported from Niord AngularJS messages-service.js getMessageFeatures()
+                if (part.geometry?.type === 'FeatureCollection' && Array.isArray(part.geometry.features)) {
+                    part.geometry.features.forEach((feature: any) => {
+                        if (feature.geometry) {
+                            validFeatures.push({
+                                type: 'Feature',
+                                geometry: feature.geometry,
+                                properties: messageProperties,
+                            });
+                        }
+                    });
+                    return; // Continue to next part
+                }
+
+                // Fallback: Handle single Feature
+                let geometry: Geometry | null = null;
                 if (part.geometry?.type === 'Feature') {
                     if (part.geometry.geometry) {
                         geometry = part.geometry.geometry;
-                        properties = {
-                            ...(part.geometry.properties || {}),
-                            messageId: message.id,
-                            mainType: message.mainType,
-                        };
                     }
                 } else if (part.geometry && ['Point', 'LineString', 'Polygon', 'MultiPoint', 'MultiLineString', 'MultiPolygon'].includes(part.geometry.type)) {
+                    // Fallback: Handle direct geometry types
                     geometry = part.geometry as Geometry;
-                    properties = {
-                        messageId: message.id,
-                        mainType: message.mainType,
-                    };
                 }
 
-                if (geometry && properties.messageId !== undefined && properties.mainType !== undefined) {
+                if (geometry && messageProperties.messageId !== undefined && messageProperties.mainType !== undefined) {
                     validFeatures.push({
                         type: 'Feature',
                         geometry: geometry,
-                        properties: properties as NwNmFeatureProperties,
+                        properties: messageProperties,
                     });
                 }
             });

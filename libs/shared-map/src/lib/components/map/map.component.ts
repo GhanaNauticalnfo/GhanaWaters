@@ -1,5 +1,5 @@
 // libs/map/src/lib/components/map/map.component.ts
-import { Component, OnInit, AfterViewInit, OnDestroy, OnChanges, SimpleChanges, ElementRef, ViewChild, inject, signal, Input, Output, EventEmitter, TemplateRef, computed } from '@angular/core';
+import { Component, OnInit, AfterViewInit, OnDestroy, OnChanges, SimpleChanges, ElementRef, ViewChild, inject, signal, Input, Output, EventEmitter, TemplateRef, computed, ApplicationRef, Injector, createComponent } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MapService } from '../../core/map.service';
 import { LayerManagerService } from '../../core/layer-manager.service';
@@ -9,6 +9,7 @@ import { SearchDropdownComponent, SearchDropdownConfig } from '@ghanawaters/shar
 import { VesselLayerService } from '../../layers/vessel/vessel-layer.service';
 import { Subject, takeUntil, map } from 'rxjs';
 import { toSignal } from '@angular/core/rxjs-interop';
+import { NwnmPopupComponent } from '../nwnm-popup/nwnm-popup.component';
 
 export interface VesselWithLocation {
   id: number;
@@ -496,9 +497,14 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy, OnChanges
   
   private mapService = inject(MapService);
   public layerManager = inject(LayerManagerService);
-  
+  private appRef = inject(ApplicationRef);
+  private injector = inject(Injector);
+
   // Fullscreen state
   isFullscreen = signal<boolean>(false);
+
+  // NW/NM popup tracking
+  private currentNwnmPopup: Popup | null = null;
   
   // Coordinate display state
   currentCoordinates = signal<{lng: number, lat: number}>({lng: 0, lat: 0});
@@ -747,6 +753,33 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy, OnChanges
 
       // Set initial zoom level
       this.currentZoom.set(this._map.getZoom());
+
+      // Add click handlers for NW/NM layers
+      const nwnmLayerIds = [
+        'nwnm-nw-points-layer',
+        'nwnm-nm-points-layer',
+        'nwnm-nw-lines-layer',
+        'nwnm-nm-lines-layer',
+        'nwnm-nw-fill-layer',
+        'nwnm-nm-fill-layer'
+      ];
+
+      this._map.on('click', nwnmLayerIds, (e) => {
+        this.handleNwnmClick(e);
+      });
+
+      // Change cursor on hover
+      this._map.on('mouseenter', nwnmLayerIds, () => {
+        if (this._map) {
+          this._map.getCanvas().style.cursor = 'pointer';
+        }
+      });
+
+      this._map.on('mouseleave', nwnmLayerIds, () => {
+        if (this._map) {
+          this._map.getCanvas().style.cursor = '';
+        }
+      });
     }
   }
   
@@ -1207,9 +1240,73 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy, OnChanges
       });
     }
   }
-  
+
+  private handleNwnmClick(e: any): void {
+    // Prevent default map click behavior
+    e.preventDefault();
+
+    // Close existing popup if any
+    if (this.currentNwnmPopup) {
+      this.currentNwnmPopup.remove();
+      this.currentNwnmPopup = null;
+    }
+
+    // Get feature properties from the click event
+    if (!e.features || e.features.length === 0) {
+      return;
+    }
+
+    const feature = e.features[0];
+    const messageData = feature.properties;
+
+    // Create Angular component dynamically
+    const componentRef = createComponent(NwnmPopupComponent, {
+      environmentInjector: this.appRef.injector,
+      elementInjector: this.injector
+    });
+
+    // Set input data
+    componentRef.instance.message = messageData;
+
+    // Trigger change detection
+    componentRef.changeDetectorRef.detectChanges();
+
+    // Attach to application
+    this.appRef.attachView(componentRef.hostView);
+
+    // Get DOM element
+    const popupElement = (componentRef.hostView as any).rootNodes[0] as HTMLElement;
+
+    if (!this._map) {
+      return;
+    }
+
+    // Create and show popup
+    this.currentNwnmPopup = new Popup({
+      closeButton: true,
+      closeOnClick: true,
+      maxWidth: '400px'
+    })
+      .setLngLat(e.lngLat)
+      .setDOMContent(popupElement)
+      .addTo(this._map);
+
+    // Cleanup on close
+    this.currentNwnmPopup.on('close', () => {
+      this.appRef.detachView(componentRef.hostView);
+      componentRef.destroy();
+      this.currentNwnmPopup = null;
+    });
+  }
+
   // Don't forget to clean up when the component is destroyed
   ngOnDestroy(): void {
+    // Clean up NW/NM popup
+    if (this.currentNwnmPopup) {
+      this.currentNwnmPopup.remove();
+      this.currentNwnmPopup = null;
+    }
+
     // Clean up vessel search
     this.destroy$.next();
     this.destroy$.complete();

@@ -1,20 +1,65 @@
 // libs/map/src/lib/layers/nwnm/nw-nm.models.ts
 import {
     Feature,
-    // FeatureCollection, // Removed unused import
+    FeatureCollection,
     Geometry,
-    GeoJsonProperties // Still needed for type definition below if desired, or remove if not extending
+    GeoJsonProperties
 } from 'geojson';
 
+/**
+ * Language-specific description for NW/NM messages
+ */
+export interface NwNmMessageDescription {
+  lang: string;
+  title?: string;
+  subject?: string;
+  details?: string;
+  name?: string;
+}
+
+/**
+ * Geographic area affected by the message
+ */
+export interface NwNmArea {
+  id?: number;
+  name?: string;
+  descs?: NwNmMessageDescription[];
+  parent?: NwNmArea;
+}
+
 export interface NwNmMessagePart {
-  // Allow geometry to be a standard Feature containing Geometry|null, OR just a Geometry object itself
-  geometry?: Feature<Geometry | null, GeoJsonProperties> | Geometry;
-  // Note: GeoJsonProperties here allows null for the properties object in the Feature definition
+  type?: string;
+  // Allow geometry to be a FeatureCollection (most common from Niord), Feature, or direct Geometry
+  geometry?: FeatureCollection<Geometry, GeoJsonProperties> | Feature<Geometry | null, GeoJsonProperties> | Geometry;
+  eventDates?: any[];
 }
 
 export interface NwNmMessage {
+  // Core identifiers
   id: number | string;
+  shortId?: string;
+
+  // Type and status
   mainType: 'NW' | 'NM';
+  type?: string;
+  status?: 'PUBLISHED' | 'DRAFT' | 'VERIFIED' | 'CANCELLED' | 'EXPIRED' | 'DELETED';
+
+  // Content (single language or primary)
+  title?: string;
+  description?: string;
+
+  // Multi-language content
+  descs?: NwNmMessageDescription[];
+
+  // Dates
+  publishDateFrom?: string;
+  publishDateTo?: string;
+  followUpDate?: string;
+
+  // Geographic info
+  areas?: NwNmArea[];
+
+  // Message structure
   parts?: NwNmMessagePart[];
 }
 
@@ -23,9 +68,27 @@ export interface NwNmMessage {
  * We define it directly instead of extending GeoJsonProperties to avoid TS2312.
  */
 export interface NwNmFeatureProperties {
-    messageId: number | string;
+    // Core identifiers
+    id: number | string;
+    messageId?: number | string;
+    shortId?: string;
+
+    // Type and status
     mainType: 'NW' | 'NM';
-    // Add other known specific properties here if applicable
+    type?: string;
+    status?: string;
+
+    // Content
+    title?: string;
+    description?: string;
+
+    // Dates
+    publishDateFrom?: string;
+    publishDateTo?: string;
+
+    // Additional data
+    areas?: any[];
+    descs?: any[];
 
     // Use 'unknown' instead of 'any' for better type safety
     // Allows merging with properties from the original GeoJSON feature

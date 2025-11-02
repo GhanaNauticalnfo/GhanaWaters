@@ -1,0 +1,33 @@
+<div class="nwnm-popup">
+  <!-- Message ID Badge -->
+  <div class="message-header">
+    <span class="message-id-badge" [ngClass]="statusClass">
+      {{ message.mainType }}{{ typeSuffix }} {{ messageIdDisplay }}
+    </span>
+  </div>
+
+  <!-- Title -->
+  <div class="message-title" *ngIf="message.title || message.descs?.[0]?.title">
+    <strong>{{ message.title || message.descs?.[0]?.title }}</strong>
+  </div>
+
+  <!-- Description -->
+  <div class="message-description" *ngIf="safeDescription"
+       [innerHTML]="safeDescription">
+  </div>
+
+  <!-- Publication Date -->
+  <div class="message-date" *ngIf="publishDate">
+    <small><strong>Published:</strong> {{ publishDate }}</small>
+  </div>
+
+  <!-- Areas -->
+  <div class="message-areas" *ngIf="areaNames">
+    <small><strong>Areas:</strong> {{ areaNames }}</small>
+  </div>
+
+  <!-- Status (if not published) -->
+  <div class="message-status" *ngIf="message.status && message.status !== 'PUBLISHED'">
+    <small><em>Status: {{ message.status }}</em></small>
+  </div>
+</div>

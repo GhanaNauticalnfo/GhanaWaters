@@ -1,0 +1,63 @@
+.nwnm-popup {
+  padding: 8px;
+  max-width: 400px;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.message-header {
+  margin-bottom: 8px;
+}
+
+.message-id-badge {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 3px;
+  color: white;
+  font-weight: 500;
+  font-size: 11px;
+  text-shadow: 0 1px 1px rgba(0,0,0,0.3);
+}
+
+/* Status colors from Niord */
+.status-PUBLISHED {
+  background-color: #559955;
+}
+
+.status-DRAFT {
+  background-color: #5555CC;
+}
+
+.status-VERIFIED {
+  background-color: #5555CC;
+}
+
+.status-CANCELLED,
+.status-EXPIRED,
+.status-DELETED {
+  background-color: #999999;
+}
+
+.message-title {
+  margin-bottom: 6px;
+  font-size: 14px;
+}
+
+.message-description {
+  margin-bottom: 8px;
+}
+
+.message-description p {
+  margin: 4px 0;
+}
+
+.message-date,
+.message-areas,
+.message-status {
+  margin-top: 6px;
+  color: #666;
+}
+
+.message-status {
+  font-style: italic;
+}
