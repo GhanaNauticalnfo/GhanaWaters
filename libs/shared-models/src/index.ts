@@ -13,4 +13,5 @@ export * from './lib/kml-dataset.model';
 export * from './lib/websocket-events.model';
 export * from './lib/sync.model';
 export * from './lib/vessel-dataset.model';
+export * from './lib/niord.model';
  

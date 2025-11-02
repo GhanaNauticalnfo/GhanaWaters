@@ -1,12 +1,12 @@
 import { Component, ViewChild, inject, AfterViewInit } from '@angular/core';
-import { MapComponent, MapConfig, OSM_STYLE, LayerManagerService, VesselLayerService, FeaturesLayerService, KmlLayerService, VesselWithLocation } from '@ghanawaters/shared-map';
+import { MapComponent, MapConfig, OSM_STYLE, LayerManagerService, VesselLayerService, FeaturesLayerService, KmlLayerService, NwNmLayerService, VesselWithLocation } from '@ghanawaters/shared-map';
 import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-home',
   standalone: true,
   imports: [MapComponent],
-  providers: [VesselLayerService, FeaturesLayerService, KmlLayerService],
+  providers: [VesselLayerService, FeaturesLayerService, KmlLayerService, NwNmLayerService],
   template: `
     <div class="p-0 h-screen flex flex-col">
       <div class="bg-blue-900 text-white p-4 text-center">
@@ -18,6 +18,7 @@ import { environment } from '../../../environments/environment';
           [config]="mapConfig"
           [vesselMode]="true"
           [showFeaturesToggle]="true"
+          [showNwNmToggle]="true"
           (vesselSelected)="onVesselSelected($event)">
         </lib-map>
       </div>
@@ -44,6 +45,7 @@ export class HomeComponent implements AfterViewInit {
   ngAfterViewInit() {
     this.layerManager.registerLayer('vessels', VesselLayerService);
     this.layerManager.registerLayer('features', FeaturesLayerService);
+    this.layerManager.registerLayer('nw-nm', NwNmLayerService);
   }
 
   onVesselSelected(vessel: VesselWithLocation) {

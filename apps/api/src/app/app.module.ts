@@ -18,6 +18,7 @@ import { TreeStubsModule } from './tree-stubs/tree-stubs.module';
 import { LandingSitesModule } from './landing-sites/landing-sites.module';
 import { DatabaseModule } from './database/database.module';
 import { AuthModule } from './auth/auth.module';
+import { NwnmModule } from './nwnm/nwnm.module';
 
 @Module({
   imports: [
@@ -57,6 +58,7 @@ import { AuthModule } from './auth/auth.module';
     TreeStubsModule,
     LandingSitesModule,
     DatabaseModule,
+    NwnmModule,
   ],
   controllers: [AppController, RootController],
   providers: [AppService],

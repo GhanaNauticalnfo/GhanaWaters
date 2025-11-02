@@ -84,8 +84,8 @@ export interface VesselWithLocation {
       </div>
       
       <!-- Vessel Names and Features Toggle -->
-      <div class="map-toggles-overlay" *ngIf="vesselMode || showFeaturesToggle">
-        <div class="vessel-names-toggle" *ngIf="vesselMode">
+      <div class="map-toggles-overlay" *ngIf="vesselMode || showFeaturesToggle || showNwNmToggle">
+        <div class="map-toggle" *ngIf="vesselMode">
           <label>
             <input
               type="checkbox"
@@ -94,13 +94,22 @@ export interface VesselWithLocation {
             <span class="text-sm">Show Vessel names</span>
           </label>
         </div>
-        <div class="features-toggle" *ngIf="showFeaturesToggle">
+        <div class="map-toggle" *ngIf="showFeaturesToggle">
           <label>
             <input
               type="checkbox"
               [checked]="showFeatures()"
               (change)="toggleFeatures()">
             <span class="text-sm">Show Features</span>
+          </label>
+        </div>
+        <div class="map-toggle" *ngIf="showNwNmToggle">
+          <label>
+            <input
+              type="checkbox"
+              [checked]="showNwNm()"
+              (change)="toggleNwNm()">
+            <span class="text-sm">Show NW/NM</span>
           </label>
         </div>
       </div>
@@ -314,12 +323,11 @@ export interface VesselWithLocation {
       padding: 8px 12px;
     }
 
-    .vessel-names-toggle:not(:last-child),
-    .features-toggle:not(:last-child) {
+    .map-toggle:not(:last-child) {
       margin-bottom: 8px;
     }
 
-    .vessel-names-toggle label {
+    .map-toggle label {
       display: flex;
       align-items: center;
       gap: 6px;
@@ -328,20 +336,7 @@ export interface VesselWithLocation {
       white-space: nowrap;
     }
 
-    .vessel-names-toggle input[type="checkbox"] {
-      cursor: pointer;
-    }
-
-    .features-toggle label {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      cursor: pointer;
-      color: #333;
-      white-space: nowrap;
-    }
-
-    .features-toggle input[type="checkbox"] {
+    .map-toggle input[type="checkbox"] {
       cursor: pointer;
     }
 
@@ -487,6 +482,9 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy, OnChanges
   // Features toggle functionality
   @Input() showFeaturesToggle = false;
 
+  // NW/NM toggle functionality
+  @Input() showNwNmToggle = false;
+
   // Events
   @Output() mapClick = new EventEmitter<{longitude: number, latitude: number}>();
   @Output() mapLoad = new EventEmitter<Map>();
@@ -516,6 +514,9 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy, OnChanges
 
   // Show features state
   showFeatures = signal<boolean>(false);
+
+  // Show NW/NM state
+  showNwNm = signal<boolean>(false);
 
   // Highlight tracking
   private highlightedVesselId: number | null = null;
@@ -577,6 +578,20 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy, OnChanges
     } else {
       // Default to true if localStorage not available
       this.showFeatures.set(true);
+    }
+
+    // Load show NW/NM preference from localStorage (default to true)
+    if (typeof window !== 'undefined' && window.localStorage) {
+      const savedPreference = localStorage.getItem('showNwNm');
+      if (savedPreference !== null) {
+        this.showNwNm.set(savedPreference === 'true');
+      } else {
+        // Default to true if no preference saved
+        this.showNwNm.set(true);
+      }
+    } else {
+      // Default to true if localStorage not available
+      this.showNwNm.set(true);
     }
   }
 
@@ -667,6 +682,11 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy, OnChanges
         if (this.showFeaturesToggle && this.showFeatures()) {
           this.layerManager.activateLayer('features');
           this.configureFeaturesLayer();
+        }
+
+        // Activate NW/NM layer if showNwNm is enabled (defaults to true)
+        if (this.showNwNmToggle && this.showNwNm()) {
+          this.layerManager.activateLayer('nw-nm');
         }
 
         // Emit map load event
@@ -1032,6 +1052,23 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy, OnChanges
       this.configureFeaturesLayer();
     } else {
       this.layerManager.deactivateLayer('features');
+    }
+  }
+
+  toggleNwNm(): void {
+    const newValue = !this.showNwNm();
+    this.showNwNm.set(newValue);
+
+    // Save preference to localStorage
+    if (typeof window !== 'undefined' && window.localStorage) {
+      localStorage.setItem('showNwNm', newValue.toString());
+    }
+
+    // Toggle the NW/NM layer
+    if (newValue) {
+      this.layerManager.activateLayer('nw-nm');
+    } else {
+      this.layerManager.deactivateLayer('nw-nm');
     }
   }
 

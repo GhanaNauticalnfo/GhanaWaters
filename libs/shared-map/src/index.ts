@@ -21,3 +21,5 @@ export * from './lib/layers/vessel/vessel-layer.service';
 export * from './lib/layers/route/route-layer.service';
 export * from './lib/layers/kml/kml-layer.service';
 export * from './lib/layers/features/features-layer.service';
+export * from './lib/layers/nwnm/nw-nm-layer.service';
+export * from './lib/layers/nwnm/nw-nm.models';

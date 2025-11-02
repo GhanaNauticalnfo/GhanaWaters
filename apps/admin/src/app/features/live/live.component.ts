@@ -7,6 +7,7 @@ import {
   VesselLayerService,
   FeaturesLayerService,
   KmlLayerService,
+  NwNmLayerService,
   MapConfig,
   OSM_STYLE,
   VesselWithLocation
@@ -28,6 +29,7 @@ import { environment } from '../../../environments/environment';
           [config]="mapConfig"
           [vesselMode]="true"
           [showFeaturesToggle]="true"
+          [showNwNmToggle]="true"
           (vesselSelected)="onVesselSelected($event)">
         </lib-map>
       </div>
@@ -71,7 +73,8 @@ import { environment } from '../../../environments/environment';
   providers: [
       VesselLayerService,
       FeaturesLayerService,
-      KmlLayerService
+      KmlLayerService,
+      NwNmLayerService
   ]
 })
 export class LiveComponent implements OnInit, AfterViewInit {
@@ -101,6 +104,7 @@ export class LiveComponent implements OnInit, AfterViewInit {
     // Register available layers
     this.layerManager.registerLayer('vessels', VesselLayerService);
     this.layerManager.registerLayer('features', FeaturesLayerService);
+    this.layerManager.registerLayer('nw-nm', NwNmLayerService);
 
     console.log('Live Component: All layers registered successfully');
   }
