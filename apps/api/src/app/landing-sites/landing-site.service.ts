@@ -6,7 +6,6 @@ import { CreateLandingSiteDto } from './dto/create-landing-site.dto';
 import { UpdateLandingSiteDto } from './dto/update-landing-site.dto';
 import { SyncService } from '../sync/sync.service';
 import { LandingSiteResponseDto } from './dto/landing-site-response.dto';
-import { ResourceSettingsService } from '../resource-settings/resource-settings.service';
 
 @Injectable()
 export class LandingSiteService {
@@ -14,7 +13,6 @@ export class LandingSiteService {
     @InjectRepository(LandingSite)
     private landingSiteRepository: Repository<LandingSite>,
     private syncService: SyncService,
-    private resourceSettingsService: ResourceSettingsService,
   ) {}
 
   async findAll(search?: string): Promise<LandingSiteResponseDto[]> {
@@ -30,8 +28,7 @@ export class LandingSiteService {
     
     const result = [];
     for (const site of landingSites) {
-      const settings = await this.resourceSettingsService.getSettingsForResource('landing_site', site.id);
-      result.push(site.toResponseDto(settings));
+      result.push(site.toResponseDto());
     }
     
     return result;
@@ -43,8 +40,7 @@ export class LandingSiteService {
     if (!landingSite) {
       throw new NotFoundException(`Landing site with ID ${id} not found`);
     }
-    const settings = await this.resourceSettingsService.getSettingsForResource('landing_site', landingSite.id);
-    return landingSite.toResponseDto(settings);
+    return landingSite.toResponseDto();
   }
 
   async findEnabled(): Promise<LandingSiteResponseDto[]> {
@@ -55,8 +51,7 @@ export class LandingSiteService {
     
     const result = [];
     for (const site of landingSites) {
-      const settings = await this.resourceSettingsService.getSettingsForResource('landing_site', site.id);
-      result.push(site.toResponseDto(settings));
+      result.push(site.toResponseDto());
     }
     
     return result;
@@ -154,7 +149,7 @@ export class LandingSiteService {
     return filtered.map(site => site.toResponseDto());
   }
 
-  async findNearest(longitude: number, latitude: number, limit: number = 5): Promise<LandingSiteResponseDto[]> {
+  async findNearest(longitude: number, latitude: number, limit = 5): Promise<LandingSiteResponseDto[]> {
     // For now, just return all enabled sites sorted by name
     // TODO: Fix spatial query with proper ST_Distance
     const landingSites = await this.landingSiteRepository.find({

@@ -1,20 +1,21 @@
 import { Component, input, output, OnInit, OnDestroy, signal, effect, computed, inject, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { TimestampPipe } from '@ghanawaters/shared';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { debounceTime } from 'rxjs/operators';
 import { Subscription } from 'rxjs';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
 import { ButtonModule } from 'primeng/button';
 import { TabsModule } from 'primeng/tabs';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ConfirmationService } from 'primeng/api';
-import { VesselTypeService, VesselType } from '../../settings/services/vessel-type.service';
-import { VesselDataset } from '@ghanawaters/shared-models';
-import { VesselTabInfoComponent } from './vessel-tab-info.component';
+import { VesselTypeService, VesselType } from '../../settings/vessel-types/vessel-type.service';
+import { VesselDataset, DeviceResponse, DeviceState } from '@ghanawaters/shared-models';
 import { VesselTabDeviceComponent } from './vessel-tab-device.component';
 import { VesselTabTrackingComponent } from './vessel-tab-tracking.component';
-import { VesselIdPipe } from '@ghanawaters/shared';
+import { MapComponent, MapConfig, OSM_STYLE } from '@ghanawaters/shared-map';
 
 export interface VesselFormData {
   name: string;
@@ -34,10 +35,10 @@ export interface VesselFormData {
     ButtonModule,
     TabsModule,
     ConfirmDialogModule,
-    VesselTabInfoComponent,
     VesselTabDeviceComponent,
     VesselTabTrackingComponent,
-    VesselIdPipe
+    MapComponent,
+    TimestampPipe
   ],
   providers: [ConfirmationService],
   template: `
@@ -53,7 +54,7 @@ export interface VesselFormData {
               
               <div class="col-12 md:col-6">
                 <div class="field">
-                  <label for="name" class="block mb-2">Name <span class="text-red-500">*</span></label>
+                  <label for="name" class="block mb-2">Name *</label>
                   <input
                     type="text"
                     pInputText
@@ -70,7 +71,7 @@ export interface VesselFormData {
               
               <div class="col-12 md:col-6">
                 <div class="field">
-                  <label for="vessel_type_id" class="block mb-2">Type <span class="text-red-500">*</span></label>
+                  <label for="vessel_type_id" class="block mb-2">Type *</label>
                   <p-select
                     id="vessel_type_id"
                     formControlName="vessel_type_id"
@@ -79,7 +80,6 @@ export interface VesselFormData {
                     optionValue="id"
                     placeholder="Select vessel type"
                     styleClass="w-full"
-                    [appendTo]="'body'"
                     [panelStyle]="{'max-height':'200px'}"
                   ></p-select>
                   @if (vesselForm.get('vessel_type_id')?.invalid && vesselForm.get('vessel_type_id')?.touched) {
@@ -139,53 +139,76 @@ export interface VesselFormData {
             <p-tabpanels>
               <p-tabpanel value="0">
                 <div class="tab-content">
-                  <div class="grid">
-                    <div class="col-12 md:col-6">
-                      <div class="field">
-                        <label for="edit-name" class="block mb-2">Name <span class="text-red-500">*</span></label>
-                        <input
-                          type="text"
-                          pInputText
-                          id="edit-name"
-                          formControlName="name"
-                          class="w-full"
-                          placeholder="Enter vessel name"
-                        />
-                        @if (vesselForm.get('name')?.invalid && vesselForm.get('name')?.touched) {
-                          <small class="p-error text-xs">Vessel name is required</small>
-                        }
-                      </div>
-                    </div>
-                    
-                    <div class="col-12 md:col-6">
-                      <div class="field">
-                        <label for="edit-vessel_type_id" class="block mb-2">Type <span class="text-red-500">*</span></label>
-                        <p-select
-                          id="edit-vessel_type_id"
-                          formControlName="vessel_type_id"
-                          [options]="vesselTypes()"
-                          optionLabel="name"
-                          optionValue="id"
-                          placeholder="Select vessel type"
-                          styleClass="w-full"
-                          [appendTo]="'body'"
-                          [panelStyle]="{'max-height':'200px'}"
-                        ></p-select>
-                        @if (vesselForm.get('vessel_type_id')?.invalid && vesselForm.get('vessel_type_id')?.touched) {
-                          <small class="p-error text-xs">Vessel type is required</small>
-                        }
-                      </div>
-                    </div>
-                    
-                    <div class="col-12">
-                      <div class="vessel-meta-info">
-                        <div class="meta-row">
-                          <span class="meta-label">ID:</span>
-                          <span class="meta-value font-mono text-sm">{{ vessel()!.id | vesselId }}</span>
+                  <div class="flex gap-3" style="height: 100%;">
+                    <!-- Left side: Map (60%) -->
+                    <div class="map-section">
+                      @if (hasActiveDevice() && hasValidPosition()) {
+                        <lib-map 
+                          [config]="mapConfig()"
+                          [vesselFilter]="vessel()!.id">
+                        </lib-map>
+                      } @else if (hasActiveDevice() && !hasValidPosition()) {
+                        <div class="no-position-message">
+                          <div class="no-position-content">
+                            <i class="pi pi-map-marker text-4xl mb-3 text-gray-400"></i>
+                            <h5 class="text-lg mb-2">No Position Data</h5>
+                            <p class="text-muted text-sm">Device is active but no position has been reported yet.</p>
+                          </div>
                         </div>
-                        <div class="meta-row">
-                          <span class="meta-label">Created:</span>
-                          <span class="meta-value">{{ vessel()!.created | date:'dd/MM/yyyy HH:mm:ss' }}</span>
+                      } @else {
+                        <div class="no-device-message">
+                          <div class="no-device-content">
+                            <i class="pi pi-mobile text-4xl mb-3 text-gray-400"></i>
+                            <h5 class="text-lg mb-2">No Active Device</h5>
+                            <p class="text-muted text-sm">To see live position data, go to the Device tab and connect a device.</p>
+                          </div>
+                        </div>
+                      }
+                    </div>
+                    
+                    <!-- Right side: Vessel Info (40%) -->
+                    <div class="form-panel">
+                      <div class="form-content">
+                        <div class="field">
+                          <label class="block mb-2">ID</label>
+                          <div class="field-value">{{ vessel()!.id }}</div>
+                        </div>
+                        
+                        <div class="field">
+                          <label class="block mb-2">Created</label>
+                          <div class="field-value">{{ vessel()!.created | timestamp }}</div>
+                        </div>
+                        
+                        <div class="field">
+                          <label for="edit-name" class="block mb-2">Name *</label>
+                          <input
+                            type="text"
+                            pInputText
+                            id="edit-name"
+                            formControlName="name"
+                            class="w-full"
+                            placeholder="Enter vessel name"
+                          />
+                          @if (vesselForm.get('name')?.invalid && vesselForm.get('name')?.touched) {
+                            <small class="p-error text-xs">Vessel name is required</small>
+                          }
+                        </div>
+                        
+                        <div class="field">
+                          <label for="edit-vessel_type_id" class="block mb-2">Type *</label>
+                          <p-select
+                            id="edit-vessel_type_id"
+                            formControlName="vessel_type_id"
+                            [options]="vesselTypes()"
+                            optionLabel="name"
+                            optionValue="id"
+                            placeholder="Select vessel type"
+                            styleClass="w-full"
+                            [panelStyle]="{'max-height':'200px'}"
+                          ></p-select>
+                          @if (vesselForm.get('vessel_type_id')?.invalid && vesselForm.get('vessel_type_id')?.touched) {
+                            <small class="p-error text-xs">Vessel type is required</small>
+                          }
                         </div>
                       </div>
                     </div>
@@ -258,10 +281,78 @@ export interface VesselFormData {
             </p-tablist>
             <p-tabpanels>
               <p-tabpanel value="0">
-                <app-vessel-tab-info 
-                  [vessel]="vessel()" 
-                  [viewMode]="true">
-                </app-vessel-tab-info>
+                <div class="tab-content">
+                  <div class="flex gap-3" style="height: 100%;">
+                    <!-- Left side: Map (60%) -->
+                    <div class="map-section">
+                      @if (hasActiveDevice() && hasValidPosition()) {
+                        <lib-map 
+                          [config]="mapConfig()"
+                          [vesselFilter]="vessel()!.id">
+                        </lib-map>
+                      } @else if (hasActiveDevice() && !hasValidPosition()) {
+                        <div class="no-position-message">
+                          <div class="no-position-content">
+                            <i class="pi pi-map-marker text-4xl mb-3 text-gray-400"></i>
+                            <h5 class="text-lg mb-2">No Position Data</h5>
+                            <p class="text-muted text-sm">Device is active but no position has been reported yet.</p>
+                          </div>
+                        </div>
+                      } @else {
+                        <div class="no-device-message">
+                          <div class="no-device-content">
+                            <i class="pi pi-mobile text-4xl mb-3 text-gray-400"></i>
+                            <h5 class="text-lg mb-2">No Active Device</h5>
+                            <p class="text-muted text-sm">To see live position data, go to the Device tab and connect a device.</p>
+                          </div>
+                        </div>
+                      }
+                    </div>
+                    
+                    <!-- Right side: Vessel Info (40%) -->
+                    <div class="form-panel">
+                      <div class="form-content">
+                        <form [formGroup]="vesselForm">
+                          <div class="field">
+                            <label class="block mb-2">ID</label>
+                            <div class="field-value">{{ vessel()!.id }}</div>
+                          </div>
+                          
+                          <div class="field">
+                            <label class="block mb-2">Created</label>
+                            <div class="field-value">{{ vessel()!.created | timestamp }}</div>
+                          </div>
+                          
+                          <div class="field">
+                            <label for="view-name" class="block mb-2">Name *</label>
+                            <input
+                              type="text"
+                              pInputText
+                              id="view-name"
+                              formControlName="name"
+                              class="w-full"
+                              placeholder="Enter vessel name"
+                            />
+                          </div>
+                          
+                          <div class="field">
+                            <label for="view-vessel_type_id" class="block mb-2">Type *</label>
+                            <p-select
+                              id="view-vessel_type_id"
+                              formControlName="vessel_type_id"
+                              [options]="vesselTypes()"
+                              optionLabel="name"
+                              optionValue="id"
+                              placeholder="Select vessel type"
+                              styleClass="w-full"
+                              [panelStyle]="{'max-height':'200px'}"
+                            ></p-select>
+                          </div>
+                        </form>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </p-tabpanel>
               
               <p-tabpanel value="1">
@@ -340,6 +431,16 @@ export interface VesselFormData {
       color: var(--text-color);
     }
     
+    .field-value {
+      padding: 0.5rem 0.75rem;
+      background-color: var(--surface-100);
+      border: 1px solid var(--surface-300);
+      border-radius: var(--border-radius);
+      color: var(--text-color);
+      font-size: 1rem;
+      line-height: 1.5;
+    }
+    
     h3 {
       color: var(--text-color);
       font-weight: 600;
@@ -370,7 +471,7 @@ export interface VesselFormData {
     }
     
     .meta-label {
-      font-weight: 600;
+      font-weight: 500;
       color: var(--text-color-secondary);
       min-width: 120px;
     }
@@ -398,6 +499,73 @@ export interface VesselFormData {
       height: 100%;
       padding: 0;
     }
+    
+    .map-section {
+      flex: 0 0 60%;
+      min-width: 300px;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+    
+    .map-section lib-map {
+      flex: 1;
+      min-height: 500px;
+      position: relative;
+      display: block;
+    }
+    
+    .form-panel {
+      flex: 0 0 40%;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      background: var(--surface-card);
+      border-left: 1px solid var(--surface-border);
+    }
+    
+    .form-content {
+      flex: 1;
+      padding: 1.5rem;
+      overflow-y: auto;
+    }
+    
+    .no-device-message,
+    .no-position-message {
+      width: 100%;
+      height: 100%;
+      min-height: 500px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--surface-50);
+      border: 2px dashed var(--surface-300);
+      border-radius: 8px;
+    }
+    
+    .form-panel .form-content {
+      min-height: 500px;
+    }
+    
+    .no-device-content,
+    .no-position-content {
+      text-align: center;
+      max-width: 400px;
+      padding: 2rem;
+    }
+    
+    .no-device-content h5,
+    .no-position-content h5 {
+      color: var(--text-color);
+      margin: 0.5rem 0;
+    }
+    
+    .no-device-content .text-muted,
+    .no-position-content .text-muted {
+      color: var(--text-color-secondary);
+      line-height: 1.5;
+    }
   `]
 })
 export class VesselFormComponent implements OnInit, OnDestroy {
@@ -405,6 +573,7 @@ export class VesselFormComponent implements OnInit, OnDestroy {
   private fb = inject(FormBuilder);
   private vesselTypeService = inject(VesselTypeService);
   private confirmationService = inject(ConfirmationService);
+  private http = inject(HttpClient);
   
   // Inputs and outputs
   vessel = input<VesselDataset | null>(null);
@@ -417,6 +586,11 @@ export class VesselFormComponent implements OnInit, OnDestroy {
   vesselForm: FormGroup;
   vesselTypes = signal<VesselType[]>([]);
   activeTabIndex = signal<number>(0);
+  
+  // Device and map state
+  activeDevice = signal<DeviceResponse | null>(null);
+  loadingDevices = signal(false);
+  mapConfig = signal<Partial<MapConfig>>({});
   
   // Change tracking
   currentFormValues = signal<VesselFormData>({ 
@@ -450,6 +624,15 @@ export class VesselFormComponent implements OnInit, OnDestroy {
     return true;
   });
   
+  hasActiveDevice = computed(() => {
+    return this.activeDevice() !== null;
+  });
+  
+  hasValidPosition = computed(() => {
+    const vessel = this.vessel();
+    return !!(vessel?.last_position?.latitude && vessel?.last_position?.longitude);
+  });
+  
   constructor() {
     // Initialize form
     this.vesselForm = this.fb.nonNullable.group({
@@ -467,6 +650,10 @@ export class VesselFormComponent implements OnInit, OnDestroy {
       const currentVessel = this.vessel();
       if (currentVessel !== null || this.mode() === 'create') {
         this.resetFormWithVesselData();
+        if (currentVessel !== null) {
+          this.loadDevices();
+          this.updateMapConfig();
+        }
       }
     });
   }
@@ -586,7 +773,52 @@ export class VesselFormComponent implements OnInit, OnDestroy {
     }, 0);
   }
   
+  private loadDevices(): void {
+    const vessel = this.vessel();
+    if (!vessel) return;
+    
+    this.loadingDevices.set(true);
+    this.http.get<DeviceResponse[]>(`/api/devices?vessel_id=${vessel.id}`).subscribe({
+      next: (devices: DeviceResponse[]) => {
+        const active = devices.find(d => d.state === DeviceState.ACTIVE);
+        this.activeDevice.set(active || null);
+      },
+      error: (error: HttpErrorResponse) => {
+        console.error('Error loading devices:', error);
+        this.activeDevice.set(null);
+      },
+      complete: () => {
+        this.loadingDevices.set(false);
+      }
+    });
+  }
+  
+  private updateMapConfig(): void {
+    const vessel = this.vessel();
+    if (!vessel || !this.hasValidPosition()) {
+      return;
+    }
+    
+    const lng = vessel.last_position!.longitude;
+    const lat = vessel.last_position!.latitude;
+    
+    this.mapConfig.set({
+      mapStyle: OSM_STYLE,
+      center: [lng, lat],
+      zoom: 12.5,
+      minZoom: 1,
+      maxZoom: 18,
+      height: '100%',
+      showControls: false,
+      showFullscreenControl: true,
+      showCoordinateDisplay: true,
+      availableLayers: [],
+      initialActiveLayers: []
+    });
+  }
+
   onDeviceUpdated(): void {
+    this.loadDevices(); // Reload devices when updated
     this.deviceUpdated.emit();
   }
 }

@@ -12,10 +12,10 @@ export class TreeStubGroup {
   @Column({ default: true })
   enabled: boolean;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ type: 'timestamptz' })
   created_at: Date;
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({ type: 'timestamptz' })
   updated_at: Date;
 
   @OneToMany(() => TreeStub, treeStub => treeStub.group)

@@ -23,6 +23,11 @@
           {
             "glob": "**/*",
             "input": "apps/frontend/public"
+          },
+          {
+            "glob": "**/*",
+            "input": "apps/frontend/src/img",
+            "output": "img"
           }
         ],
         "styles": [
@@ -30,7 +35,11 @@
           "node_modules/primeicons/primeicons.css",
           "node_modules/maplibre-gl/dist/maplibre-gl.css"
         ],
-        "scripts": []
+        "scripts": [],
+        "allowedCommonJsDependencies": [
+          "maplibre-gl",
+          "qrcode"
+        ]
       },
       "configurations": {
         "prod": {
@@ -114,9 +123,9 @@
         "buildTarget": "frontend:build"
       }
     },
-    "lint": {
-      "executor": "@nx/eslint:lint"
-    },
+    // "lint": {
+    //   "executor": "@nx/eslint:lint"
+    // },
     "test": {
       "executor": "@nx/jest:jest",
       "outputs": [

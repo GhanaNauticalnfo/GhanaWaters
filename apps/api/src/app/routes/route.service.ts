@@ -3,7 +3,6 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Route } from './route.entity';
 import { SyncService } from '../sync/sync.service';
-import { ResourceSettingsService } from '../resource-settings/resource-settings.service';
 import { RouteResponseDto } from './dto/route-response.dto';
 import { RouteInputDto } from './dto/route-input.dto';
 import { Waypoint } from '@ghanawaters/shared-models';
@@ -14,7 +13,6 @@ export class RouteService {
     @InjectRepository(Route)
     private routeRepository: Repository<Route>,
     private syncService: SyncService,
-    private resourceSettingsService: ResourceSettingsService,
   ) {}
 
   async findAll(): Promise<RouteResponseDto[]> {
@@ -24,8 +22,7 @@ export class RouteService {
     
     const result = [];
     for (const route of routes) {
-      const settings = await this.resourceSettingsService.getSettingsForResource('route', route.id);
-      result.push(route.toResponseDto(settings));
+      result.push(route.toResponseDto());
     }
     
     return result;
@@ -33,8 +30,7 @@ export class RouteService {
 
   async findOne(id: number): Promise<RouteResponseDto> {
     const route = await this.findOneEntity(id);
-    const settings = await this.resourceSettingsService.getSettingsForResource('route', route.id);
-    return route.toResponseDto(settings);
+    return route.toResponseDto();
   }
 
   async findOneEntity(id: number): Promise<Route> {

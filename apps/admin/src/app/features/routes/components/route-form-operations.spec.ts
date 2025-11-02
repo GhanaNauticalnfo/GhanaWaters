@@ -46,7 +46,9 @@ describe('RouteFormComponent - Operations (Unit)', () => {
       { lat: 5.6037, lng: -0.186, order: 0 },
       { lat: 5.605, lng: -0.185, order: 1 }
     ],
-    enabled: true
+    enabled: true,
+    created: '2024-01-01T00:00:00.000Z',
+    last_updated: '2024-01-01T00:00:00.000Z'
   };
 
   const mockWaypoints: Waypoint[] = [
@@ -153,10 +155,13 @@ describe('RouteFormComponent - Operations (Unit)', () => {
         const currentRoute = route();
         
         const routeData: Route = {
+          id: currentRoute?.id || 0,
           name: formValue.name,
           notes: formValue.notes,
           waypoints: waypoints(),
-          enabled: formValue.enabled
+          enabled: formValue.enabled,
+          created: currentRoute?.created || '2024-01-01T00:00:00.000Z',
+          last_updated: new Date().toISOString()
         };
         
         if (currentRoute?.id) {
@@ -316,10 +321,13 @@ describe('RouteFormComponent - Operations (Unit)', () => {
       saveRoute();
       
       expect(saveEmitSpy).toHaveBeenCalledWith({
+        id: 0,
         name: 'New Route',
         notes: 'New Notes',
         waypoints: mockWaypoints,
-        enabled: false
+        enabled: false,
+        created: '2024-01-01T00:00:00.000Z',
+        last_updated: expect.any(String)
       });
     });
 
@@ -338,7 +346,9 @@ describe('RouteFormComponent - Operations (Unit)', () => {
         name: 'Updated Route',
         notes: mockRoute.notes,
         waypoints: mockRoute.waypoints,
-        enabled: mockRoute.enabled
+        enabled: mockRoute.enabled,
+        created: mockRoute.created,
+        last_updated: expect.any(String)
       });
     });
 
@@ -509,9 +519,12 @@ describe('RouteFormComponent - Operations (Unit)', () => {
 
     it('should handle route with missing fields', () => {
       const incompleteRoute: Route = {
+        id: 1,
         name: 'Test',
         waypoints: [],
-        enabled: true
+        enabled: true,
+        created: '2024-01-01T00:00:00.000Z',
+        last_updated: '2024-01-01T00:00:00.000Z'
       };
       route.set(incompleteRoute);
       

@@ -12,6 +12,7 @@ describe('VesselTypeController (Unit)', () => {
   const mockVesselTypeResponse: VesselTypeResponseDto = {
     id: 1,
     name: 'Cargo',
+    color: '#10B981',
     created_at: '2024-01-01T00:00:00.000Z',
     updated_at: '2024-01-01T00:00:00.000Z',
     vessel_count: 2
@@ -21,6 +22,7 @@ describe('VesselTypeController (Unit)', () => {
     {
       id: 1,
       name: 'Unspecified',
+      color: '#3B82F6',
       created_at: '2024-01-01T00:00:00.000Z',
       updated_at: '2024-01-01T00:00:00.000Z',
       vessel_count: 0
@@ -96,6 +98,7 @@ describe('VesselTypeController (Unit)', () => {
       const newVesselType: VesselTypeResponseDto = {
         id: 3,
         name: 'Fishing Vessel',
+        color: '#F59E0B',
         created_at: '2024-01-01T00:00:00.000Z',
         updated_at: '2024-01-01T00:00:00.000Z',
         vessel_count: 0
@@ -211,6 +214,7 @@ describe('VesselTypeController (Unit)', () => {
       service.update.mockResolvedValue({
         id: 2,
         name: 'Updated Name',
+        color: '#10B981',
         created_at: '2024-01-01T00:00:00.000Z',
         updated_at: '2024-01-02T00:00:00.000Z',
         vessel_count: 0

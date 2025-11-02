@@ -13,7 +13,7 @@ The ArgoCD UI is not publicly exposed by default. To access it locally, use port
 kubectl port-forward svc/argocd-server -n argocd 8080:443
 ```
 
-Then access the UI at: https://localhost:8080
+Then access the UI at: https://localhost:8080. (Use another port than 8080 if you already have something running there)
 
 **Note**: You'll see a certificate warning since ArgoCD uses a self-signed certificate. This is safe to ignore for local access.
 

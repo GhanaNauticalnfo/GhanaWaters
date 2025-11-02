@@ -21,6 +21,11 @@
             "routerLink": "/landing-sites"
         },
         {
+            "name": "KML Datasets",
+            "icon": "pi pi-map",
+            "routerLink": "/features/kml"
+        },
+        {
             "name": "Live",
             "icon": "pi pi-compass",
             "routerLink": "/live"

@@ -1,13 +1,13 @@
 import { Component, Input, signal, OnInit, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { TimestampPipe } from '@ghanawaters/shared';
 import { VesselDataset } from '@ghanawaters/shared-models';
-import { VesselTypeService, VesselType } from '../../settings/services/vessel-type.service';
-import { VesselIdPipe } from '@ghanawaters/shared';
+import { VesselTypeService, VesselType } from '../../settings/vessel-types/vessel-type.service';
 
 @Component({
   selector: 'app-vessel-tab-info',
   standalone: true,
-  imports: [CommonModule, VesselIdPipe],
+  imports: [CommonModule, TimestampPipe],
   template: `
     <div class="view-dialog-content">
       @if (isLoading()) {
@@ -40,7 +40,7 @@ import { VesselIdPipe } from '@ghanawaters/shared';
             <div class="info-row">
               <label class="field-label text-base">ID</label>
               <div class="field-content">
-                <span class="field-value font-mono text-base">{{ vessel.id | vesselId }}</span>
+                <span class="field-value font-mono text-base">{{ vessel.id }}</span>
               </div>
             </div>
 
@@ -48,7 +48,7 @@ import { VesselIdPipe } from '@ghanawaters/shared';
             <div class="info-row">
               <label class="field-label text-base">Created</label>
               <div class="field-content">
-                <span class="field-value text-base">{{ vessel.created | date:'dd/MM/yyyy HH:mm:ss' }}</span>
+                <span class="field-value text-base">{{ vessel.created | timestamp }}</span>
               </div>
             </div>
 
@@ -58,7 +58,7 @@ import { VesselIdPipe } from '@ghanawaters/shared';
               <div class="info-row">
                 <label class="field-label text-base">Last Seen</label>
                 <div class="field-content">
-                  <span class="field-value text-base">{{ vessel.last_seen | date:'dd/MM/yyyy HH:mm:ss' }}</span>
+                  <span class="field-value text-base">{{ vessel.last_seen | timestamp }}</span>
                 </div>
               </div>
             }

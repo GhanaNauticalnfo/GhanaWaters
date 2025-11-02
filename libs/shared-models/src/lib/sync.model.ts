@@ -3,47 +3,25 @@
  */
 
 /**
- * Summary of sync data
+ * Individual sync entity representing a change to a specific entity
  */
-export interface SyncSummary {
-  totalEntries: number;
-  lastSyncVersion: string;
-  entityTypes: number;
-}
-
-/**
- * Statistics for a specific entity type
- */
-export interface EntityStats {
-  entityType: string;
-  create: number;
-  update: number;
-  delete: number;
-  totalSize: number;
-  total: number;
-}
-
-/**
- * Recent sync log entry
- */
-export interface RecentEntry {
+export interface SyncEntity {
   entityType: string;
   entityId: string;
-  action: 'create' | 'update' | 'delete';
-  dataSize: number;
-  hasData: boolean;
-  timestamp: string | null;
+  entityAction: 'create' | 'update' | 'delete';
+  entityData?: any;
 }
 
 /**
- * Response from sync manage endpoint
+ * Sync entry representing a batch of changes within a version range
  */
-export interface SyncManageResponse {
-  version: string;
+export interface SyncEntry {
   majorVersion: number;
-  summary: SyncSummary;
-  entityStats: EntityStats[];
-  recentEntries: RecentEntry[];
+  fromMinorVersion: number;
+  toMinorVersion: number;
+  lastUpdate: string;
+  hasMoreEntities: boolean;
+  entities: SyncEntity[];
 }
 
 /**
@@ -52,4 +30,22 @@ export interface SyncManageResponse {
 export interface SyncResetResponse {
   success: boolean;
   majorVersion: number;
+}
+
+/**
+ * Minor version information for sync overview
+ */
+export interface MinorVersionInfo {
+  minorVersion: number;
+  size: number;
+  timestamp: string;
+}
+
+/**
+ * Response from sync overview endpoint
+ */
+export interface SyncOverviewResponse {
+  majorVersion: number;
+  lastUpdate: string;
+  minorVersions: MinorVersionInfo[];
 }

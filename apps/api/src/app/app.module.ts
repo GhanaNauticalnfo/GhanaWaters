@@ -6,7 +6,6 @@ import { AppController } from './app.controller';
 import { RootController } from './root.controller';
 import { AppService } from './app.service';
 import { KmlDatasetModule } from './kml-dataset/kml-dataset.module';
-import { VoltaDepthModule } from './volta-depth/volta-depth.module';
 // Import the CORRECT factory function from database.config.ts
 import { typeOrmModuleOptionsFactory } from '../config/database.config';
 // KmlDataset entity will be picked up by autoLoadEntities or by forFeature in its own module
@@ -17,9 +16,9 @@ import { SyncModule } from './sync/sync.module';
 import { SettingsModule } from './settings/settings.module';
 import { TreeStubsModule } from './tree-stubs/tree-stubs.module';
 import { LandingSitesModule } from './landing-sites/landing-sites.module';
-import { ResourceSettingsModule } from './resource-settings/resource-settings.module';
 import { DatabaseModule } from './database/database.module';
 import { AuthModule } from './auth/auth.module';
+import { NwnmModule } from './nwnm/nwnm.module';
 
 @Module({
   imports: [
@@ -53,14 +52,13 @@ import { AuthModule } from './auth/auth.module';
     // Register feature modules AFTER TypeOrmModule.forRootAsync
     VesselsModule,
     KmlDatasetModule,
-    VoltaDepthModule,
     RoutesModule,
     SyncModule,
     SettingsModule,
     TreeStubsModule,
     LandingSitesModule,
-    ResourceSettingsModule,
     DatabaseModule,
+    NwnmModule,
   ],
   controllers: [AppController, RootController],
   providers: [AppService],

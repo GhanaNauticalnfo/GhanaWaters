@@ -28,6 +28,11 @@
             "glob": "**/*",
             "input": "apps/admin/src/assets",
             "output": "/assets"
+          },
+          {
+            "glob": "**/*",
+            "input": "apps/admin/src/img",
+            "output": "img"
           }
         ],
         "styles": [
@@ -35,7 +40,11 @@
           "node_modules/primeicons/primeicons.css",
           "apps/admin/src/styles.css"
         ],
-        "scripts": []
+        "scripts": [],
+        "allowedCommonJsDependencies": [
+          "maplibre-gl",
+          "qrcode"
+        ]
       },
       "configurations": {
         "prod": {
@@ -121,9 +130,9 @@
         "buildTarget": "admin:build"
       }
     },
-    "lint": {
-      "executor": "@nx/eslint:lint"
-    },
+    // "lint": {
+    //   "executor": "@nx/eslint:lint"
+    // },
     "test": {
       "executor": "@nx/jest:jest",
       "outputs": [

@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+// Injects a buildTag into the environment file based on the BUILD_TAG environment variable or command line argument.
+// That is shown in the footer of the admin app.
 
 const fs = require('fs');
 const path = require('path');

@@ -1,8 +1,10 @@
 // kml-dataset.controller.ts
 import { Controller, Get, Post, Body, Param, Put, Delete, HttpException, HttpStatus } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiTags, ApiResponse, ApiBody } from '@nestjs/swagger';
 import { KmlDatasetService } from './kml-dataset.service';
 import { KmlDataset } from './kml-dataset.entity';
+import { KmlDatasetInputDto, KmlDatasetResponseDto } from './dto';
+import { Public } from '../auth/decorators';
 
 @ApiTags('kml-datasets')
 @Controller('kml-datasets')
@@ -10,19 +12,23 @@ export class KmlDatasetController {
   constructor(private readonly kmlDatasetService: KmlDatasetService) {}
 
   @Get()
-  async findAll(): Promise<KmlDataset[]> {
-    return this.kmlDatasetService.findAll();
+  @Public() // Public access for frontend map to display enabled KML datasets
+  @ApiResponse({ type: [KmlDatasetResponseDto] })
+  async findAll(): Promise<KmlDatasetResponseDto[]> {
+    const datasets = await this.kmlDatasetService.findAll();
+    return datasets.map(dataset => dataset.toResponseDto());
   }
 
   @Get(':id')
-  async findOne(@Param('id') id: string): Promise<KmlDataset> {
+  @ApiResponse({ type: KmlDatasetResponseDto })
+  async findOne(@Param('id') id: string): Promise<KmlDatasetResponseDto> {
     const dataset = await this.kmlDatasetService.findOne(+id);
     
     if (!dataset) {
       throw new HttpException('KML dataset not found', HttpStatus.NOT_FOUND);
     }
     
-    return dataset;
+    return dataset.toResponseDto();
   }
 
   @Get('enabled')
@@ -33,21 +39,25 @@ export class KmlDatasetController {
       throw new HttpException('Error fetching enabled KML datasets', HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
-// kml-dataset.controller.ts - update the create method
 @Post()
-async create(@Body() body: { kml: string, name: string, enabled?: boolean }): Promise<KmlDataset> {
+@ApiBody({ type: KmlDatasetInputDto })
+@ApiResponse({ type: KmlDatasetResponseDto })
+async create(@Body() createDto: KmlDatasetInputDto): Promise<KmlDatasetResponseDto> {
   try {
-    return await this.kmlDatasetService.create(body.kml, body.name, body.enabled);
+    const dataset = await this.kmlDatasetService.create(createDto.kml, createDto.name, createDto.enabled);
+    return dataset.toResponseDto();
   } catch {
     throw new HttpException('Error creating KML dataset', HttpStatus.BAD_REQUEST);
   }
 }
 
-// kml-dataset.controller.ts - update the update method
 @Put(':id')
-async update(@Param('id') id: string, @Body() body: { kml?: string, name?: string, enabled?: boolean }): Promise<KmlDataset> {
+@ApiBody({ type: KmlDatasetInputDto })
+@ApiResponse({ type: KmlDatasetResponseDto })
+async update(@Param('id') id: string, @Body() updateDto: KmlDatasetInputDto): Promise<KmlDatasetResponseDto> {
   try {
-    return await this.kmlDatasetService.update(+id, body);
+    const dataset = await this.kmlDatasetService.update(+id, updateDto);
+    return dataset.toResponseDto();
   } catch {
     throw new HttpException('Error updating KML dataset', HttpStatus.BAD_REQUEST);
   }

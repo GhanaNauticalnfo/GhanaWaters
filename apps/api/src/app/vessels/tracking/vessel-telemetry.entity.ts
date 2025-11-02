@@ -9,7 +9,7 @@ export class VesselTelemetry {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ type: 'timestamptz' })
   created: Date;
 
   @Column('timestamptz')

@@ -6,17 +6,13 @@ import { VesselType } from './type/vessel-type.entity';
 import { Device, DeviceAuthService, DeviceController, DeviceGateway } from './device';
 import { VesselService } from './vessel.service';
 import { VesselController } from './vessel.controller';
-import { QgisTrackingController } from './tracking/qgis-tracking.controller';
 import { VesselTypeController } from './type/vessel-type.controller';
 import { VesselTypeService } from './type/vessel-type.service';
 import { VesselTelemetry } from './tracking/vessel-telemetry.entity';
 import { TrackingService } from './tracking/tracking.service';
 import { TrackingController } from './tracking/tracking.controller';
 import { TrackingGateway } from './tracking/tracking.gateway';
-import { MqttTrackingService } from './tracking/mqtt-tracking.service';
 import { TelemetryExportService } from './tracking/telemetry-export.service';
-import { ResourceSettingsModule } from '../resource-settings/resource-settings.module';
-import { MqttAuthController } from './mqtt/mqtt-auth.controller';
 import { SyncModule } from '../sync/sync.module';
 
 @Module({
@@ -27,7 +23,6 @@ import { SyncModule } from '../sync/sync.module';
       Device,
       VesselTelemetry,
     ]),
-    ResourceSettingsModule,
     SyncModule,
   ],
   providers: [
@@ -37,16 +32,13 @@ import { SyncModule } from '../sync/sync.module';
     TrackingService,
     TrackingGateway,
     DeviceGateway,
-    // MqttTrackingService, // Disabled - using WebSocket/HTTPS only
     TelemetryExportService,
   ],
   controllers: [
     VesselTypeController,
     VesselController,
     TrackingController,
-    QgisTrackingController,
     DeviceController,
-    // MqttAuthController // Disabled - using WebSocket/HTTPS only
   ],
   exports: [
     VesselService,

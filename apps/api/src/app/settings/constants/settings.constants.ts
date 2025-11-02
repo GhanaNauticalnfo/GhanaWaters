@@ -1,12 +1,11 @@
 /**
- * Constants for application settings keys (Node.js compatible)
+ * Constants for application settings keys
  * 
  * This ensures type safety and consistency across frontend and backend
  * when working with settings. This file mirrors the shared-models constants
  * but is available for the backend Node.js environment.
  */
 export const SETTING_KEYS = {
-  ROUTE_COLOR: 'route.color',
   DATABASE_TELEMETRY_RETENTION_DAYS: 'database.telemetry.retention_days'
 } as const;
 
@@ -14,7 +13,6 @@ export const SETTING_KEYS = {
  * Default values for settings
  */
 export const SETTING_DEFAULTS = {
-  [SETTING_KEYS.ROUTE_COLOR]: '#FF0000',
   [SETTING_KEYS.DATABASE_TELEMETRY_RETENTION_DAYS]: '365'
 } as const;
 

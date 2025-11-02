@@ -20,13 +20,13 @@ export class Route {
   @Column({ default: true })
   enabled: boolean;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ type: 'timestamptz' })
   created: Date;
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({ type: 'timestamptz' })
   last_updated: Date;
 
-  toResponseDto(settings?: Record<string, string>): RouteResponseDto {
+  toResponseDto(): RouteResponseDto {
     const dto: RouteResponseDto = {
       id: this.id,
       name: this.name,
@@ -36,11 +36,6 @@ export class Route {
       created: this.created.toISOString(),
       last_updated: this.last_updated.toISOString(),
     };
-
-    if (settings) {
-      dto.settings = settings;
-    }
-
     return dto;
   }
 }

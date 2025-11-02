@@ -7,7 +7,7 @@ import {
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { Logger } from '@nestjs/common';
-import { SyncNotification } from './mqtt-sync.service';
+import { SyncNotification } from '@ghanawaters/shared-models';
 
 @WebSocketGateway({
   namespace: '/sync',
@@ -46,21 +46,17 @@ export class SyncGateway
       const notification: SyncNotification = {
         major_version: majorVersion,
         minor_version: minorVersion,
-      };
-
-      const payload = {
-        ...notification,
         timestamp: new Date(),
       };
 
       console.log('🔄 [SYNC] Emitting sync update to /sync namespace:', {
         majorVersion,
         minorVersion,
-        timestamp: payload.timestamp.toISOString(),
+        timestamp: notification.timestamp.toISOString(),
       });
 
       // Emit to all connected clients
-      this.server.emit('sync-update', payload);
+      this.server.emit('sync-update', notification);
 
       this.logger.debug(`Emitted sync update: v${majorVersion}.${minorVersion}`);
     } catch (error) {

@@ -34,7 +34,7 @@ describe('SyncGateway', () => {
 
   describe('afterInit', () => {
     it('should log initialization', () => {
-      const logSpy = jest.spyOn(console, 'log').mockImplementation();
+      const logSpy = jest.spyOn(gateway['logger'], 'log').mockImplementation();
       gateway.afterInit(mockServer as Server);
       expect(logSpy).toHaveBeenCalledWith('Sync WebSocket Gateway initialized');
       logSpy.mockRestore();
@@ -42,36 +42,34 @@ describe('SyncGateway', () => {
   });
 
   describe('handleConnection', () => {
-    it('should log client connection and join sync room', () => {
-      const logSpy = jest.spyOn(console, 'log').mockImplementation();
+    it('should log client connection', () => {
+      const logSpy = jest.spyOn(gateway['logger'], 'log').mockImplementation();
       gateway.handleConnection(mockSocket as Socket);
       
-      expect(mockSocket.join).toHaveBeenCalledWith('sync-updates');
-      expect(logSpy).toHaveBeenCalledWith(`Sync client connected: ${mockSocket.id}`);
+      expect(logSpy).toHaveBeenCalledWith(`Client connected to sync namespace: ${mockSocket.id}`);
       logSpy.mockRestore();
     });
   });
 
   describe('handleDisconnect', () => {
     it('should log client disconnection', () => {
-      const logSpy = jest.spyOn(console, 'log').mockImplementation();
+      const logSpy = jest.spyOn(gateway['logger'], 'log').mockImplementation();
       gateway.handleDisconnect(mockSocket as Socket);
       
-      expect(logSpy).toHaveBeenCalledWith(`Sync client disconnected: ${mockSocket.id}`);
+      expect(logSpy).toHaveBeenCalledWith(`Client disconnected from sync namespace: ${mockSocket.id}`);
       logSpy.mockRestore();
     });
   });
 
   describe('emitSyncUpdate', () => {
     it('should emit sync update to all connected clients', () => {
-      const majorVersion = 1;
+      const syncVersion = 1;
       const minorVersion = 123;
       
-      gateway.emitSyncUpdate(majorVersion, minorVersion);
+      gateway.emitSyncUpdate(syncVersion, minorVersion);
       
-      expect(mockServer.to).toHaveBeenCalledWith('sync-updates');
       expect(mockServer.emit).toHaveBeenCalledWith('sync-update', {
-        major_version: majorVersion,
+        major_version: syncVersion, // Keep API field name for backward compatibility
         minor_version: minorVersion,
         timestamp: expect.any(Date)
       });
@@ -79,38 +77,39 @@ describe('SyncGateway', () => {
 
     it('should log the sync update', () => {
       const logSpy = jest.spyOn(console, 'log').mockImplementation();
-      const majorVersion = 2;
+      const debugSpy = jest.spyOn(gateway['logger'], 'debug').mockImplementation();
+      const syncVersion = 2;
       const minorVersion = 456;
       
-      gateway.emitSyncUpdate(majorVersion, minorVersion);
+      gateway.emitSyncUpdate(syncVersion, minorVersion);
       
-      expect(logSpy).toHaveBeenCalledWith(
-        `Emitting sync update: v${majorVersion}.${minorVersion}`
-      );
+      expect(logSpy).toHaveBeenCalledWith('🔄 [SYNC] Emitting sync update to /sync namespace:', {
+        majorVersion: syncVersion,
+        minorVersion,
+        timestamp: expect.any(String),
+      });
+      expect(debugSpy).toHaveBeenCalledWith(`Emitted sync update: v${syncVersion}.${minorVersion}`);
       logSpy.mockRestore();
+      debugSpy.mockRestore();
     });
 
-    it('should handle missing server gracefully', () => {
-      gateway.server = undefined;
+    it('should handle errors gracefully', () => {
+      const errorSpy = jest.spyOn(console, 'error').mockImplementation();
+      const loggerErrorSpy = jest.spyOn(gateway['logger'], 'error').mockImplementation();
+      
+      // Mock server.emit to throw an error
+      mockServer.emit = jest.fn().mockImplementation(() => {
+        throw new Error('Test error');
+      });
       
       // Should not throw
       expect(() => gateway.emitSyncUpdate(1, 1)).not.toThrow();
-    });
-  });
-
-  describe('WebSocket subscription messages', () => {
-    it('should handle subscribe-sync message', () => {
-      const handler = gateway.handleSubscribeSync(mockSocket as Socket);
       
-      expect(mockSocket.join).toHaveBeenCalledWith('sync-updates');
-      expect(handler).toEqual({ event: 'subscribed', data: 'sync-updates' });
-    });
-
-    it('should handle unsubscribe-sync message', () => {
-      const handler = gateway.handleUnsubscribeSync(mockSocket as Socket);
+      expect(errorSpy).toHaveBeenCalledWith('🔄 [SYNC] Error emitting sync update:', expect.any(Error));
+      expect(loggerErrorSpy).toHaveBeenCalledWith('Error emitting sync update:', expect.any(Error));
       
-      expect(mockSocket.leave).toHaveBeenCalledWith('sync-updates');
-      expect(handler).toEqual({ event: 'unsubscribed', data: 'sync-updates' });
+      errorSpy.mockRestore();
+      loggerErrorSpy.mockRestore();
     });
   });
 });

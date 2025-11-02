@@ -2,13 +2,12 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { RouteResponse as Route } from '@ghanawaters/shared-models';
-import { environment } from '../../../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class RouteService {
-  private apiUrl = `${environment.apiUrl}/routes`;
+  private apiUrl = '/api/routes';
 
   constructor(private http: HttpClient) {}
 

@@ -3,7 +3,7 @@ import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { VesselTabDeviceComponent } from './vessel-tab-device.component';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { of, throwError, Subject } from 'rxjs';
-import { Device } from '../models/device.model';
+import { Device, DeviceState, DeviceResponse } from '@ghanawaters/shared-models';
 import { VesselDataset } from '@ghanawaters/shared-models';
 import { signal } from '@angular/core';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
@@ -34,32 +34,30 @@ describe('VesselTabDeviceComponent', () => {
     type: 'Vessel',
   } as VesselDataset;
 
-  const mockPendingDevice: Device = {
+  const mockPendingDevice: DeviceResponse = {
     device_id: 'pending-123',
     device_token: 'pending-token',
     activation_token: 'activation-token',
-    auth_token: null,
-    is_activated: false,
-    state: 'pending',
-    activated_at: null,
-    expires_at: new Date(Date.now() + 86400000), // 1 day from now
-    vessel_id: 123,
-    created_at: new Date(),
-    updated_at: new Date(),
+    auth_token: undefined,
+    state: DeviceState.PENDING,
+    activated_at: undefined,
+    expires_at: new Date(Date.now() + 86400000).toISOString(),
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    activation_url: 'ghmaritimeapp://auth?token=activation-token'
   };
 
-  const mockActiveDevice: Device = {
+  const mockActiveDevice: DeviceResponse = {
     device_id: 'active-123',
     device_token: 'active-token',
     activation_token: '',
     auth_token: 'auth-token-123',
-    is_activated: true,
-    state: 'active',
-    activated_at: new Date(),
-    expires_at: new Date(Date.now() + 86400000),
-    vessel_id: 123,
-    created_at: new Date(),
-    updated_at: new Date(),
+    state: DeviceState.ACTIVE,
+    activated_at: new Date().toISOString(),
+    expires_at: new Date(Date.now() + 86400000).toISOString(),
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    vessel: { id: 123, name: 'Test Vessel' }
   };
 
   beforeEach(async () => {

@@ -1,103 +1,104 @@
-import { Controller, Get, Post, Query } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
-import { Public } from '../auth/decorators';
+import { Controller, Get, Post, Query, Param, NotFoundException, HttpCode, HttpStatus, Res } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiQuery } from '@nestjs/swagger';
+import { Response } from 'express';
+import { Public, Roles } from '../auth/decorators';
 import { SyncService } from './sync.service';
+import { SyncEntry, SyncOverviewResponse } from '@ghanawaters/shared-models';
+import { SyncEntryDto, SyncOverviewResponseDto } from './dto';
 
 @ApiTags('sync')
 @Controller('data')
 export class SyncController {
   constructor(private syncService: SyncService) {}
 
+  @Get('sync/overview')
+  @Public()
+  @ApiOperation({
+    summary: 'Get sync overview',
+    description: 'Returns overview of sync system including current major version and minor version details'
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Sync overview data',
+    type: SyncOverviewResponseDto
+  })
+  @ApiResponse({
+    status: 204,
+    description: 'No sync data available'
+  })
+  async getSyncOverview(@Res() res: Response): Promise<void> {
+    const result = await this.syncService.getSyncOverview();
+    
+    if (!result) {
+      // Return 204 No Content when no versions exist yet
+      res.status(204).send();
+      return;
+    }
+    
+    res.json(result);
+  }
+
   @Get('sync')
   @Public()
-  async syncData(@Query('since') since?: string) {
-    const sinceDate = since ? new Date(since) : new Date(0);
-    return this.syncService.getChangesSince(sinceDate);
+  @ApiOperation({
+    summary: 'Sync data',
+    description: 'Returns sync entries for mobile apps and admin interface. Used for incremental data synchronization.'
+  })
+  @ApiQuery({ name: 'majorVersion', required: false, description: 'Sync version to sync from' })
+  @ApiQuery({ name: 'fromMinorVersion', required: false, description: 'Minor version to sync from (exclusive)' })
+  @ApiQuery({ name: 'limit', required: false, description: 'Maximum number of minor versions to return (default: 100)' })
+  @ApiResponse({
+    status: 200,
+    description: 'Sync data entries',
+    type: SyncEntryDto
+  })
+  @ApiResponse({
+    status: 204,
+    description: 'No sync data available'
+  })
+  async syncData(
+    @Res() res: Response,
+    @Query('majorVersion') majorVersion?: string, // Keep API parameter name for backward compatibility
+    @Query('fromMinorVersion') fromMinorVersion?: string,
+    @Query('limit') limit?: string
+  ): Promise<void> {
+    const parsedSyncVersion = majorVersion ? parseInt(majorVersion, 10) : undefined;
+    const parsedFromMinorVersion = fromMinorVersion ? parseInt(fromMinorVersion, 10) : undefined;
+    const parsedLimit = limit ? parseInt(limit, 10) : 100;
+
+    const result = await this.syncService.getChangesByVersion(
+      parsedSyncVersion,
+      parsedFromMinorVersion,
+      parsedLimit
+    );
+
+    if (!result) {
+      // Return 204 No Content when no versions exist yet
+      res.status(204).send();
+      return;
+    }
+
+    res.json(result);
   }
 
-  @Get('sync/debug')
-  async debugSyncData(@Query('since') since?: string) {
-    const sinceDate = since ? new Date(since) : new Date(0);
-    const data = await this.syncService.getChangesSince(sinceDate);
-    
-    // Add debug info
-    const debugData = {
-      ...data,
-      debug: {
-        itemCount: data.data.length,
-        byType: {},
-        dataLengths: data.data.map(item => ({
-          entity: `${item.entity_type}:${item.entity_id}`,
-          action: item.action,
-          dataLength: item.data ? JSON.stringify(item.data).length : 0,
-          hasData: !!item.data,
-          dataKeys: item.data ? Object.keys(item.data) : []
-        }))
-      }
-    };
-    
-    // Count by type
-    data.data.forEach(item => {
-      const key = `${item.entity_type}_${item.action}`;
-      debugData.debug.byType[key] = (debugData.debug.byType[key] || 0) + 1;
-    });
-    
-    return debugData;
-  }
-
-  @Get('sync/manage')
-  async manageSyncData(@Query('since') since?: string, @Query('limit') limit?: string) {
-    const sinceDate = since ? new Date(since) : new Date(0);
-    const data = await this.syncService.getChangesSince(sinceDate);
-    
-    // Build statistics by entity type
-    const statsByEntityType: Record<string, { create: number; update: number; delete: number; totalSize: number }> = {};
-    
-    data.data.forEach(item => {
-      if (!statsByEntityType[item.entity_type]) {
-        statsByEntityType[item.entity_type] = { create: 0, update: 0, delete: 0, totalSize: 0 };
-      }
-      
-      statsByEntityType[item.entity_type][item.action]++;
-      if (item.data) {
-        statsByEntityType[item.entity_type].totalSize += JSON.stringify(item.data).length;
-      }
-    });
-    
-    // Convert stats to array format for easier display
-    const entityStats = Object.entries(statsByEntityType).map(([entityType, stats]) => ({
-      entityType,
-      ...stats,
-      total: stats.create + stats.update + stats.delete
-    }));
-    
-    // Get recent entries (limited if specified)
-    const maxLimit = limit ? parseInt(limit, 10) : 100;
-    const recentEntries = data.data.slice(-maxLimit).reverse().map(item => ({
-      entityType: item.entity_type,
-      entityId: item.entity_id,
-      action: item.action,
-      dataSize: item.data ? JSON.stringify(item.data).length : 0,
-      hasData: !!item.data,
-      timestamp: item.data?.properties?.last_updated || item.data?.properties?.created || null
-    }));
-    
-    const majorVersion = await this.syncService.getCurrentMajorVersion();
-    
-    return {
-      version: data.version,
-      majorVersion,
-      summary: {
-        totalEntries: data.data.length,
-        lastSyncVersion: data.version,
-        entityTypes: Object.keys(statsByEntityType).length,
-      },
-      entityStats,
-      recentEntries
-    };
-  }
 
   @Post('sync/reset')
+  @Roles('admin')
+  @ApiOperation({
+    summary: 'Reset sync',
+    description: 'Creates a new major version and compacts all sync entries. Mobile apps will reset their local data on next sync.'
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Sync reset successfully',
+    schema: {
+      type: 'object',
+      properties: {
+        success: { type: 'boolean' },
+        majorVersion: { type: 'number' }
+      }
+    }
+  })
   async resetSync() {
     return this.syncService.resetSync();
   }

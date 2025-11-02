@@ -8,7 +8,7 @@ Ghana Waters provides real-time vessel tracking, navigation aids, and offline-ca
 
 - **Admin Dashboard** - Vessel management and monitoring interface
 - **Public Frontend** - Public-facing map with navigation data
-- **API Backend** - RESTful API with real-time MQTT support
+- **API Backend** - RESTful API with real-time WebSocket support
 - **Android App** - Mobile vessel tracking and navigation (separate repository)
 
 ## Key Features
@@ -27,7 +27,6 @@ Ghana Waters provides real-time vessel tracking, navigation aids, and offline-ca
 - **Infrastructure**: Docker, Nx monorepo, TypeScript
 - **Real-time**: WebSocket (Socket.IO) for live vessel updates
 - **Authentication**: Keycloak (OAuth2/OIDC with PKCE)
-- **Maps**: MapLibre with offline-capable vector tiles
 
 ## Quick Start
 
@@ -190,11 +189,20 @@ npx nx run-many -t test
 
 ## Contributing
 
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+### PR Workflow
+
+**Daily work:**
+1. Create branch from `develop`
+2. Make changes
+3. PR to `develop` → auto-deploys to DEV
+4. Merge, done
+
+**When ready for testing:**
+1. PR: `develop` → `test` → auto-deploys to TEST
+2. QA tests it
+
+**When ready for production:**
+1. PR: `test` → `main` → deploys to PROD
 
 ### Code Style
 

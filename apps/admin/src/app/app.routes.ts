@@ -1,16 +1,16 @@
 import { Route } from '@angular/router';
-import { AppMainComponent } from './layout/app.main.component';
+import { AppMainComponent } from './core/layout/app.main.component';
 import { KmlComponent } from './features/kml/kml.component';
 import { VesselComponent } from './features/vessels/vessel.component';
 import { LiveComponent } from './features/live/live.component';
 import { RoutesComponent } from './features/routes/routes.component';
 import { LandingSitesComponent } from './features/landing-sites/landing-sites.component';
-import { authGuard } from './auth/auth.guard';
+import { authGuard } from './core/auth/guards/auth.guard';
 
 export const routes: Route[] = [
   {
     path: 'login',
-    loadComponent: () => import('./login.component').then(m => m.LoginComponent)
+    loadComponent: () => import('./core/auth/pages/login/login.component').then(m => m.LoginComponent)
   },
   // Keycloak handles the callback internally, so this route is no longer needed
   // {
@@ -19,7 +19,7 @@ export const routes: Route[] = [
   // },
   {
     path: 'forbidden',
-    loadComponent: () => import('./forbidden/forbidden.component').then(m => m.ForbiddenComponent)
+    loadComponent: () => import('./core/auth/pages/forbidden/forbidden.component').then(m => m.ForbiddenComponent)
   },
   {
     path: 'app',
@@ -51,12 +51,6 @@ export const routes: Route[] = [
       {
         path: 'kml',
         component: KmlComponent,
-        data: { roles: ['admin'] }
-      },
-      {
-        path: 'volta-depth',
-        loadComponent: () => import('./features/volta-depth/volta-depth.component')
-          .then(m => m.VoltaDepthComponent),
         data: { roles: ['admin'] }
       },
       {
@@ -133,7 +127,7 @@ export const routes: Route[] = [
   },
   {
     path: 'settings/vessel-types/:id',
-    loadComponent: () => import('./features/settings/components/vessel-type-detail.component')
+    loadComponent: () => import('./features/settings/vessel-types/vessel-type-detail.component')
       .then(m => m.VesselTypeDetailComponent),
     canActivate: [authGuard],
     data: { roles: ['admin'] }

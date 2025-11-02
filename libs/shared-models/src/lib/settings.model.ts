@@ -32,3 +32,16 @@ export interface SettingResponse {
 export interface UpdateDatabaseSettings {
   retentionDays: number;
 }
+
+/**
+ * Database statistics interface
+ */
+export interface DatabaseStatistics {
+  retentionDays: number;
+  currentSizeGb: number;
+  history: Array<{
+    date: string;
+    vesselTelemetrySizeGb: number;
+    vesselTelemetryCount: number;
+  }>;
+}

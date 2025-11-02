@@ -2,7 +2,7 @@
 module.exports = {
   content: [
     "./apps/*/src/**/*.{html,ts,css}",
-    "./libs/**/*.{html,ts,css}",
+    "./libs/**/src/**/*.{html,ts,css}",
   ],
   theme: {
     extend: {},

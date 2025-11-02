@@ -1,15 +1,18 @@
 // In your component (e.g., LiveComponent)
 import { Component, OnInit, inject, ViewChild, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { 
+import {
   MapComponent,
-  LayerManagerService, 
-  VesselLayerService, 
+  LayerManagerService,
+  VesselLayerService,
+  FeaturesLayerService,
+  KmlLayerService,
+  NwNmLayerService,
   MapConfig,
   OSM_STYLE,
-  DepthLayerService,
   VesselWithLocation
-} from '@ghanawaters/map';
+} from '@ghanawaters/shared-map';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-live',
@@ -21,10 +24,12 @@ import {
         <h2 class="text-2xl">Live</h2>
       </div>
       <div class="map-container">
-        <lib-map 
-          #mapComponent 
+        <lib-map
+          #mapComponent
           [config]="mapConfig"
           [vesselMode]="true"
+          [showFeaturesToggle]="true"
+          [showNwNmToggle]="true"
           (vesselSelected)="onVesselSelected($event)">
         </lib-map>
       </div>
@@ -66,8 +71,10 @@ import {
     }
   `],
   providers: [
-    DepthLayerService,
-    VesselLayerService
+      VesselLayerService,
+      FeaturesLayerService,
+      KmlLayerService,
+      NwNmLayerService
   ]
 })
 export class LiveComponent implements OnInit, AfterViewInit {
@@ -83,21 +90,22 @@ export class LiveComponent implements OnInit, AfterViewInit {
     height: '600px',
     showFullscreenControl: true,
     showControls: false, // Hide the map layers panel
-    availableLayers: ['vessels', 'depth'],
+    availableLayers: ['vessels'],
     initialActiveLayers: ['vessels'], // Automatically activate this layer on load
     layerNames: {
-      'vessels': 'Vessels',
-      'depth': 'Depths'
-    }
+      'vessels': 'Vessels'
+    },
+    apiUrl: environment.apiUrl
   };
   
   ngOnInit() {
     console.log('Live Component: Initializing live vessel tracking page');
-    
+
     // Register available layers
     this.layerManager.registerLayer('vessels', VesselLayerService);
-    this.layerManager.registerLayer('depth', DepthLayerService);
-    
+    this.layerManager.registerLayer('features', FeaturesLayerService);
+    this.layerManager.registerLayer('nw-nm', NwNmLayerService);
+
     console.log('Live Component: All layers registered successfully');
   }
   

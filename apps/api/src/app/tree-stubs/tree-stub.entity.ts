@@ -16,10 +16,10 @@ export class TreeStub {
   })
   geometry: string;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ type: 'timestamptz' })
   created_at: Date;
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({ type: 'timestamptz' })
   updated_at: Date;
 
   @ManyToOne(() => TreeStubGroup, group => group.tree_stubs)

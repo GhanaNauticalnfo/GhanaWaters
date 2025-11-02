@@ -8,14 +8,15 @@ import { MessageService, ConfirmationService } from 'primeng/api';
 import { DialogService } from 'primeng/dynamicdialog';
 import Noir from '../themes/app-theme';
 import { includeBearerTokenInterceptor } from 'keycloak-angular';
-import { provideKeycloakAngular } from './auth/keycloak.config';
+import { provideKeycloakAngular } from './core/auth/services/keycloak.config';
+import { apiBaseUrlInterceptor } from './core/interceptors/api-base-url.interceptor';
 
 export const appConfig: ApplicationConfig = {
   providers: [
     provideKeycloakAngular(),
     provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(routes),
-    provideHttpClient(withInterceptors([includeBearerTokenInterceptor])),
+    provideHttpClient(withInterceptors([apiBaseUrlInterceptor, includeBearerTokenInterceptor])),
     provideAnimationsAsync(),
     MessageService,
     ConfirmationService,

@@ -110,7 +110,7 @@ export class DeviceAuthService {
     return device;
   }
 
-  async createDevice(vesselId?: number, expiresInDays: number = 30): Promise<Device> {
+  async createDevice(vesselId?: number, expiresInDays = 30): Promise<Device> {
     // DEBUG: Log device creation request
     console.log('=== DEVICE CREATION DEBUG ===');
     console.log('Timestamp:', new Date().toISOString());

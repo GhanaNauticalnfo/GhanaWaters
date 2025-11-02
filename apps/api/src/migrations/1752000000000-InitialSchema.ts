@@ -132,32 +132,6 @@ export class InitialSchema1752000000000 implements MigrationInterface {
             )
         `);
 
-        // Create volta_depth_tile table
-        await queryRunner.query(`
-            CREATE TABLE "volta_depth_tile" (
-                "id" SERIAL NOT NULL,
-                "zoom" integer NOT NULL,
-                "x" integer NOT NULL,
-                "y" integer NOT NULL,
-                "created_at" TIMESTAMP NOT NULL DEFAULT now(),
-                "updated_at" TIMESTAMP NOT NULL DEFAULT now(),
-                CONSTRAINT "UQ_volta_depth_tile_coords" UNIQUE ("zoom", "x", "y"),
-                CONSTRAINT "PK_volta_depth_tile" PRIMARY KEY ("id")
-            )
-        `);
-
-        // Create volta_depth_tile_feature table
-        await queryRunner.query(`
-            CREATE TABLE "volta_depth_tile_feature" (
-                "id" SERIAL NOT NULL,
-                "tile_id" integer NOT NULL,
-                "properties" jsonb NOT NULL,
-                "geometry" jsonb NOT NULL,
-                "created_at" TIMESTAMP NOT NULL DEFAULT now(),
-                "updated_at" TIMESTAMP NOT NULL DEFAULT now(),
-                CONSTRAINT "PK_volta_depth_tile_feature" PRIMARY KEY ("id")
-            )
-        `);
 
         // Create tree_stub_group table
         await queryRunner.query(`
@@ -247,7 +221,6 @@ export class InitialSchema1752000000000 implements MigrationInterface {
         await queryRunner.query(`CREATE INDEX "IDX_sync_log_created_latest" ON "sync_log" ("created_at", "is_latest") WHERE "is_latest" = true`);
         await queryRunner.query(`CREATE INDEX "IDX_sync_log_entity" ON "sync_log" ("entity_id", "entity_type", "is_latest")`);
         await queryRunner.query(`CREATE INDEX "IDX_sync_log_version" ON "sync_log" ("major_version", "created_at", "is_latest") WHERE "is_latest" = true`);
-        await queryRunner.query(`CREATE INDEX "IDX_volta_depth_tile_feature_tile_id" ON "volta_depth_tile_feature" ("tile_id")`);
         await queryRunner.query(`CREATE INDEX "IDX_tree_stubs_geometry" ON "tree_stubs" USING GIST ("geometry")`);
         await queryRunner.query(`CREATE INDEX "IDX_tree_stubs_group_id" ON "tree_stubs" ("group_id")`);
         await queryRunner.query(`CREATE INDEX "IDX_landing_sites_location" ON "landing_sites" USING GIST ("location")`);
@@ -292,12 +265,6 @@ export class InitialSchema1752000000000 implements MigrationInterface {
             ON DELETE NO ACTION ON UPDATE NO ACTION
         `);
 
-        await queryRunner.query(`
-            ALTER TABLE "volta_depth_tile_feature" 
-            ADD CONSTRAINT "FK_volta_depth_tile_feature_tile" 
-            FOREIGN KEY ("tile_id") REFERENCES "volta_depth_tile"("id") 
-            ON DELETE CASCADE ON UPDATE NO ACTION
-        `);
 
         await queryRunner.query(`
             ALTER TABLE "tree_stubs" 
@@ -312,7 +279,6 @@ export class InitialSchema1752000000000 implements MigrationInterface {
     public async down(queryRunner: QueryRunner): Promise<void> {
         // Drop foreign keys
         await queryRunner.query(`ALTER TABLE "tree_stubs" DROP CONSTRAINT "FK_tree_stubs_group"`);
-        await queryRunner.query(`ALTER TABLE "volta_depth_tile_feature" DROP CONSTRAINT "FK_volta_depth_tile_feature_tile"`);
         await queryRunner.query(`ALTER TABLE "sync_log" DROP CONSTRAINT "FK_sync_log_version"`);
         await queryRunner.query(`ALTER TABLE "devices" DROP CONSTRAINT "FK_devices_vessel"`);
         await queryRunner.query(`ALTER TABLE "vessel_telemetry" DROP CONSTRAINT "FK_vessel_telemetry_vessel"`);
@@ -325,7 +291,6 @@ export class InitialSchema1752000000000 implements MigrationInterface {
         await queryRunner.query(`DROP INDEX "IDX_landing_sites_location"`);
         await queryRunner.query(`DROP INDEX "IDX_tree_stubs_group_id"`);
         await queryRunner.query(`DROP INDEX "IDX_tree_stubs_geometry"`);
-        await queryRunner.query(`DROP INDEX "IDX_volta_depth_tile_feature_tile_id"`);
         await queryRunner.query(`DROP INDEX "IDX_sync_log_version"`);
         await queryRunner.query(`DROP INDEX "IDX_sync_log_entity"`);
         await queryRunner.query(`DROP INDEX "IDX_sync_log_created_latest"`);
@@ -341,8 +306,6 @@ export class InitialSchema1752000000000 implements MigrationInterface {
         await queryRunner.query(`DROP TABLE "landing_sites"`);
         await queryRunner.query(`DROP TABLE "tree_stubs"`);
         await queryRunner.query(`DROP TABLE "tree_stub_group"`);
-        await queryRunner.query(`DROP TABLE "volta_depth_tile_feature"`);
-        await queryRunner.query(`DROP TABLE "volta_depth_tile"`);
         await queryRunner.query(`DROP TABLE "sync_log"`);
         await queryRunner.query(`DROP TABLE "sync_version"`);
         await queryRunner.query(`DROP TABLE "kml_dataset"`);

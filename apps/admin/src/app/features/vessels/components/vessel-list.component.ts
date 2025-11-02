@@ -2,7 +2,7 @@ import { Component, OnInit, AfterViewInit, TemplateRef, signal, viewChild, injec
 import { CommonModule } from '@angular/common';
 import { TagModule } from 'primeng/tag';
 import { MessageService } from 'primeng/api';
-import { ResourceListComponent, ResourceListConfig, ResourceAction, TimeAgoPipe, VesselIdPipe } from '@ghanawaters/shared';
+import { ResourceListComponent, ResourceListConfig, ResourceAction, TimeAgoPipe, BoatIconComponent, TimestampPipe } from '@ghanawaters/shared';
 import { VesselService } from '../services/vessel.service';
 import { VesselResponseDto, CreateVesselDto, UpdateVesselDto } from '../models/vessel.dto';
 import { VesselFormComponent, VesselFormData } from './vessel-form.component';
@@ -21,7 +21,8 @@ import { VesselDataset } from '@ghanawaters/shared-models';
     VesselFormComponent,
     DialogModule,
     TimeAgoPipe,
-    VesselIdPipe
+    BoatIconComponent,
+    TimestampPipe
   ],
   providers: [MessageService],
   host: {
@@ -54,18 +55,33 @@ import { VesselDataset } from '@ghanawaters/shared-models';
     
     <!-- Column Templates -->
     <ng-template #idTemplate let-item>
-      <span class="font-mono text-sm">{{ item.id | vesselId }}</span>
+      <span class="font-mono text-sm">{{ item.id }}</span>
     </ng-template>
     
     <ng-template #typeTemplate let-item>
-      <span [class]="'type-badge text-xs font-bold uppercase tracking-tight ' + getVesselTypeClass(item.vessel_type?.name)">
-        {{ item.vessel_type?.name || 'Unspecified' }}
-      </span>
+      <div class="vessel-type-display">
+        <app-boat-icon 
+          [color]="item.vessel_type?.color || '#757575'" 
+          [size]="16"
+          [title]="item.vessel_type?.name || 'Unspecified'">
+        </app-boat-icon>
+        <span class="type-text text-xs font-bold uppercase tracking-tight">
+          {{ item.vessel_type?.name || 'Unspecified' }}
+        </span>
+      </div>
+    </ng-template>
+    
+    <ng-template #activeDeviceTemplate let-item>
+      <p-tag 
+        [value]="item.has_active_device ? 'Yes' : 'No'"
+        [severity]="item.has_active_device ? 'success' : 'danger'"
+        [icon]="item.has_active_device ? 'pi pi-check' : 'pi pi-times'">
+      </p-tag>
     </ng-template>
     
     <ng-template #lastSeenTemplate let-item>
       @if (item.latest_position_timestamp) {
-        {{ item.latest_position_timestamp | date:'dd/MM/yyyy HH:mm:ss' }}
+        {{ item.latest_position_timestamp | timestamp }}
         <span class="text-muted text-sm"> ({{ item.latest_position_timestamp | timeAgo }})</span>
       } @else {
         <span class="text-muted text-sm">Never</span>
@@ -89,65 +105,14 @@ import { VesselDataset } from '@ghanawaters/shared-models';
       white-space: nowrap;
     }
 
-    .type-badge {
-      border-radius: 4px;
-      padding: 0.25rem 0.5rem;
-      display: inline-block;
+    .vessel-type-display {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
     }
 
-    .type-canoe {
-      background-color: var(--blue-100, #BBDEFB);
-      color: var(--blue-700, #1565C0);
-    }
-
-    .type-cargo {
-      background-color: var(--indigo-100, #C5CAE9);
-      color: var(--indigo-700, #303F9F);
-    }
-
-    .type-tanker {
-      background-color: var(--purple-100, #E1BEE7);
-      color: var(--purple-700, #7B1FA2);
-    }
-
-    .type-passenger {
-      background-color: var(--teal-100, #B2DFDB);
-      color: var(--teal-700, #00796B);
-    }
-
-    .type-fishing {
-      background-color: var(--cyan-100, #B2EBF2);
-      color: var(--cyan-700, #0097A7);
-    }
-
-    .type-military {
-      background-color: var(--gray-200, #E0E0E0);
-      color: var(--gray-700, #616161);
-    }
-
-    .type-sailing {
-      background-color: var(--green-100, #C8E6C9);
-      color: var(--green-700, #388E3C);
-    }
-
-    .type-pleasure {
-      background-color: var(--pink-100, #F8BBD0);
-      color: var(--pink-700, #C2185B);
-    }
-
-    .type-tug {
-      background-color: var(--orange-100, #FFE0B2);
-      color: var(--orange-700, #E65100);
-    }
-
-    .type-other {
-      background-color: var(--yellow-100, #FFF9C4);
-      color: var(--yellow-800, #F57F17);
-    }
-
-    .type-unspecified {
-      background-color: var(--gray-100, #F5F5F5);
-      color: var(--gray-600, #757575);
+    .type-text {
+      color: var(--text-color);
     }
   `]
 })
@@ -162,6 +127,7 @@ export class VesselListComponent implements OnInit, AfterViewInit {
   vesselFormComponent = viewChild<VesselFormComponent>('vesselForm');
   idTemplate = viewChild.required<TemplateRef<any>>('idTemplate');
   typeTemplate = viewChild.required<TemplateRef<any>>('typeTemplate');
+  activeDeviceTemplate = viewChild.required<TemplateRef<any>>('activeDeviceTemplate');
   lastSeenTemplate = viewChild.required<TemplateRef<any>>('lastSeenTemplate');
   
   // Signals for resource list
@@ -187,9 +153,10 @@ export class VesselListComponent implements OnInit, AfterViewInit {
       entityNameSingular: 'vessel',
       columns: [
         { field: 'id', header: 'ID', sortable: true, width: '10%' },
-        { field: 'name', header: 'Name', sortable: true, width: '30%' },
-        { field: 'vessel_type', header: 'Type', sortable: true, width: '15%' },
-        { field: 'latest_position_timestamp', header: 'Last Seen', sortable: true, width: '30%' }
+        { field: 'name', header: 'Name', sortable: true, width: '23%' },
+        { field: 'vessel_type', header: 'Type', sortable: true, width: '12%' },
+        { field: 'has_active_device', header: 'Active Device', sortable: true, width: '15%' },
+        { field: 'latest_position_timestamp', header: 'Last Seen', sortable: true, width: '20%' }
       ],
       searchFields: ['name'],
       actions: {
@@ -197,10 +164,16 @@ export class VesselListComponent implements OnInit, AfterViewInit {
         edit: this.hasRole('admin'),
         delete: this.hasRole('admin')
       },
+      actionColumnWidth: '20%',
       deleteConfirmMessage: (item) => `Are you sure you want to delete the vessel "${item.name}" (ID: ${item.id})?<br><br>This will permanently delete:<br><br><ul style="margin: 0; padding-left: 20px;"><li>The vessel record and all its information</li><li>All associated devices and their authentication tokens</li><li>All tracking data and position history</li></ul><br><strong>⚠️ This action cannot be undone and all data will be lost forever.</strong>`,
       deleteConfirmHeader: 'Delete Vessel - Permanent Action',
       emptyMessage: 'No vessels found',
-      pageSize: 10
+      pageSize: 10,
+      dialogStyles: {
+        create: { width: '600px', height: 'auto' },
+        edit: { width: '90vw', height: '85vh' },
+        view: { width: '90vw', height: '85vh' }
+      }
     };
     
     this.loadVessels();
@@ -211,7 +184,8 @@ export class VesselListComponent implements OnInit, AfterViewInit {
     // Now add the template references
     this.listConfig.columns[0].template = this.idTemplate();
     this.listConfig.columns[2].template = this.typeTemplate();
-    this.listConfig.columns[3].template = this.lastSeenTemplate();
+    this.listConfig.columns[3].template = this.activeDeviceTemplate();
+    this.listConfig.columns[4].template = this.lastSeenTemplate();
   }
   
   loadVessels() {
@@ -402,34 +376,6 @@ export class VesselListComponent implements OnInit, AfterViewInit {
     this.loadVesselDatasets();
   }
 
-  // Get CSS class for vessel type badge
-  getVesselTypeClass(type: string): string {
-    switch (type?.toLowerCase()) {
-      case 'canoe':
-        return 'type-canoe';
-      case 'cargo':
-        return 'type-cargo';
-      case 'tanker':
-        return 'type-tanker';
-      case 'passenger':
-        return 'type-passenger';
-      case 'fishing':
-        return 'type-fishing';
-      case 'military':
-        return 'type-military';
-      case 'sailing':
-        return 'type-sailing';
-      case 'pleasure':
-        return 'type-pleasure';
-      case 'tug':
-        return 'type-tug';
-      case 'other':
-        return 'type-other';
-      case 'unspecified':
-      default:
-        return 'type-unspecified';
-    }
-  }
   
   private hasRole(role: string): boolean {
     const roles = this.keycloak.realmAccess?.roles || [];

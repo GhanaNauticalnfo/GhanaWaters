@@ -3,7 +3,8 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { DeviceController } from './device.controller';
 import { DeviceAuthService } from './device-auth.service';
-import { Device, DeviceState } from './device.entity';
+import { Device } from './device.entity';
+import { DeviceState } from '@ghanawaters/shared-models';
 import { DeviceResponseDto } from './dto/device-response.dto';
 import { BadRequestException } from '@nestjs/common';
 
@@ -36,10 +37,10 @@ describe('DeviceController', () => {
         activation_token: baseDevice.activation_token,
         auth_token: baseDevice.auth_token || undefined,
         state: baseDevice.state,
-        activated_at: baseDevice.activated_at || undefined,
-        expires_at: baseDevice.expires_at || undefined,
-        created_at: baseDevice.created_at,
-        updated_at: baseDevice.updated_at,
+        activated_at: baseDevice.activated_at?.toISOString() || undefined,
+        expires_at: baseDevice.expires_at?.toISOString() || undefined,
+        created_at: baseDevice.created_at.toISOString(),
+        updated_at: baseDevice.updated_at.toISOString(),
         vessel: baseDevice.vessel ? {
           id: baseDevice.vessel.id,
           name: baseDevice.vessel.name
@@ -104,8 +105,8 @@ describe('DeviceController', () => {
       expect(deviceRepository.createQueryBuilder).toHaveBeenCalledWith('device');
       expect(mockQueryBuilder.leftJoinAndSelect).toHaveBeenCalledWith('device.vessel', 'vessel');
       expect(mockQueryBuilder.andWhere).toHaveBeenCalledWith(
-        '(device.expires_at IS NULL OR device.expires_at > :now)', 
-        { now: expect.any(Date) }
+        '(device.state != :pendingState OR device.expires_at IS NULL OR device.expires_at > :now)', 
+        { pendingState: 'pending', now: expect.any(Date) }
       );
       expect(mockQueryBuilder.andWhere).toHaveBeenCalledWith(
         'device.state != :retiredState', 

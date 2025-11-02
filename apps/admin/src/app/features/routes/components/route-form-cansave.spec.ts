@@ -25,7 +25,9 @@ describe('RouteFormComponent - canSave Logic (Unit)', () => {
       { lat: 5.6037, lng: -0.186, order: 0 },
       { lat: 5.605, lng: -0.185, order: 1 }
     ],
-    enabled: true
+    enabled: true,
+    created: '2024-01-01T00:00:00.000Z',
+    last_updated: '2024-01-01T00:00:00.000Z'
   };
 
   const mockWaypoints: Waypoint[] = [
@@ -351,7 +353,7 @@ describe('RouteFormComponent - canSave Logic (Unit)', () => {
       waypoints.set(mockRoute.waypoints || []);
       originalFormValues.set({
         name: mockRoute.name || '',
-        description: mockRoute.description || '',
+        notes: mockRoute.notes || '',
         enabled: mockRoute.enabled
       });
       originalWaypoints.set(mockRoute.waypoints || []);
