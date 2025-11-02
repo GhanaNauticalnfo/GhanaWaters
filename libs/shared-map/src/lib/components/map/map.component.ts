@@ -136,7 +136,14 @@ export interface VesselWithLocation {
           <span class="heading" *ngIf="vessel.heading !== null && vessel.heading !== undefined">{{ vessel.heading.toFixed(0) }}°</span>
         </div>
       </ng-template>
-      
+
+      <!-- NW/NM Modal Overlay -->
+      <div class="nwnm-modal-overlay" *ngIf="showNwnmModal()" (click)="closeNwnmModal()">
+        <div class="nwnm-modal-content" (click)="$event.stopPropagation()" #nwnmModalContainer>
+          <!-- Angular component will be injected here -->
+        </div>
+      </div>
+
       <ng-content></ng-content>
     </div>
   `,
@@ -418,11 +425,37 @@ export interface VesselWithLocation {
         right: 10px;
       }
     }
+
+    /* NW/NM Modal Overlay */
+    .nwnm-modal-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10000;
+      padding: 20px;
+    }
+
+    .nwnm-modal-content {
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+      max-width: 800px;
+      max-height: 90vh;
+      overflow-y: auto;
+      position: relative;
+    }
   `]
 })
 export class MapComponent implements OnInit, AfterViewInit, OnDestroy, OnChanges {
   @ViewChild('mapElement') mapElement!: ElementRef;
   @ViewChild('vesselItemTemplate') vesselItemTemplate!: TemplateRef<any>;
+  @ViewChild('nwnmModalContainer', { read: ElementRef }) nwnmModalContainer!: ElementRef;
   
   // Allow for full configuration object input
   @Input() set config(config: Partial<MapConfig>) {
@@ -503,8 +536,9 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy, OnChanges
   // Fullscreen state
   isFullscreen = signal<boolean>(false);
 
-  // NW/NM popup tracking
-  private currentNwnmPopup: Popup | null = null;
+  // NW/NM modal tracking
+  showNwnmModal = signal<boolean>(false);
+  private currentNwnmComponentRef: any = null;
   
   // Coordinate display state
   currentCoordinates = signal<{lng: number, lat: number}>({lng: 0, lat: 0});
@@ -1245,11 +1279,8 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy, OnChanges
     // Prevent default map click behavior
     e.preventDefault();
 
-    // Close existing popup if any
-    if (this.currentNwnmPopup) {
-      this.currentNwnmPopup.remove();
-      this.currentNwnmPopup = null;
-    }
+    // Close existing modal if any
+    this.closeNwnmModal();
 
     // Get feature properties from the click event
     if (!e.features || e.features.length === 0) {
@@ -1268,6 +1299,11 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy, OnChanges
     // Set input data
     componentRef.instance.message = messageData;
 
+    // Listen to close event from component
+    componentRef.instance.close.subscribe(() => {
+      this.closeNwnmModal();
+    });
+
     // Trigger change detection
     componentRef.changeDetectorRef.detectChanges();
 
@@ -1277,35 +1313,42 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy, OnChanges
     // Get DOM element
     const popupElement = (componentRef.hostView as any).rootNodes[0] as HTMLElement;
 
-    if (!this._map) {
-      return;
+    // Store component reference for cleanup
+    this.currentNwnmComponentRef = componentRef;
+
+    // Show modal first
+    this.showNwnmModal.set(true);
+
+    // Wait for Angular to create the modal container DOM, then inject component
+    setTimeout(() => {
+      if (this.nwnmModalContainer && this.nwnmModalContainer.nativeElement) {
+        this.nwnmModalContainer.nativeElement.appendChild(popupElement);
+      }
+    }, 0);
+  }
+
+  closeNwnmModal(): void {
+    // Hide modal
+    this.showNwnmModal.set(false);
+
+    // Cleanup component
+    if (this.currentNwnmComponentRef) {
+      // Clear container
+      if (this.nwnmModalContainer && this.nwnmModalContainer.nativeElement) {
+        this.nwnmModalContainer.nativeElement.innerHTML = '';
+      }
+
+      // Destroy component
+      this.appRef.detachView(this.currentNwnmComponentRef.hostView);
+      this.currentNwnmComponentRef.destroy();
+      this.currentNwnmComponentRef = null;
     }
-
-    // Create and show popup
-    this.currentNwnmPopup = new Popup({
-      closeButton: true,
-      closeOnClick: true,
-      maxWidth: '400px'
-    })
-      .setLngLat(e.lngLat)
-      .setDOMContent(popupElement)
-      .addTo(this._map);
-
-    // Cleanup on close
-    this.currentNwnmPopup.on('close', () => {
-      this.appRef.detachView(componentRef.hostView);
-      componentRef.destroy();
-      this.currentNwnmPopup = null;
-    });
   }
 
   // Don't forget to clean up when the component is destroyed
   ngOnDestroy(): void {
-    // Clean up NW/NM popup
-    if (this.currentNwnmPopup) {
-      this.currentNwnmPopup.remove();
-      this.currentNwnmPopup = null;
-    }
+    // Clean up NW/NM modal
+    this.closeNwnmModal();
 
     // Clean up vessel search
     this.destroy$.next();

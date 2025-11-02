@@ -1,4 +1,4 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { NwNmFeatureProperties } from '../../layers/nwnm/nw-nm.models';
@@ -12,6 +12,7 @@ import { NwNmFeatureProperties } from '../../layers/nwnm/nw-nm.models';
 })
 export class NwnmPopupComponent implements OnInit {
   @Input() message!: NwNmFeatureProperties;
+  @Output() close = new EventEmitter<void>();
 
   constructor(private sanitizer: DomSanitizer) {}
 

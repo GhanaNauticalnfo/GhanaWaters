@@ -1,9 +1,29 @@
 .nwnm-popup {
-  padding: 0;
+  padding: 16px;
   max-width: 750px;
   font-size: 12px;
   line-height: 1.4;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  position: relative;
+}
+
+.close-button {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: transparent;
+  border: none;
+  font-size: 28px;
+  line-height: 1;
+  color: #666;
+  cursor: pointer;
+  padding: 4px 8px;
+  z-index: 10;
+  transition: color 0.2s;
+}
+
+.close-button:hover {
+  color: #000;
 }
 
 .message-details-item {
