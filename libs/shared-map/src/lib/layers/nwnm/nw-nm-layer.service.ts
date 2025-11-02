@@ -28,11 +28,22 @@ const LAYER_IDS = {
     NM_LINES: 'nwnm-nm-lines-layer',
     NW_FILL: 'nwnm-nw-fill-layer',
     NM_FILL: 'nwnm-nm-fill-layer',
+    NW_OUTLINE: 'nwnm-nw-outline-layer',
+    NM_OUTLINE: 'nwnm-nm-outline-layer',
 } as const;
 
 @Injectable({
     providedIn: 'root',
 })
+/**
+ * NW/NM Layer Service - Manages Navigational Warnings and Notices to Mariners
+ *
+ * Initialization Flow:
+ * 1. constructor() - Service instantiation
+ * 2. initialize(map) - Load icons, add GeoJSON source, add layers
+ * 3. addMapLayers() - Add NW layers (points/lines/fill), then NM layers (points/lines/fill)
+ * 4. update() - Fetch data from API and update source
+ */
 export class NwNmLayerService extends BaseLayerService {
     override readonly layerId = 'nw-nm';
     private readonly apiUrl = '/api/nwnm/messages';
@@ -215,18 +226,10 @@ export class NwNmLayerService extends BaseLayerService {
 
         const initialVisibility = this.isVisible ? 'visible' : 'none';
 
-        addLayerSafely({
-            id: LAYER_IDS.NW_POINTS, type: 'symbol', source: SOURCE_ID,
-            filter: ['all', ['==', ['geometry-type'], 'Point'], ['==', ['get', 'mainType'], 'NW']],
-            layout: { 'icon-image': this.areImagesLoaded ? NW_ICON_ID : '', 'icon-size': 0.3, 'icon-allow-overlap': true, 'icon-ignore-placement': true, 'visibility': initialVisibility, },
-            paint: {}
-        });
-         addLayerSafely({
-             id: LAYER_IDS.NM_POINTS, type: 'symbol', source: SOURCE_ID,
-             filter: ['all', ['==', ['geometry-type'], 'Point'], ['==', ['get', 'mainType'], 'NM']],
-             layout: { 'icon-image': this.areImagesLoaded ? NM_ICON_ID : '', 'icon-size': 0.3, 'icon-allow-overlap': true, 'icon-ignore-placement': true, 'visibility': initialVisibility, },
-             paint: {}
-         });
+        // ========================================
+        // Navigational Warnings (NW) Layers
+        // ========================================
+        const fillPaint = { 'fill-color': '#FF00FF', 'fill-opacity': 0.2 };
         addLayerSafely({
             id: LAYER_IDS.NW_LINES, type: 'line', source: SOURCE_ID,
             filter: ['all', ['any', ['==', ['geometry-type'], 'LineString'], ['==', ['geometry-type'], 'MultiLineString']], ['==', ['get', 'mainType'], 'NW']],
@@ -234,17 +237,32 @@ export class NwNmLayerService extends BaseLayerService {
             paint: { 'line-color': '#8B008B', 'line-width': 2, 'line-opacity': 0.8 }
         });
         addLayerSafely({
-            id: LAYER_IDS.NM_LINES, type: 'line', source: SOURCE_ID,
-            filter: ['all', ['any', ['==', ['geometry-type'], 'LineString'], ['==', ['geometry-type'], 'MultiLineString']], ['==', ['get', 'mainType'], 'NM']],
-            layout: { 'line-join': 'round', 'line-cap': 'round', 'visibility': initialVisibility },
-            paint: { 'line-color': '#8B008B', 'line-width': 2, 'line-opacity': 0.8 }
-        });
-        const fillPaint = { 'fill-color': '#FF00FF', 'fill-opacity': 0.2 };
-        addLayerSafely({
             id: LAYER_IDS.NW_FILL, type: 'fill', source: SOURCE_ID,
             filter: ['all', ['any', ['==', ['geometry-type'], 'Polygon'], ['==', ['geometry-type'], 'MultiPolygon']], ['==', ['get', 'mainType'], 'NW']],
             layout: { 'visibility': initialVisibility },
             paint: fillPaint,
+        });
+        addLayerSafely({
+            id: LAYER_IDS.NW_OUTLINE, type: 'line', source: SOURCE_ID,
+            filter: ['all', ['any', ['==', ['geometry-type'], 'Polygon'], ['==', ['geometry-type'], 'MultiPolygon']], ['==', ['get', 'mainType'], 'NW']],
+            layout: { 'line-join': 'round', 'line-cap': 'round', 'visibility': initialVisibility },
+            paint: { 'line-color': '#8B008B', 'line-width': 1, 'line-opacity': 0.8 }
+        });
+        addLayerSafely({
+            id: LAYER_IDS.NW_POINTS, type: 'symbol', source: SOURCE_ID,
+            filter: ['all', ['==', ['geometry-type'], 'Point'], ['==', ['get', 'mainType'], 'NW']],
+            layout: { 'icon-image': this.areImagesLoaded ? NW_ICON_ID : '', 'icon-size': 0.3, 'icon-allow-overlap': true, 'icon-ignore-placement': true, 'visibility': initialVisibility, },
+            paint: {}
+        });
+
+        // ========================================
+        // Notices to Mariners (NM) Layers
+        // ========================================
+        addLayerSafely({
+            id: LAYER_IDS.NM_LINES, type: 'line', source: SOURCE_ID,
+            filter: ['all', ['any', ['==', ['geometry-type'], 'LineString'], ['==', ['geometry-type'], 'MultiLineString']], ['==', ['get', 'mainType'], 'NM']],
+            layout: { 'line-join': 'round', 'line-cap': 'round', 'visibility': initialVisibility },
+            paint: { 'line-color': '#8B008B', 'line-width': 2, 'line-opacity': 0.8 }
         });
         addLayerSafely({
             id: LAYER_IDS.NM_FILL, type: 'fill', source: SOURCE_ID,
@@ -252,6 +270,18 @@ export class NwNmLayerService extends BaseLayerService {
             layout: { 'visibility': initialVisibility },
             paint: fillPaint
         });
+        addLayerSafely({
+            id: LAYER_IDS.NM_OUTLINE, type: 'line', source: SOURCE_ID,
+            filter: ['all', ['any', ['==', ['geometry-type'], 'Polygon'], ['==', ['geometry-type'], 'MultiPolygon']], ['==', ['get', 'mainType'], 'NM']],
+            layout: { 'line-join': 'round', 'line-cap': 'round', 'visibility': initialVisibility },
+            paint: { 'line-color': '#8B008B', 'line-width': 1, 'line-opacity': 0.8 }
+        });
+        addLayerSafely({
+             id: LAYER_IDS.NM_POINTS, type: 'symbol', source: SOURCE_ID,
+             filter: ['all', ['==', ['geometry-type'], 'Point'], ['==', ['get', 'mainType'], 'NM']],
+             layout: { 'icon-image': this.areImagesLoaded ? NM_ICON_ID : '', 'icon-size': 0.3, 'icon-allow-overlap': true, 'icon-ignore-placement': true, 'visibility': initialVisibility, },
+             paint: {}
+         });
     }
 
     private fetchNwNmMessages(lang = 'en'): Observable<NwNmMessage[]> {
