@@ -2,10 +2,10 @@ import { Component, OnInit, AfterViewInit, ChangeDetectionStrategy, TemplateRef,
 import { CommonModule } from '@angular/common';
 import { TagModule } from 'primeng/tag';
 import { MessageService } from 'primeng/api';
-import { ResourceListComponent, ResourceListConfig, ResourceAction } from '@ghanawaters/shared';
+import { ResourceListComponent, ResourceListConfig, ResourceAction, TimestampPipe } from '@ghanawaters/shared';
 import { RouteService } from '../services/route.service';
-import { Route } from '../models/route.model';
-import { RouteFormComponent } from './route-form-modern.component';
+import { RouteResponse as Route } from '@ghanawaters/shared-models';
+import { RouteFormComponent } from './route-form.component';
 
 @Component({
   selector: 'app-route-list',
@@ -15,7 +15,8 @@ import { RouteFormComponent } from './route-form-modern.component';
     CommonModule,
     TagModule,
     ResourceListComponent,
-    RouteFormComponent
+    RouteFormComponent,
+    TimestampPipe
   ],
   providers: [MessageService],
   template: `
@@ -43,10 +44,6 @@ import { RouteFormComponent } from './route-form-modern.component';
     </lib-resource-list>
     
     <!-- Column Templates -->
-    <ng-template #waypointsTemplate let-item>
-      {{ item.waypoints.length }} waypoints
-    </ng-template>
-    
     <ng-template #statusTemplate let-item>
       <p-tag 
         [value]="item.enabled ? 'Active' : 'Inactive'" 
@@ -55,7 +52,7 @@ import { RouteFormComponent } from './route-form-modern.component';
     </ng-template>
     
     <ng-template #lastUpdatedTemplate let-item>
-      {{ item.last_updated | date:'short' }}
+      {{ item.last_updated | timestamp }}
     </ng-template>
   `,
   host: {
@@ -69,7 +66,6 @@ export class RouteListComponent implements OnInit, AfterViewInit {
 
   // View children
   routeFormComponent = viewChild<RouteFormComponent>('routeForm');
-  waypointsTemplate = viewChild.required<TemplateRef<any>>('waypointsTemplate');
   statusTemplate = viewChild.required<TemplateRef<any>>('statusTemplate');
   lastUpdatedTemplate = viewChild.required<TemplateRef<any>>('lastUpdatedTemplate');
   
@@ -92,12 +88,11 @@ export class RouteListComponent implements OnInit, AfterViewInit {
       entityNameSingular: 'route',
       columns: [
         { field: 'name', header: 'Name', sortable: true },
-        { field: 'description', header: 'Description', sortable: false },
-        { field: 'waypoints', header: 'Waypoints', sortable: true },
+        { field: 'notes', header: 'Notes', sortable: false },
         { field: 'enabled', header: 'Status', sortable: true },
         { field: 'last_updated', header: 'Last Updated', sortable: true }
       ],
-      searchFields: ['name', 'description'],
+      searchFields: ['name', 'notes'],
       actions: {
         view: true,
         edit: true,
@@ -113,9 +108,8 @@ export class RouteListComponent implements OnInit, AfterViewInit {
   
   ngAfterViewInit() {
     // Now add the template references
-    this.listConfig.columns[2].template = this.waypointsTemplate();
-    this.listConfig.columns[3].template = this.statusTemplate();
-    this.listConfig.columns[4].template = this.lastUpdatedTemplate();
+    this.listConfig.columns[2].template = this.statusTemplate();
+    this.listConfig.columns[3].template = this.lastUpdatedTemplate();
   }
   
   loadRoutes() {
@@ -130,7 +124,7 @@ export class RouteListComponent implements OnInit, AfterViewInit {
         this.messageService.add({
           severity: 'error',
           summary: 'Error',
-          detail: 'Failed to load routes'
+          detail: error.error?.message || error.message || 'Failed to load routes'
         });
       }
     });
@@ -154,12 +148,8 @@ export class RouteListComponent implements OnInit, AfterViewInit {
   }
   
   showCreateDialog() {
-    this.selectedRoute.set({
-      name: '',
-      description: '',
-      waypoints: [],
-      enabled: true
-    } as Route);
+    // For create mode, set selectedRoute to null instead of empty object
+    this.selectedRoute.set(null);
     this.dialogMode.set('create');
     this.showDialog = true;
   }
@@ -196,7 +186,7 @@ export class RouteListComponent implements OnInit, AfterViewInit {
           this.messageService.add({
             severity: 'error',
             summary: 'Error',
-            detail: 'Failed to create route'
+            detail: error.error?.message || error.message || 'Failed to create route'
           });
         }
       });
@@ -217,7 +207,7 @@ export class RouteListComponent implements OnInit, AfterViewInit {
           this.messageService.add({
             severity: 'error',
             summary: 'Error',
-            detail: 'Failed to update route'
+            detail: error.error?.message || error.message || 'Failed to update route'
           });
         }
       });
@@ -239,7 +229,7 @@ export class RouteListComponent implements OnInit, AfterViewInit {
           this.messageService.add({
             severity: 'error',
             summary: 'Error',
-            detail: 'Failed to delete route'
+            detail: error.error?.message || error.message || 'Failed to delete route'
           });
         }
       });

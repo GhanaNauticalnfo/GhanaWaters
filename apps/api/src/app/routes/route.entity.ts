@@ -11,7 +11,7 @@ export class Route {
   name: string;
 
   @Column({ nullable: true })
-  description: string;
+  notes: string;
 
   @Column('jsonb', { default: [] })
   waypoints: Waypoint[];
@@ -20,27 +20,22 @@ export class Route {
   @Column({ default: true })
   enabled: boolean;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ type: 'timestamptz' })
   created: Date;
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({ type: 'timestamptz' })
   last_updated: Date;
 
-  toResponseDto(settings?: Record<string, string>): RouteResponseDto {
+  toResponseDto(): RouteResponseDto {
     const dto: RouteResponseDto = {
       id: this.id,
       name: this.name,
-      description: this.description,
+      notes: this.notes,
       waypoints: this.waypoints,
       enabled: this.enabled,
       created: this.created.toISOString(),
       last_updated: this.last_updated.toISOString(),
     };
-
-    if (settings) {
-      dto.settings = settings;
-    }
-
     return dto;
   }
 }

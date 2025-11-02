@@ -8,10 +8,10 @@ export class Setting {
   @Column()
   value: string;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ type: 'timestamptz' })
   created: Date;
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({ type: 'timestamptz' })
   last_updated: Date;
 
   toResponseDto() {

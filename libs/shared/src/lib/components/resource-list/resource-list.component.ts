@@ -81,7 +81,7 @@ import { ResourceListConfig, ResourceAction } from './resource-list.models';
               }
             }
             @if (config().actions) {
-              <th>Actions</th>
+              <th [style.width]="config().actionColumnWidth || '15%'">Actions</th>
             }
           </tr>
         </ng-template>
@@ -98,7 +98,7 @@ import { ResourceListConfig, ResourceAction } from './resource-list.models';
               </td>
             }
             @if (config().actions) {
-              <td>
+              <td [style.width]="config().actionColumnWidth || '15%'">
                 @if (config().actions?.view) {
                   <button 
                     pButton 
@@ -166,7 +166,7 @@ import { ResourceListConfig, ResourceAction } from './resource-list.models';
         (visibleChange)="onDialogVisibilityChange($event)"
         [header]="dialogHeader()"
         [modal]="true"
-        [style]="{width: '90vw', height: '85vh'}"
+        [style]="dialogStyle()"
         [contentStyle]="{height: '100%', display: 'flex', flexDirection: 'column'}"
         [transitionOptions]="'0ms'"
         [maximizable]="true"
@@ -174,6 +174,8 @@ import { ResourceListConfig, ResourceAction } from './resource-list.models';
         [resizable]="false"
         [appendTo]="'body'"
         [blockScroll]="true"
+        [closeOnEscape]="true"
+        [focusTrap]="true"
         (onShow)="onDialogShow()">
         
         <ng-content select="[formContent]"></ng-content>
@@ -233,7 +235,7 @@ export class ResourceListComponent<T extends { id?: number | string }> {
     const dataList = this.dataSignal();
     const currentConfig = this.config();
     
-    console.log('Filtering data:', { query, dataLength: dataList.length, data: dataList });
+ //   console.log('Filtering data:', { query, dataLength: dataList.length, data: dataList });
     
     if (!query || !currentConfig.searchFields) return dataList;
     
@@ -261,6 +263,18 @@ export class ResourceListComponent<T extends { id?: number | string }> {
 
   columnCount = computed(() => {
     return this.config().columns.length + (this.config().actions ? 1 : 0);
+  });
+
+  dialogStyle = computed(() => {
+    const mode = this.dialogMode();
+    const customStyles = this.config().dialogStyles;
+    
+    if (customStyles?.[mode]) {
+      return customStyles[mode];
+    }
+    
+    // Default styles
+    return { width: '90vw', height: '85vh' };
   });
 
   onCreateNew() {

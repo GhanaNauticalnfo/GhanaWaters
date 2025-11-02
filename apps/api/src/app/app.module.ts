@@ -6,7 +6,6 @@ import { AppController } from './app.controller';
 import { RootController } from './root.controller';
 import { AppService } from './app.service';
 import { KmlDatasetModule } from './kml-dataset/kml-dataset.module';
-import { VoltaDepthModule } from './volta-depth/volta-depth.module';
 // Import the CORRECT factory function from database.config.ts
 import { typeOrmModuleOptionsFactory } from '../config/database.config';
 // KmlDataset entity will be picked up by autoLoadEntities or by forFeature in its own module
@@ -17,13 +16,18 @@ import { SyncModule } from './sync/sync.module';
 import { SettingsModule } from './settings/settings.module';
 import { TreeStubsModule } from './tree-stubs/tree-stubs.module';
 import { LandingSitesModule } from './landing-sites/landing-sites.module';
-import { ResourceSettingsModule } from './resource-settings/resource-settings.module';
+import { DatabaseModule } from './database/database.module';
+import { AuthModule } from './auth/auth.module';
+import { NwnmModule } from './nwnm/nwnm.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true, // Good practice: Makes ConfigService available everywhere
-      envFilePath: `.env.${process.env.NODE_ENV || 'local'}`,
+      envFilePath: process.env.NODE_ENV === 'local' || !process.env.NODE_ENV 
+        ? '.env.local' 
+        : undefined, // Only load .env.local for local development
+      ignoreEnvFile: process.env.NODE_ENV !== 'local' && !!process.env.NODE_ENV, // Ignore file for non-local environments
     }),
     TypeOrmModule.forRootAsync({
       // Make ConfigModule available for injection into the factory
@@ -43,16 +47,18 @@ import { ResourceSettingsModule } from './resource-settings/resource-settings.mo
       //   };
       // },
     }),
+    // Register auth module early so guards are available
+    AuthModule,
     // Register feature modules AFTER TypeOrmModule.forRootAsync
     VesselsModule,
     KmlDatasetModule,
-    VoltaDepthModule,
     RoutesModule,
     SyncModule,
     SettingsModule,
     TreeStubsModule,
     LandingSitesModule,
-    ResourceSettingsModule,
+    DatabaseModule,
+    NwnmModule,
   ],
   controllers: [AppController, RootController],
   providers: [AppService],

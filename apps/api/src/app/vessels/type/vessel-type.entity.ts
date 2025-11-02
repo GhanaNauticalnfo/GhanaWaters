@@ -17,18 +17,18 @@ export class VesselType {
   @ApiProperty({ description: 'Color for the vessel type in hex format', example: '#3B82F6' })
   color: string;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ type: 'timestamptz' })
   @ApiProperty({ description: 'Timestamp when the vessel type was created', type: Date })
   created_at: Date;
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({ type: 'timestamptz' })
   @ApiProperty({ description: 'Timestamp when the vessel type was last updated', type: Date })
   updated_at: Date;
 
   @OneToMany(() => Vessel, vessel => vessel.vessel_type)
   vessels: Vessel[];
 
-  toResponseDto(settings?: Record<string, string>): VesselTypeResponseDto {
+  toResponseDto(): VesselTypeResponseDto {
     const dto: VesselTypeResponseDto = {
       id: this.id,
       name: this.name,
@@ -38,9 +38,6 @@ export class VesselType {
       vessel_count: this.vessels?.length || 0
     };
 
-    if (settings) {
-      dto.settings = settings;
-    }
 
     return dto;
   }

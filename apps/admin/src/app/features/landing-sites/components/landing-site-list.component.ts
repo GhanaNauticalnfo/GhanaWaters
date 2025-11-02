@@ -1,13 +1,12 @@
-import { Component, OnInit, AfterViewInit, ChangeDetectionStrategy, TemplateRef, signal, viewChild, inject, computed } from '@angular/core';
+import { Component, OnInit, AfterViewInit, ChangeDetectionStrategy, TemplateRef, signal, viewChild, inject, computed, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { TagModule } from 'primeng/tag';
 import { MessageService } from 'primeng/api';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { ResourceListComponent, ResourceListConfig, ResourceAction } from '@ghanawaters/shared';
+import { ResourceListComponent, ResourceListConfig, ResourceAction, TimestampPipe } from '@ghanawaters/shared';
 import { LandingSiteService } from '../services/landing-site.service';
-import { LandingSiteResponseDto, CreateLandingSiteDto, UpdateLandingSiteDto } from '../models/landing-site.dto';
+import { LandingSiteResponse, LandingSiteInput } from '@ghanawaters/shared-models';
 import { LandingSiteFormComponent } from './landing-site-form.component';
-import { LandingSite } from '../models/landing-site.model';
 
 @Component({
   selector: 'app-landing-site-list',
@@ -16,7 +15,8 @@ import { LandingSite } from '../models/landing-site.model';
     CommonModule,
     TagModule,
     ResourceListComponent,
-    LandingSiteFormComponent
+    LandingSiteFormComponent,
+    TimestampPipe
   ],
   providers: [MessageService],
   template: `
@@ -51,13 +51,13 @@ import { LandingSite } from '../models/landing-site.model';
     
     <ng-template #statusTemplate let-item>
       <p-tag 
-        [value]="getStatusLabel(item.status)" 
-        [severity]="getStatusSeverity(item.status)">
+        [value]="item.active ? 'Active' : 'Inactive'" 
+        [severity]="item.active ? 'success' : 'secondary'">
       </p-tag>
     </ng-template>
     
     <ng-template #lastUpdatedTemplate let-item>
-      {{ item.updated_at | date:'short' }}
+      {{ item.updated_at | timestamp }}
     </ng-template>
   `,
   host: {
@@ -68,6 +68,7 @@ export class LandingSiteListComponent implements OnInit, AfterViewInit {
   // Services
   private landingSiteService = inject(LandingSiteService);
   private messageService = inject(MessageService);
+  private cdr = inject(ChangeDetectorRef);
 
   // View children
   landingSiteFormComponent = viewChild<LandingSiteFormComponent>('landingSiteForm');
@@ -76,16 +77,15 @@ export class LandingSiteListComponent implements OnInit, AfterViewInit {
   lastUpdatedTemplate = viewChild.required<TemplateRef<any>>('lastUpdatedTemplate');
   
   // Signals
-  landingSites = signal<LandingSiteResponseDto[]>([]);
-  selectedLandingSite = signal<LandingSiteResponseDto | null>(null);
+  landingSites = signal<LandingSiteResponse[]>([]);
+  selectedLandingSite = signal<LandingSiteResponse | null>(null);
   loading = signal(false);
   showDialog = false;
   dialogMode = signal<'view' | 'edit' | 'create'>('create');
   
-  listConfig!: ResourceListConfig<LandingSiteResponseDto>;
+  listConfig!: ResourceListConfig<LandingSiteResponse>;
   
-  // Convert between DTO and model for the form
-  formLandingSite = signal<LandingSite | null>(null);
+  formLandingSite = signal<LandingSiteResponse | null>(null);
   
   ngOnInit() {
     // Initialize config without template references
@@ -99,7 +99,7 @@ export class LandingSiteListComponent implements OnInit, AfterViewInit {
         { field: 'name', header: 'Name', sortable: true },
         { field: 'description', header: 'Description', sortable: false },
         { field: 'location', header: 'Location', sortable: false },
-        { field: 'status', header: 'Status', sortable: true },
+        { field: 'active', header: 'Status', sortable: true },
         { field: 'updated_at', header: 'Last Updated', sortable: true }
       ],
       searchFields: ['name', 'description'],
@@ -143,7 +143,7 @@ export class LandingSiteListComponent implements OnInit, AfterViewInit {
     });
   }
   
-  handleAction(action: ResourceAction<LandingSiteResponseDto>) {
+  handleAction(action: ResourceAction<LandingSiteResponse>) {
     switch (action.type) {
       case 'create':
         this.showCreateDialog();
@@ -161,14 +161,17 @@ export class LandingSiteListComponent implements OnInit, AfterViewInit {
   }
   
   showCreateDialog() {
-    const newSite: LandingSite = {
+    const newSite: LandingSiteResponse = {
+      id: 0,
       name: '',
       description: '',
       location: {
         type: 'Point',
         coordinates: [-0.4, 5.6] // Default to Ghana coast
       },
-      enabled: true
+      active: true,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
     };
     this.formLandingSite.set(newSite);
     this.selectedLandingSite.set(null);
@@ -176,33 +179,34 @@ export class LandingSiteListComponent implements OnInit, AfterViewInit {
     this.showDialog = true;
   }
   
-  viewLandingSite(site: LandingSiteResponseDto) {
+  viewLandingSite(site: LandingSiteResponse) {
     this.selectedLandingSite.set(site);
-    this.formLandingSite.set(this.dtoToModel(site));
+    this.formLandingSite.set(site);
     this.dialogMode.set('view');
     this.showDialog = true;
   }
   
-  editLandingSite(site: LandingSiteResponseDto) {
+  editLandingSite(site: LandingSiteResponse) {
     this.selectedLandingSite.set(site);
-    this.formLandingSite.set(this.dtoToModel(site));
+    this.formLandingSite.set(site);
     this.dialogMode.set('edit');
     this.showDialog = true;
   }
   
-  saveLandingSite(site: LandingSite) {
+  saveLandingSite(site: LandingSiteResponse) {
     if (this.dialogMode() === 'create') {
-      const createDto: CreateLandingSiteDto = {
+      const createDto: LandingSiteInput = {
         name: site.name,
         description: site.description,
         location: site.location,
-        enabled: site.enabled
+        active: site.active
       };
       
       this.landingSiteService.create(createDto).subscribe({
         next: (newSite) => {
           this.landingSites.update(sites => [...sites, newSite]);
           this.showDialog = false;
+          this.cdr.detectChanges();
           this.messageService.add({
             severity: 'success',
             summary: 'Success',
@@ -218,11 +222,11 @@ export class LandingSiteListComponent implements OnInit, AfterViewInit {
         }
       });
     } else if (this.dialogMode() === 'edit' && this.selectedLandingSite()?.id) {
-      const updateDto: UpdateLandingSiteDto = {
+      const updateDto: LandingSiteInput = {
         name: site.name,
         description: site.description,
         location: site.location,
-        enabled: site.enabled
+        active: site.active
       };
       
       this.landingSiteService.update(this.selectedLandingSite()!.id, updateDto).subscribe({
@@ -231,6 +235,7 @@ export class LandingSiteListComponent implements OnInit, AfterViewInit {
             sites.map(s => s.id === updatedSite.id ? updatedSite : s)
           );
           this.showDialog = false;
+          this.cdr.detectChanges();
           this.messageService.add({
             severity: 'success',
             summary: 'Success',
@@ -248,7 +253,7 @@ export class LandingSiteListComponent implements OnInit, AfterViewInit {
     }
   }
   
-  deleteLandingSite(site: LandingSiteResponseDto) {
+  deleteLandingSite(site: LandingSiteResponse) {
     this.landingSiteService.delete(site.id).subscribe({
       next: () => {
         this.landingSites.update(sites => sites.filter(s => s.id !== site.id));
@@ -277,37 +282,5 @@ export class LandingSiteListComponent implements OnInit, AfterViewInit {
         formComponent.prepareMap();
       }
     }, 10); // Minimal delay since dialog now opens instantly
-  }
-  
-  // Convert DTO to model for form
-  private dtoToModel(dto: LandingSiteResponseDto): LandingSite {
-    return {
-      id: dto.id,
-      name: dto.name,
-      description: dto.description,
-      location: dto.location,
-      enabled: dto.status === 'active',
-      created: new Date(dto.created_at),
-      last_updated: new Date(dto.updated_at)
-    };
-  }
-
-  // Status utility methods (kept as methods since they're used in templates with parameters)
-  getStatusLabel(status: string): string {
-    switch (status) {
-      case 'active': return 'Active';
-      case 'inactive': return 'Inactive';
-      case 'restricted': return 'Restricted';
-      default: return status;
-    }
-  }
-
-  getStatusSeverity(status: string): 'success' | 'danger' | 'warn' | 'info' {
-    switch (status) {
-      case 'active': return 'success';
-      case 'inactive': return 'danger';
-      case 'restricted': return 'warn';
-      default: return 'info';
-    }
   }
 }

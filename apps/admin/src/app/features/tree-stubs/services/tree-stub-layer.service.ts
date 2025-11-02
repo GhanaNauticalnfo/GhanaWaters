@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Map } from 'maplibre-gl';
-import { BaseLayerService } from '@ghanawaters/map';
+import { BaseLayerService } from '@ghanawaters/shared-map';
 import { TreeStubResponseDto } from '@ghanawaters/shared-models';
 
 @Injectable({

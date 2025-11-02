@@ -1,15 +1,18 @@
-import { Component, ChangeDetectionStrategy, input, output, OnInit, OnDestroy, AfterViewInit, viewChild, signal, inject, effect } from '@angular/core';
+import { Component, ChangeDetectionStrategy, input, output, OnInit, OnDestroy, AfterViewInit, viewChild, signal, inject, effect, computed, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
+import { InputGroupModule } from 'primeng/inputgroup';
 import { TextareaModule } from 'primeng/textarea';
 import { InputSwitchModule } from 'primeng/inputswitch';
 import { DividerModule } from 'primeng/divider';
 import { CardModule } from 'primeng/card';
 import { SkeletonModule } from 'primeng/skeleton';
-import { LandingSite } from '../models/landing-site.model';
-import { MapComponent, MapConfig, OSM_STYLE } from '@ghanawaters/map';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { ConfirmationService } from 'primeng/api';
+import { LandingSiteResponse } from '@ghanawaters/shared-models';
+import { MapComponent, MapConfig, OSM_STYLE } from '@ghanawaters/shared-map';
 import { GeoPoint } from '@ghanawaters/shared-models';
 import { Map as MaplibreMap, Marker, LngLatLike } from 'maplibre-gl';
 
@@ -23,12 +26,15 @@ import { Map as MaplibreMap, Marker, LngLatLike } from 'maplibre-gl';
     ReactiveFormsModule,
     ButtonModule,
     InputTextModule,
+    InputGroupModule,
     TextareaModule,
     InputSwitchModule,
     DividerModule,
     CardModule,
-    MapComponent
+    MapComponent,
+    ConfirmDialogModule
   ],
+  providers: [ConfirmationService],
   template: `
     <div class="landing-site-form-container">
       <form [formGroup]="landingSiteForm" class="flex gap-3" style="height: 100%;">
@@ -40,14 +46,14 @@ import { Map as MaplibreMap, Marker, LngLatLike } from 'maplibre-gl';
               [config]="mapConfig()">
             </lib-map>
             @if (mode() !== 'view') {
-              <div class="map-instructions">
+              <div class="map-instructions text-sm">
                 <i class="pi pi-info-circle"></i> Click on the map to set the landing site location
               </div>
             }
           } @else {
             <div class="map-skeleton">
               <p-skeleton width="100%" height="100%"></p-skeleton>
-              <div class="loading-text">Loading map...</div>
+              <div class="loading-text text-xl">Loading map...</div>
             </div>
           }
         </div>
@@ -80,61 +86,118 @@ import { Map as MaplibreMap, Marker, LngLatLike } from 'maplibre-gl';
               </textarea>
             </div>
 
-            <div class="field-checkbox">
-              <p-inputSwitch 
-                formControlName="enabled">
-              </p-inputSwitch>
-              <label class="ml-2">Active</label>
-            </div>
-
-            <p-divider></p-divider>
-
-            <div class="location-section">
-              <h4 class="m-0 mb-3">Location</h4>
-              <div class="location-display">
-                <div class="location-item">
-                  <span class="location-label">Latitude:</span>
-                  <span class="location-value">{{ currentLocation().coordinates[1].toFixed(6) }}°</span>
+            <div class="field">
+              <label class="block mb-2">Location</label>
+              <div class="location-inputs">
+                <div class="location-input-group">
+                  <label for="latitude" class="location-input-label">Latitude:</label>
+                  <div class="p-inputgroup location-input">
+                    <input 
+                      pInputText
+                      type="text"
+                      id="latitude"
+                      formControlName="latitudeText"
+                      placeholder="-90 to 90"
+                      class="p-inputtext-sm">
+                    <span class="p-inputgroup-addon">°</span>
+                  </div>
                 </div>
-                <div class="location-item">
-                  <span class="location-label">Longitude:</span>
-                  <span class="location-value">{{ currentLocation().coordinates[0].toFixed(6) }}°</span>
+                <div class="location-input-group">
+                  <label for="longitude" class="location-input-label">Longitude:</label>
+                  <div class="p-inputgroup location-input">
+                    <input 
+                      pInputText
+                      type="text"
+                      id="longitude"
+                      formControlName="longitudeText"
+                      placeholder="-180 to 180"
+                      class="p-inputtext-sm">
+                    <span class="p-inputgroup-addon">°</span>
+                  </div>
                 </div>
               </div>
+              @if (mode() === 'view') {
+                <small class="text-color-secondary">Location coordinates</small>
+              } @else {
+                <small class="text-color-secondary">Click on the map or enter coordinates manually</small>
+                @if (landingSiteForm.get('latitudeText')?.errors && landingSiteForm.get('latitudeText')?.touched) {
+                  <small class="p-error block mt-1">
+                    @if (landingSiteForm.get('latitudeText')?.errors?.['invalidNumber']) {
+                      Latitude must be a valid number
+                    }
+                    @if (landingSiteForm.get('latitudeText')?.errors?.['outOfRange']) {
+                      Latitude must be between -90 and 90
+                    }
+                  </small>
+                }
+                @if (landingSiteForm.get('longitudeText')?.errors && landingSiteForm.get('longitudeText')?.touched) {
+                  <small class="p-error block mt-1">
+                    @if (landingSiteForm.get('longitudeText')?.errors?.['invalidNumber']) {
+                      Longitude must be a valid number
+                    }
+                    @if (landingSiteForm.get('longitudeText')?.errors?.['outOfRange']) {
+                      Longitude must be between -180 and 180
+                    }
+                  </small>
+                }
+              }
+            </div>
+
+            <div class="field-checkbox">
+              <p-inputSwitch 
+                formControlName="active">
+              </p-inputSwitch>
+              <label class="ml-2">Active</label>
             </div>
           </div>
 
           <div class="form-actions">
             @if (mode() !== 'view') {
-              <button 
-                pButton 
-                type="button" 
-                label="Cancel" 
-                class="p-button-text"
-                (click)="cancel.emit()">
-              </button>
-              <button 
-                pButton 
-                type="button" 
-                label="Save" 
-                icon="pi pi-check"
-                (click)="saveLandingSite()"
-                [disabled]="landingSiteForm.invalid">
-              </button>
+              <div class="flex items-center justify-between w-full">
+                <div class="text-sm text-gray-500">
+                  @if (mode() === 'create' && !landingSiteForm.valid) {
+                    <span class="text-orange-500">Please enter a landing site name</span>
+                  } @else if (mode() === 'edit' && !hasChanges()) {
+                    <span class="text-gray-500">No changes made</span>
+                  }
+                </div>
+                <div class="flex gap-2">
+                  <button 
+                    pButton 
+                    type="button" 
+                    label="Cancel" 
+                    class="p-button-text"
+                    (click)="onCancel()">
+                  </button>
+                  <button 
+                    pButton 
+                    type="button" 
+                    label="Save" 
+                    icon="pi pi-check"
+                    (click)="saveLandingSite()"
+                    [disabled]="!canSave()">
+                  </button>
+                </div>
+              </div>
             } @else {
               <button 
                 pButton 
                 type="button" 
                 label="Close" 
                 class="p-button-text"
-                (click)="cancel.emit()">
+                (click)="onCancel()">
               </button>
             }
           </div>
         </div>
       </form>
+      
+      <p-confirmDialog></p-confirmDialog>
     </div>
   `,
+  host: {
+    class: 'landing-site-form-host'
+  },
   styles: [`
     .landing-site-form-container {
       height: 100%;
@@ -157,6 +220,8 @@ import { Map as MaplibreMap, Marker, LngLatLike } from 'maplibre-gl';
     .map-section lib-map {
       flex: 1;
       min-height: 500px;
+      position: relative;
+      display: block;
     }
 
     .map-skeleton {
@@ -172,7 +237,6 @@ import { Map as MaplibreMap, Marker, LngLatLike } from 'maplibre-gl';
     .loading-text {
       position: absolute;
       color: var(--text-color-secondary);
-      font-size: 1.2rem;
     }
 
     .map-instructions {
@@ -183,7 +247,6 @@ import { Map as MaplibreMap, Marker, LngLatLike } from 'maplibre-gl';
       padding: 8px 12px;
       border-radius: 4px;
       box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-      font-size: 0.875rem;
       z-index: 10;
     }
 
@@ -219,47 +282,72 @@ import { Map as MaplibreMap, Marker, LngLatLike } from 'maplibre-gl';
       align-items: center;
     }
 
-    .location-section {
-      background: var(--surface-50);
-      padding: 1rem;
-      border-radius: var(--border-radius);
-    }
-
-    .location-display {
+    .location-inputs {
       display: flex;
-      flex-direction: column;
-      gap: 0.5rem;
-    }
-
-    .location-item {
-      display: flex;
-      justify-content: space-between;
+      gap: 1.5rem;
       align-items: center;
     }
 
-    .location-label {
-      font-weight: 600;
-      color: var(--text-color-secondary);
+    .location-input-group {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      flex: 1;
     }
 
-    .location-value {
-      font-family: monospace;
-      font-size: 1.1rem;
+    .location-input-label {
+      font-weight: 500;
+      color: var(--text-color-secondary);
+      white-space: nowrap;
+    }
+
+    .location-input {
+      flex: 1;
+    }
+
+    .location-input ::ng-deep .p-inputnumber-input {
+      width: 100%;
     }
   `]
 })
 export class LandingSiteFormComponent implements OnInit, OnDestroy, AfterViewInit {
+  // Computed values
+  canSave = computed(() => {
+    const mode = this.mode();
+    const current = this.currentFormValues();
+    
+    // Basic validation: name must not be empty
+    const hasValidName = current.name && current.name.trim().length > 0;
+    
+    // Check if the form is valid (including lat/lon validation)
+    const isFormValid = this.landingSiteForm.valid;
+    
+    if (!hasValidName || !isFormValid) {
+      return false;
+    }
+    
+    // For edit mode, also require changes
+    if (mode === 'edit') {
+      return this.hasChanges();
+    }
+    
+    // For create mode, basic requirements are enough
+    return true;
+  });
+
   // Input/Output signals
-  landingSite = input<LandingSite | null>(null);
+  landingSite = input<LandingSiteResponse | null>(null);
   mode = input<'view' | 'edit' | 'create'>('view');
-  save = output<LandingSite>();
+  save = output<LandingSiteResponse>();
   cancel = output<void>();
   
   // Services
   private fb = inject(FormBuilder);
+  private confirmationService = inject(ConfirmationService);
+  private cdr = inject(ChangeDetectorRef);
   
   // View child
-  mapComponent = viewChild.required<MapComponent>('mapComponent');
+  mapComponent = viewChild<MapComponent>('mapComponent');
 
   landingSiteForm: FormGroup;
   mapConfig = signal<Partial<MapConfig>>({});
@@ -268,6 +356,17 @@ export class LandingSiteFormComponent implements OnInit, OnDestroy, AfterViewIni
     coordinates: [-0.4, 5.6]
   });
   mapReady = signal(false);
+  
+  // Change tracking
+  currentFormValues = signal<{ name: string; description: string; active: boolean; latitude: number; longitude: number }>({ 
+    name: '', 
+    description: '', 
+    active: true,
+    latitude: 5.6,
+    longitude: -0.4
+  });
+  originalFormValues = signal<{ name: string; description: string; active: boolean; latitude: number; longitude: number } | null>(null);
+  originalLocation = signal<GeoPoint | null>(null);
   
   private marker?: Marker;
   private map?: MaplibreMap;
@@ -287,7 +386,9 @@ export class LandingSiteFormComponent implements OnInit, OnDestroy, AfterViewIni
     this.landingSiteForm = this.fb.group({
       name: ['', Validators.required],
       description: [''],
-      enabled: [true]
+      active: [true],
+      latitudeText: ['5.6', [Validators.required, this.latitudeValidator]],
+      longitudeText: ['-0.4', [Validators.required, this.longitudeValidator]]
     });
     
     // Initialize map configuration
@@ -295,7 +396,7 @@ export class LandingSiteFormComponent implements OnInit, OnDestroy, AfterViewIni
       mapStyle: OSM_STYLE,
       center: [-0.4, 5.6], // Ghana coast
       zoom: 7,
-      height: '600px',
+      height: '100%', // Use 100% to fill container
       showControls: false,
       showFullscreenControl: true,
       showCoordinateDisplay: true,
@@ -306,30 +407,135 @@ export class LandingSiteFormComponent implements OnInit, OnDestroy, AfterViewIni
 
   ngOnInit() {
     this.resetFormWithLandingSiteData();
+    
+    // Watch for form changes to update current values signal
+    this.landingSiteForm.valueChanges.subscribe((values) => {
+      this.currentFormValues.set({
+        name: values.name,
+        description: values.description,
+        active: values.active,
+        latitude: parseFloat(values.latitudeText) || 0,
+        longitude: parseFloat(values.longitudeText) || 0
+      });
+    });
+    
+    // Watch for latitude/longitude text changes to update map
+    this.landingSiteForm.get('latitudeText')?.valueChanges.subscribe((latText) => {
+      const lat = parseFloat(latText);
+      if (!isNaN(lat) && lat >= -90 && lat <= 90) {
+        const lng = this.currentLocation().coordinates[0];
+        // Only update if the value actually changed (to avoid infinite loops)
+        if (Math.abs(lat - this.currentLocation().coordinates[1]) > 0.000001) {
+          this.updateLocation(lng, lat);
+        }
+      }
+    });
+    
+    this.landingSiteForm.get('longitudeText')?.valueChanges.subscribe((lngText) => {
+      const lng = parseFloat(lngText);
+      if (!isNaN(lng) && lng >= -180 && lng <= 180) {
+        const lat = this.currentLocation().coordinates[1];
+        // Only update if the value actually changed (to avoid infinite loops)
+        if (Math.abs(lng - this.currentLocation().coordinates[0]) > 0.000001) {
+          this.updateLocation(lng, lat);
+        }
+      }
+    });
+  }
+  
+  // Unified change detection method
+  hasChanges(): boolean {
+    const current = this.currentFormValues();
+    const originalForm = this.originalFormValues();
+    const currentLoc = this.currentLocation();
+    const originalLoc = this.originalLocation();
+    
+    // Check form changes
+    if (originalForm) {
+      const formChanged = (
+        current.name !== originalForm.name ||
+        current.description !== originalForm.description ||
+        current.active !== originalForm.active ||
+        Math.abs(current.latitude - originalForm.latitude) > 0.000001 ||
+        Math.abs(current.longitude - originalForm.longitude) > 0.000001
+      );
+      
+      if (formChanged) return true;
+    }
+    
+    // Check location changes (this is now redundant since we track lat/lon in form)
+    if (originalLoc && currentLoc) {
+      return (
+        Math.abs(currentLoc.coordinates[0] - originalLoc.coordinates[0]) > 0.000001 ||
+        Math.abs(currentLoc.coordinates[1] - originalLoc.coordinates[1]) > 0.000001
+      );
+    }
+    
+    return false;
   }
 
   private resetFormWithLandingSiteData() {
     const site = this.landingSite();
     if (site) {
-      this.landingSiteForm.patchValue({
+      const location = site.location || { type: 'Point', coordinates: [-0.4, 5.6] };
+      const formData = {
         name: site.name || '',
         description: site.description || '',
-        enabled: site.enabled !== undefined ? site.enabled : true
-      });
+        active: site.active !== undefined ? site.active : true,
+        latitudeText: location.coordinates[1].toString(),
+        longitudeText: location.coordinates[0].toString()
+      };
+      this.landingSiteForm.reset(formData);
+      
+      // Force change detection to ensure PrimeNG InputSwitch updates
+      this.cdr.detectChanges();
       
       if (site.location) {
         this.currentLocation.set(site.location);
       }
-    } else {
-      this.landingSiteForm.patchValue({
-        name: '',
-        description: '',
-        enabled: true
+      
+      // Store both current and original values for change tracking
+      this.currentFormValues.set({ 
+        name: formData.name,
+        description: formData.description,
+        active: formData.active,
+        latitude: location.coordinates[1],
+        longitude: location.coordinates[0]
       });
-      this.currentLocation.set({
+      this.originalFormValues.set({ 
+        name: formData.name,
+        description: formData.description,
+        active: formData.active,
+        latitude: location.coordinates[1],
+        longitude: location.coordinates[0]
+      });
+      // Deep copy location to track changes
+      this.originalLocation.set(site.location ? { ...site.location, coordinates: [...site.location.coordinates] } : null);
+    } else {
+      const defaultLocation: GeoPoint = {
         type: 'Point',
         coordinates: [-0.4, 5.6]
+      };
+      const formData = {
+        name: '',
+        description: '',
+        active: true,
+        latitudeText: defaultLocation.coordinates[1].toString(),
+        longitudeText: defaultLocation.coordinates[0].toString()
+      };
+      this.landingSiteForm.reset(formData);
+      this.currentLocation.set(defaultLocation);
+      
+      // For create mode, set current values and original to null
+      this.currentFormValues.set({ 
+        name: '',
+        description: '',
+        active: true,
+        latitude: defaultLocation.coordinates[1],
+        longitude: defaultLocation.coordinates[0]
       });
+      this.originalFormValues.set(null);
+      this.originalLocation.set(null);
     }
   }
 
@@ -350,19 +556,40 @@ export class LandingSiteFormComponent implements OnInit, OnDestroy, AfterViewIni
 
     this.map = mapComponentRef.map;
     
-    // Add click handler for setting location (only in edit/create mode)
-    if (this.mode() !== 'view') {
-      this.map.on('click', (e) => {
-        const { lng, lat } = e.lngLat;
-        this.updateLocation(lng, lat);
+    // Wait for map style to be loaded
+    const initializeLandingSite = () => {
+      // Add click handler for setting location (only in edit/create mode)
+      if (this.mode() !== 'view') {
+        this.map!.on('click', (e) => {
+          const { lng, lat } = e.lngLat;
+          this.updateLocation(lng, lat);
+        });
+      }
+      
+      // Add initial marker
+      this.updateMarker();
+      
+      // Delay fitting to location to ensure map is fully ready
+      setTimeout(() => {
+        this.fitMapToLocation();
+      }, 300);
+    };
+    
+    if (this.map.isStyleLoaded()) {
+      initializeLandingSite();
+      // Ensure map layout is correct after initialization
+      setTimeout(() => {
+        mapComponentRef.resize();
+      }, 100);
+    } else {
+      this.map.once('styledata', () => {
+        initializeLandingSite();
+        // Ensure map layout is correct after initialization
+        setTimeout(() => {
+          mapComponentRef.resize();
+        }, 100);
       });
     }
-    
-    // Add initial marker
-    this.updateMarker();
-    
-    // Center map on location
-    this.fitMapToLocation();
   }
 
   private updateFormState() {
@@ -381,11 +608,44 @@ export class LandingSiteFormComponent implements OnInit, OnDestroy, AfterViewIni
       this.marker.remove();
     }
   }
+  
+  // Custom validators
+  private latitudeValidator = (control: any) => {
+    const value = control.value;
+    if (!value) return null;
+    
+    const num = parseFloat(value);
+    if (isNaN(num)) {
+      return { invalidNumber: true };
+    }
+    if (num < -90 || num > 90) {
+      return { outOfRange: true };
+    }
+    return null;
+  }
+  
+  private longitudeValidator = (control: any) => {
+    const value = control.value;
+    if (!value) return null;
+    
+    const num = parseFloat(value);
+    if (isNaN(num)) {
+      return { invalidNumber: true };
+    }
+    if (num < -180 || num > 180) {
+      return { outOfRange: true };
+    }
+    return null;
+  }
 
   // Public method to prepare the map - called by parent component when dialog is shown
   public prepareMap(): void {
     this.mapReady.set(true);
-    // Initialize map after next tick when it's rendered
+    
+    // Force change detection to ensure map container renders with proper dimensions
+    this.cdr.detectChanges();
+    
+    // Initialize map with minimal delay like routes
     setTimeout(() => {
       this.initializeMapIntegration();
     }, 0);
@@ -396,7 +656,17 @@ export class LandingSiteFormComponent implements OnInit, OnDestroy, AfterViewIni
       type: 'Point',
       coordinates: [lng, lat]
     });
+    
+    // Update form controls without triggering valueChanges (to avoid infinite loops)
+    this.landingSiteForm.get('latitudeText')?.setValue(lat.toString(), { emitEvent: false });
+    this.landingSiteForm.get('longitudeText')?.setValue(lng.toString(), { emitEvent: false });
+    
     this.updateMarker();
+    
+    // Update map view to center on the new location
+    if (this.map) {
+      this.map.setCenter([lng, lat]);
+    }
   }
 
   private updateMarker() {
@@ -425,14 +695,36 @@ export class LandingSiteFormComponent implements OnInit, OnDestroy, AfterViewIni
     });
   }
 
+  onCancel(): void {
+    if (this.mode() !== 'view' && this.hasChanges()) {
+      this.confirmationService.confirm({
+        message: 'You have unsaved changes. Are you sure you want to cancel?',
+        header: 'Unsaved Changes',
+        icon: 'pi pi-exclamation-triangle',
+        accept: () => {
+          this.mapReady.set(false);
+          this.cancel.emit();
+        }
+      });
+    } else {
+      this.mapReady.set(false);
+      this.cancel.emit();
+    }
+  }
+  
   saveLandingSite() {
-    if (this.landingSiteForm.valid) {
+    if (this.canSave()) {
       const formValue = this.landingSiteForm.value;
       const site = this.landingSite();
-      const landingSite: LandingSite = {
-        ...site,
-        ...formValue,
-        location: this.currentLocation()
+      const landingSite: LandingSiteResponse = {
+        id: site?.id || 0,
+        name: formValue.name,
+        description: formValue.description,
+        active: formValue.active,
+        location: this.currentLocation(),
+        created_at: site?.created_at || new Date().toISOString(),
+        updated_at: site?.updated_at || new Date().toISOString(),
+        settings: site?.settings
       };
       this.save.emit(landingSite);
       // Reset map state in case dialog closes

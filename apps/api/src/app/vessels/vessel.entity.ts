@@ -3,8 +3,9 @@ import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateCol
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { VesselTelemetry } from './tracking/vessel-telemetry.entity';
 import { VesselType } from './type/vessel-type.entity';
+import { Device } from './device/device.entity';
 import { VesselResponseDto } from './dto/vessel-response.dto';
-import { GeoPoint } from '@ghanawaters/shared-models';
+import { GeoPoint, DeviceState } from '@ghanawaters/shared-models';
 
 @Entity()
 export class Vessel {
@@ -12,11 +13,11 @@ export class Vessel {
   @ApiProperty({ description: 'Unique identifier for the vessel', example: 1 })
   id: number;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ type: 'timestamptz' })
   @ApiProperty({ description: 'Timestamp when the vessel was created', type: Date })
   created: Date;
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({ type: 'timestamptz' })
   @ApiProperty({ description: 'Timestamp when the vessel was last updated', type: Date })
   last_updated: Date;
 
@@ -37,7 +38,11 @@ export class Vessel {
   @ApiPropertyOptional({ description: 'Latest tracking position for this vessel', type: () => VesselTelemetry })
   latest_position: VesselTelemetry;
 
-  toResponseDto(coordinates?: GeoPoint, settings?: Record<string, string>): VesselResponseDto {
+  @OneToMany(() => Device, device => device.vessel)
+  @ApiPropertyOptional({ description: 'Devices associated with this vessel', type: () => [Device] })
+  devices?: Device[];
+
+  toResponseDto(coordinates?: GeoPoint): VesselResponseDto {
     const dto: VesselResponseDto = {
       id: this.id,
       created: this.created,
@@ -57,9 +62,9 @@ export class Vessel {
       }
     }
 
-    // Include settings if provided
-    if (settings) {
-      dto.settings = settings;
+    // Check if vessel has any active devices
+    if (this.devices) {
+      dto.has_active_device = this.devices.some(device => device.state === DeviceState.ACTIVE);
     }
 
     return dto;

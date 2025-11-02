@@ -5,7 +5,6 @@ import { VesselType } from './vessel-type.entity';
 import { Vessel } from '../vessel.entity';
 import { VesselTypeInputDto } from './dto/vessel-type-input.dto';
 import { VesselTypeResponseDto } from './dto/vessel-type-response.dto';
-import { ResourceSettingsService } from '../../resource-settings/resource-settings.service';
 
 @Injectable()
 export class VesselTypeService {
@@ -14,7 +13,6 @@ export class VesselTypeService {
     private vesselTypeRepository: Repository<VesselType>,
     @InjectRepository(Vessel)
     private vesselRepository: Repository<Vessel>,
-    private resourceSettingsService: ResourceSettingsService,
   ) {}
 
   async findAll(): Promise<VesselTypeResponseDto[]> {
@@ -27,8 +25,7 @@ export class VesselTypeService {
 
     const result = [];
     for (const type of vesselTypes) {
-      const settings = await this.resourceSettingsService.getSettingsForResource('vessel_type', type.id);
-      result.push(type.toResponseDto(settings));
+      result.push(type.toResponseDto());
     }
 
     return result;
@@ -44,8 +41,7 @@ export class VesselTypeService {
       throw new BadRequestException(`Vessel type with ID ${id} not found`);
     }
     
-    const settings = await this.resourceSettingsService.getSettingsForResource('vessel_type', vesselType.id);
-    return vesselType.toResponseDto(settings);
+    return vesselType.toResponseDto();
   }
 
   async create(dto: VesselTypeInputDto): Promise<VesselTypeResponseDto> {
@@ -76,33 +72,36 @@ export class VesselTypeService {
       throw new BadRequestException('Cannot rename the Unspecified vessel type');
     }
 
-    const vesselType = await this.vesselTypeRepository.findOne({
-      where: { id },
-      relations: ['vessels']
-    });
-    
-    if (!vesselType) {
-      throw new BadRequestException(`Vessel type with ID ${id} not found`);
-    }
-    
-    // Check if new name already exists (excluding current record)
-    if (dto.name !== vesselType.name) {
-      const existingType = await this.vesselTypeRepository.findOne({
-        where: { name: dto.name }
+    // Use transaction to ensure both vessel type update and sync log are atomic
+    return await this.vesselTypeRepository.manager.transaction(async manager => {
+      const vesselType = await manager.findOne(VesselType, {
+        where: { id },
+        relations: ['vessels']
       });
       
-      if (existingType) {
-        throw new ConflictException(`Vessel type with name '${dto.name}' already exists`);
+      if (!vesselType) {
+        throw new BadRequestException(`Vessel type with ID ${id} not found`);
       }
-    }
+      
+      // Check if new name already exists (excluding current record)
+      if (dto.name !== vesselType.name) {
+        const existingType = await manager.findOne(VesselType, {
+          where: { name: dto.name }
+        });
+        
+        if (existingType) {
+          throw new ConflictException(`Vessel type with name '${dto.name}' already exists`);
+        }
+      }
 
-    vesselType.name = dto.name;
-    if (dto.color !== undefined) {
-      vesselType.color = dto.color;
-    }
-    await this.vesselTypeRepository.save(vesselType);
-    
-    return vesselType.toResponseDto();
+      vesselType.name = dto.name;
+      if (dto.color !== undefined) {
+        vesselType.color = dto.color;
+      }
+      const saved = await manager.save(vesselType);
+      
+      return saved.toResponseDto();
+    });
   }
 
   async remove(id: number): Promise<void> {
@@ -136,6 +135,4 @@ export class VesselTypeService {
       await manager.delete(VesselType, { id });
     });
   }
-
-
 }

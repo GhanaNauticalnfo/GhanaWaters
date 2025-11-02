@@ -1,16 +1,15 @@
 import { ValidatorFn, Validators } from '@angular/forms';
-import { Waypoint } from '../models/route.model';
+import { Waypoint } from '@ghanawaters/shared-models';
 
 export class RouteValidators {
   static routeName(): ValidatorFn[] {
     return [
       Validators.required,
-      Validators.minLength(1),
       Validators.maxLength(100)
     ];
   }
 
-  static routeDescription(): ValidatorFn[] {
+  static routeNotes(): ValidatorFn[] {
     return [
       Validators.maxLength(500)
     ];

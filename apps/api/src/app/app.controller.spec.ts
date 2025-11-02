@@ -13,9 +13,13 @@ describe('AppController', () => {
   });
 
   describe('getData', () => {
-    it('should return "Hello API!"', () => {
+    it('should return "Ghana Waters API"', () => {
       const appController = app.get<AppController>(AppController);
-      expect(appController.getData()).toEqual({ message: 'Hello API!' });
+      expect(appController.getData()).toEqual({ 
+        message: 'Ghana Waters API',
+        buildTime: 'unknown',
+        tag: 'unknown'
+      });
     });
   });
 });

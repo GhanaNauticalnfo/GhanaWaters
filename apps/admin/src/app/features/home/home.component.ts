@@ -3,23 +3,7 @@ import { Component, signal, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
-
-interface VesselTypeCount {
-  id: number;
-  name: string;
-  color: string;
-  vessel_count: number;
-}
-
-interface Vessel {
-  id: number;
-  name: string;
-  vessel_type: {
-    id: number;
-    name: string;
-    color: string;
-  };
-}
+import { VesselResponse, VesselTypeResponse } from '@ghanawaters/shared-models';
 
 @Component({
   selector: 'app-home',
@@ -28,24 +12,24 @@ interface Vessel {
   template: `
     <div class="home-container">
       <div class="home-header">
-        <h1 class="home-title">Overview</h1>
+        <h1 class="home-title text-4xl font-bold">Overview</h1>
       </div>
 
       <div class="dashboard-content">
         <div class="stats-grid">
           <div class="stat-card stat-vessels">
-            <div class="stat-icon">
+            <div class="stat-icon text-2xl">
               <i class="pi pi-compass"></i>
             </div>
             <div class="stat-info">
-              <h3>Total Vessels</h3>
-              <p class="stat-number">{{ totalVessels() }}</p>
+              <h3 class="text-sm font-semibold uppercase tracking-wide">Vessels</h3>
+              <p class="stat-number text-4xl font-bold">{{ totalVessels() }}</p>
               <div class="vessel-types-list">
                 @for (type of vesselTypes(); track type.id) {
-                  @if (type.vessel_count > 0) {
+                  @if ((type.vessel_count ?? 0) > 0) {
                     <div class="vessel-type-item">
                       <span class="type-color" [style.background-color]="type.color"></span>
-                      <span class="type-name">{{ type.name }}: {{ type.vessel_count }}</span>
+                      <span class="type-name text-sm">{{ type.name }}: {{ type.vessel_count ?? 0 }}</span>
                     </div>
                   }
                 }
@@ -54,24 +38,22 @@ interface Vessel {
           </div>
 
           <div class="stat-card stat-routes">
-            <div class="stat-icon">
+            <div class="stat-icon text-2xl">
               <i class="pi pi-map"></i>
             </div>
             <div class="stat-info">
-              <h3>Total Routes</h3>
-              <p class="stat-number">{{ totalRoutes() }}</p>
-              <span class="stat-label">Navigation routes</span>
+              <h3 class="text-sm font-semibold uppercase tracking-wide">Routes</h3>
+              <p class="stat-number text-4xl font-bold">{{ totalRoutes() }}</p>
             </div>
           </div>
 
           <div class="stat-card stat-landing-sites">
-            <div class="stat-icon">
+            <div class="stat-icon text-2xl">
               <i class="pi pi-flag"></i>
             </div>
             <div class="stat-info">
-              <h3>Total Landing Sites</h3>
-              <p class="stat-number">{{ totalLandingSites() }}</p>
-              <span class="stat-label">Active sites</span>
+              <h3 class="text-sm font-semibold uppercase tracking-wide">Landing Sites</h3>
+              <p class="stat-number text-4xl font-bold">{{ totalLandingSites() }}</p>
             </div>
           </div>
         </div>
@@ -90,14 +72,11 @@ interface Vessel {
     }
 
     .home-title {
-      font-size: 2rem;
-      font-weight: 700;
       color: var(--text-color);
       margin: 0 0 0.5rem 0;
     }
 
     .home-subtitle {
-      font-size: 1rem;
       color: var(--text-color-secondary);
       margin: 0;
     }
@@ -137,7 +116,6 @@ interface Vessel {
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 1.5rem;
       color: white;
     }
 
@@ -147,22 +125,15 @@ interface Vessel {
 
     .stat-info h3 {
       margin: 0 0 0.25rem 0;
-      font-size: 0.875rem;
-      font-weight: 600;
       color: var(--text-color-secondary);
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
     }
 
     .stat-number {
       margin: 0 0 0.25rem 0;
-      font-size: 2rem;
-      font-weight: 700;
       color: var(--text-color);
     }
 
     .stat-label {
-      font-size: 0.875rem;
       color: var(--text-color-secondary);
     }
 
@@ -177,7 +148,6 @@ interface Vessel {
       display: flex;
       align-items: center;
       gap: 0.5rem;
-      font-size: 0.875rem;
       color: var(--text-color-secondary);
     }
 
@@ -188,9 +158,7 @@ interface Vessel {
       flex-shrink: 0;
     }
 
-    .type-name {
-      font-size: 0.875rem;
-    }
+    /* type-name font size handled by Tailwind text-sm class */
 
     @media (max-width: 768px) {
       .home-container {
@@ -212,7 +180,7 @@ export class HomeComponent implements OnInit {
   private http = inject(HttpClient);
   
   totalVessels = signal(0);
-  vesselTypes = signal<VesselTypeCount[]>([]);
+  vesselTypes = signal<VesselTypeResponse[]>([]);
   totalRoutes = signal(0);
   totalLandingSites = signal(0);
 
@@ -222,27 +190,25 @@ export class HomeComponent implements OnInit {
 
   private loadStatistics() {
     // Fetch all vessels and count by type
-    this.http.get<Vessel[]>(`${environment.apiUrl}/vessels`).subscribe({
+    this.http.get<VesselResponse[]>('/api/vessels').subscribe({
       next: (vessels) => {
         // Set total vessel count
         this.totalVessels.set(vessels.length);
         
         // Group vessels by type and count them
-        const typeMap = new Map<number, VesselTypeCount>();
+        const typeMap = new Map<number, VesselTypeResponse>();
         
         vessels.forEach(vessel => {
           if (vessel.vessel_type) {
             const typeId = vessel.vessel_type.id;
             if (!typeMap.has(typeId)) {
               typeMap.set(typeId, {
-                id: typeId,
-                name: vessel.vessel_type.name,
-                color: vessel.vessel_type.color,
+                ...vessel.vessel_type,
                 vessel_count: 0
               });
             }
             const type = typeMap.get(typeId)!;
-            type.vessel_count++;
+            type.vessel_count = (type.vessel_count || 0) + 1;
           }
         });
         
@@ -256,13 +222,13 @@ export class HomeComponent implements OnInit {
     });
 
     // Fetch routes count
-    this.http.get<any[]>(`${environment.apiUrl}/routes`).subscribe({
+    this.http.get<any[]>('/api/routes').subscribe({
       next: (routes) => this.totalRoutes.set(routes.length),
       error: (err) => console.error('Failed to load routes:', err)
     });
 
     // Fetch landing sites count
-    this.http.get<any[]>(`${environment.apiUrl}/landing-sites`).subscribe({
+    this.http.get<any[]>('/api/landing-sites').subscribe({
       next: (sites) => this.totalLandingSites.set(sites.length),
       error: (err) => console.error('Failed to load landing sites:', err)
     });

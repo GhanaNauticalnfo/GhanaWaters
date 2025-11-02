@@ -10,7 +10,6 @@ import { CreateVesselDto } from './dto/create-vessel.dto';
 import { UpdateVesselDto } from './dto/update-vessel.dto';
 import { VesselResponseDto } from './dto/vessel-response.dto';
 import { GeoPoint } from '@ghanawaters/shared-models';
-import { ResourceSettingsService } from '../resource-settings/resource-settings.service';
 
 @Injectable()
 export class VesselService {
@@ -23,12 +22,11 @@ export class VesselService {
     private trackingRepository: Repository<VesselTelemetry>,
     @InjectRepository(VesselType)
     private vesselTypeRepository: Repository<VesselType>,
-    private resourceSettingsService: ResourceSettingsService,
   ) {}
 
   async findAll(): Promise<VesselResponseDto[]> {
     const vessels = await this.vesselRepository.find({
-      relations: ['vessel_type'],
+      relations: ['vessel_type', 'devices'],
       order: {
         name: 'ASC'
       }
@@ -36,8 +34,7 @@ export class VesselService {
     
     const result = [];
     for (const vessel of vessels) {
-      const settings = await this.resourceSettingsService.getSettingsForResource('vessel', vessel.id);
-      result.push(vessel.toResponseDto(undefined, settings));
+      result.push(vessel.toResponseDto());
     }
     
     return result;
@@ -45,7 +42,7 @@ export class VesselService {
 
   async findAllWithLatestPositions(): Promise<VesselResponseDto[]> {
     const vessels = await this.vesselRepository.find({
-      relations: ['vessel_type', 'latest_position'],
+      relations: ['vessel_type', 'latest_position', 'devices'],
       order: {
         name: 'ASC'
       }
@@ -70,8 +67,7 @@ export class VesselService {
         }
       }
       
-      const settings = await this.resourceSettingsService.getSettingsForResource('vessel', vessel.id);
-      result.push(vessel.toResponseDto(coordinates, settings));
+      result.push(vessel.toResponseDto(coordinates));
     }
     
     return result;
@@ -80,7 +76,7 @@ export class VesselService {
   async findOne(id: number): Promise<VesselResponseDto> {
     const vessel = await this.vesselRepository.findOne({ 
       where: { id },
-      relations: ['vessel_type', 'latest_position']
+      relations: ['vessel_type', 'latest_position', 'devices']
     });
     
     if (!vessel) return null;
@@ -102,14 +98,13 @@ export class VesselService {
       }
     }
     
-    const settings = await this.resourceSettingsService.getSettingsForResource('vessel', vessel.id);
-    return vessel.toResponseDto(coordinates, settings);
+    return vessel.toResponseDto(coordinates);
   }
 
   async findOneEntity(id: number): Promise<Vessel> {
     return this.vesselRepository.findOne({ 
       where: { id },
-      relations: ['vessel_type']
+      relations: ['vessel_type', 'devices']
     });
   }
 

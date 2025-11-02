@@ -1,9 +1,10 @@
-import { Controller, Get, Post, Body, Param, Delete, Query, NotFoundException } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Delete, Query, NotFoundException, HttpCode } from '@nestjs/common';
 import { 
   ApiTags, ApiOperation, ApiResponse, ApiParam, 
   ApiQuery, ApiBearerAuth, ApiBody 
 } from '@nestjs/swagger';
 import { DeviceAuthService } from './device-auth.service';
+import { Public } from '../../auth/decorators';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Device } from './device.entity';
@@ -47,7 +48,10 @@ export class DeviceController {
     const shouldIncludeRetired = includeRetired === true || includeRetired === 'true';
 
     if (!shouldIncludeExpired) {
-      query.andWhere('(device.expires_at IS NULL OR device.expires_at > :now)', { now: new Date() });
+      // Only filter out expired PENDING devices
+      // ACTIVE devices should always be included regardless of expires_at
+      query.andWhere('(device.state != :pendingState OR device.expires_at IS NULL OR device.expires_at > :now)', 
+        { pendingState: 'pending', now: new Date() });
     }
 
     if (!shouldIncludeRetired) {
@@ -115,6 +119,8 @@ export class DeviceController {
 
 
   @Post('activate')
+  @Public() // Device activation must be public for Android app
+  @HttpCode(200)
   @ApiOperation({ summary: 'Activate device', description: 'Activate a device using an activation token' })
   @ApiBody({ type: DeviceActivationDto })
   @ApiResponse({ status: 200, description: 'Device activated successfully' })

@@ -1,14 +1,13 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { environment } from '../../../../environments/environment';
 import { TreeStubGroup, TreeStub, TreeStubGroupInputDto, TreeStubInputDto, TreeStubGroupResponseDto, TreeStubResponseDto } from '@ghanawaters/shared-models';
 
 @Injectable({
   providedIn: 'root'
 })
 export class TreeStubService {
-  private apiUrl = environment.apiUrl;
+  private apiUrl = '/api';
 
   constructor(private http: HttpClient) {}
 

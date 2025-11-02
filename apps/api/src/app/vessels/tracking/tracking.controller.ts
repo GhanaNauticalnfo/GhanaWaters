@@ -10,6 +10,7 @@ import { VesselTelemetryInputDto } from './dto/vessel-telemetry-input.dto';
 import { VesselTelemetryResponseDto } from './dto/vessel-telemetry-response.dto';
 import { VesselService } from '../vessel.service';
 import { DeviceAuthGuard } from '../device';
+import { Public } from '../../auth/decorators';
 
 @ApiTags('vessel-telemetry')
 @Controller('vessels')
@@ -106,6 +107,7 @@ export class TrackingController {
 
   // Special endpoint for device authentication - uses device's vessel_id
   @Post('telemetry/report')
+  @Public() // Allow device bearer tokens to bypass Keycloak auth
   @UseGuards(DeviceAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ 
@@ -118,7 +120,7 @@ export class TrackingController {
     @Req() req: any
   ): Promise<VesselTelemetryResponseDto> {
     const device = req.device;
-    return this.trackingService.create(device.vessel_id, trackingData);
+    return this.trackingService.create(device.vessel_id, trackingData, device.device_id);
   }
 
   @Get('telemetry/export/stats')

@@ -1,24 +1,9 @@
 // features/vessels/services/vessel-dataset.service.ts
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Observable, map, Subject } from 'rxjs';
-import { VesselDataset, VesselTelemetry } from '../models/vessel-dataset.model';
-import { environment } from '../../../../environments/environment';
-
-export interface TelemetryExportFilters {
-  startDate: string;
-  endDate: string;
-  vesselIds?: number[];
-  vesselTypeIds?: number[];
-}
-
-export interface TelemetryExportStats {
-  totalRecords: number;
-  dateRange: {
-    min: string;
-    max: string;
-  };
-}
+import { VesselDataset, VesselTelemetryResponse, TelemetryExportFilters, TelemetryExportStats } from '@ghanawaters/shared-models';
+import Keycloak from 'keycloak-js';
 
 interface ApiVessel {
   id: number;
@@ -36,7 +21,7 @@ interface ApiVessel {
   home_port: string;
   created: string;
   last_updated: string;
-  vessel_telemetry?: VesselTelemetry[];
+  vessel_telemetry?: VesselTelemetryResponse[];
   // New position data from API
   latest_position_timestamp?: string;
   latest_position_speed?: string;
@@ -51,7 +36,8 @@ interface ApiVessel {
   providedIn: 'root'
 })
 export class VesselDatasetService {
-  private apiUrl = `${environment.apiUrl}/vessels`;
+  private apiUrl = '/api/vessels';
+  private keycloak = inject(Keycloak);
 
   constructor(private http: HttpClient) {}
 
@@ -202,6 +188,11 @@ export class VesselDatasetService {
     const xhr = new XMLHttpRequest();
     xhr.open('GET', url.toString(), true);
     xhr.responseType = 'blob';
+    
+    // Add Authorization header with Bearer token
+    if (this.keycloak.token) {
+      xhr.setRequestHeader('Authorization', `Bearer ${this.keycloak.token}`);
+    }
     
     // Track download progress
     xhr.onprogress = (event) => {

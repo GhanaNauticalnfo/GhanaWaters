@@ -1,12 +1,26 @@
 import { Route } from '@angular/router';
-import { AppMainComponent } from './layout/app.main.component';
+import { AppMainComponent } from './core/layout/app.main.component';
 import { KmlComponent } from './features/kml/kml.component';
 import { VesselComponent } from './features/vessels/vessel.component';
 import { LiveComponent } from './features/live/live.component';
 import { RoutesComponent } from './features/routes/routes.component';
 import { LandingSitesComponent } from './features/landing-sites/landing-sites.component';
+import { authGuard } from './core/auth/guards/auth.guard';
 
 export const routes: Route[] = [
+  {
+    path: 'login',
+    loadComponent: () => import('./core/auth/pages/login/login.component').then(m => m.LoginComponent)
+  },
+  // Keycloak handles the callback internally, so this route is no longer needed
+  // {
+  //   path: 'auth/callback',
+  //   loadComponent: () => import('./auth/auth-callback.component').then(m => m.AuthCallbackComponent)
+  // },
+  {
+    path: 'forbidden',
+    loadComponent: () => import('./core/auth/pages/forbidden/forbidden.component').then(m => m.ForbiddenComponent)
+  },
   {
     path: 'app',
     redirectTo: 'home',
@@ -15,6 +29,7 @@ export const routes: Route[] = [
   {
   path: '',
   component: AppMainComponent,
+  canActivate: [authGuard],
   children: [
   {
     path: '',
@@ -26,31 +41,34 @@ export const routes: Route[] = [
     loadComponent: () => import('./features/home/home.component')
       .then(m => m.HomeComponent)
   },
+
+  
   {
     path: 'features',
+    canActivate: [authGuard],
+    data: { roles: ['admin'] },
     children: [
       {
         path: 'kml',
-        component: KmlComponent
-      },
-      {
-        path: 'volta-depth',
-        loadComponent: () => import('./features/volta-depth/volta-depth.component')
-          .then(m => m.VoltaDepthComponent)
+        component: KmlComponent,
+        data: { roles: ['admin'] }
       },
       {
         path: 'routes', 
-        component: RoutesComponent
+        component: RoutesComponent,
+        data: { roles: ['admin'] }
       },
       {
         path: 'tree-stubs',
         loadComponent: () => import('./features/tree-stubs/tree-stubs.component')
-          .then(m => m.TreeStubsComponent)
+          .then(m => m.TreeStubsComponent),
+        data: { roles: ['admin'] }
       },
       {
         path: 'tree-stubs/:id',
         loadComponent: () => import('./features/tree-stubs/components/stub-editor.component')
-          .then(m => m.StubEditorComponent)
+          .then(m => m.StubEditorComponent),
+        data: { roles: ['admin'] }
       },
       {
         path: '',
@@ -59,28 +77,24 @@ export const routes: Route[] = [
       }
     ]
   },
-  // Backward compatibility redirects
   {
-    path: 'kml',
-    redirectTo: '/features/kml',
-    pathMatch: 'full'
-  },
-  {
-    path: 'volta-depth',
-    redirectTo: '/features/volta-depth',
-    pathMatch: 'full'
-  },
-  {
-    path: 'vessels', component: VesselComponent,
+    path: 'vessels', 
+    component: VesselComponent,
+    canActivate: [authGuard],
+    data: { roles: ['admin', 'viewer'] }
   },
   {
     path: 'landing-sites',
-    component: LandingSitesComponent
+    component: LandingSitesComponent,
+    canActivate: [authGuard],
+    data: { roles: ['admin', 'operator'] }
   },
   {
     path: 'exports',
     loadComponent: () => import('./features/export/export.component')
-      .then(m => m.ExportComponent)
+      .then(m => m.ExportComponent),
+    canActivate: [authGuard],
+    data: { roles: ['admin', 'operator'] }
   },
   // Backward compatibility redirects for routes and tree-stubs
   {
@@ -99,39 +113,25 @@ export const routes: Route[] = [
     pathMatch: 'full'
   },
   {
-    path: 'live', component: LiveComponent,
+    path: 'live', 
+    component: LiveComponent,
+    canActivate: [authGuard],
+    data: { roles: ['admin', 'viewer'] }
   },
   {
     path: 'settings',
     loadComponent: () => import('./features/settings/settings.component')
-      .then(m => m.SettingsComponent)
+      .then(m => m.SettingsComponent),
+    canActivate: [authGuard],
+    data: { roles: ['admin'] }
   },
   {
     path: 'settings/vessel-types/:id',
-    loadComponent: () => import('./features/settings/components/vessel-type-detail.component')
-      .then(m => m.VesselTypeDetailComponent)
+    loadComponent: () => import('./features/settings/vessel-types/vessel-type-detail.component')
+      .then(m => m.VesselTypeDetailComponent),
+    canActivate: [authGuard],
+    data: { roles: ['admin'] }
   },
 ]
   }
 ];
-
-/*
-import { Routes } from '@angular/router';
-import { authGuard } from './auth/auth.guard';
-import { DashboardComponent } from './dashboard/dashboard.component';
-
-export const routes: Routes = [
-  { path: '', redirectTo: '/dashboard', pathMatch: 'full' },
-  {
-    path: 'dashboard',
-    component: DashboardComponent,
-    canActivate: [authGuard],
-    data: { roles: ['admin'] }
-  },
-  // Add a forbidden route
-  { 
-    path: 'forbidden', 
-    loadComponent: () => import('./forbidden/forbidden.component').then(m => m.ForbiddenComponent) 
-  }
-];
-*/

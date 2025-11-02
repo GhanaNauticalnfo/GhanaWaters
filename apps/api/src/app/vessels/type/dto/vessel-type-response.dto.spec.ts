@@ -8,6 +8,7 @@ describe('VesselType Entity toResponseDto() Method', () => {
       const vesselType = new VesselType();
       vesselType.id = 1;
       vesselType.name = 'Cargo';
+      vesselType.color = '#10B981';
       vesselType.created_at = new Date('2024-01-01T10:00:00.000Z');
       vesselType.updated_at = new Date('2024-01-02T15:30:00.000Z');
       vesselType.vessels = [];
@@ -17,6 +18,7 @@ describe('VesselType Entity toResponseDto() Method', () => {
       expect(result).toEqual({
         id: 1,
         name: 'Cargo',
+        color: '#10B981',
         created_at: '2024-01-01T10:00:00.000Z',
         updated_at: '2024-01-02T15:30:00.000Z',
         vessel_count: 0
@@ -37,6 +39,7 @@ describe('VesselType Entity toResponseDto() Method', () => {
       const vesselType = new VesselType();
       vesselType.id = 2;
       vesselType.name = 'Fishing';
+      vesselType.color = '#F59E0B';
       vesselType.created_at = new Date('2024-01-01T00:00:00.000Z');
       vesselType.updated_at = new Date('2024-01-01T00:00:00.000Z');
       vesselType.vessels = [vessel1, vessel2];
@@ -54,6 +57,7 @@ describe('VesselType Entity toResponseDto() Method', () => {
       const vesselType = new VesselType();
       vesselType.id = 1;
       vesselType.name = 'Test';
+      vesselType.color = '#3B82F6';
       vesselType.created_at = new Date('2024-03-15T08:30:45.123Z');
       vesselType.updated_at = new Date('2024-03-16T14:22:10.456Z');
       vesselType.vessels = [];
@@ -70,6 +74,7 @@ describe('VesselType Entity toResponseDto() Method', () => {
       const vesselType = new VesselType();
       vesselType.id = 1;
       vesselType.name = 'Test';
+      vesselType.color = '#3B82F6';
       vesselType.created_at = new Date('2024-01-01T12:00:00+02:00'); // UTC+2
       vesselType.updated_at = new Date('2024-01-01T12:00:00-05:00'); // UTC-5
       vesselType.vessels = [];
@@ -85,6 +90,7 @@ describe('VesselType Entity toResponseDto() Method', () => {
       const vesselType = new VesselType();
       vesselType.id = 1;
       vesselType.name = 'Test';
+      vesselType.color = '#3B82F6';
       vesselType.created_at = new Date('1970-01-01T00:00:00.000Z'); // Unix epoch
       vesselType.updated_at = new Date('2038-01-19T03:14:07.000Z'); // Near year 2038 problem
       vesselType.vessels = [];
@@ -101,6 +107,7 @@ describe('VesselType Entity toResponseDto() Method', () => {
       const vesselType = new VesselType();
       vesselType.id = 1;
       vesselType.name = 'Test';
+      vesselType.color = '#3B82F6';
       vesselType.created_at = new Date();
       vesselType.updated_at = new Date();
       vesselType.vessels = [];
@@ -114,6 +121,7 @@ describe('VesselType Entity toResponseDto() Method', () => {
       const vesselType = new VesselType();
       vesselType.id = 1;
       vesselType.name = 'Test';
+      vesselType.color = '#3B82F6';
       vesselType.created_at = new Date();
       vesselType.updated_at = new Date();
       vesselType.vessels = undefined;
@@ -127,6 +135,7 @@ describe('VesselType Entity toResponseDto() Method', () => {
       const vesselType = new VesselType();
       vesselType.id = 1;
       vesselType.name = 'Test';
+      vesselType.color = '#3B82F6';
       vesselType.created_at = new Date();
       vesselType.updated_at = new Date();
       vesselType.vessels = null;
@@ -140,6 +149,7 @@ describe('VesselType Entity toResponseDto() Method', () => {
       const vesselType = new VesselType();
       vesselType.id = 1;
       vesselType.name = 'Test';
+      vesselType.color = '#3B82F6';
       vesselType.created_at = new Date();
       vesselType.updated_at = new Date();
       
@@ -160,6 +170,7 @@ describe('VesselType Entity toResponseDto() Method', () => {
       const vesselType = new VesselType();
       vesselType.id = 1;
       vesselType.name = 'Test';
+      vesselType.color = '#3B82F6';
       vesselType.created_at = new Date();
       vesselType.updated_at = new Date();
 
@@ -209,6 +220,7 @@ describe('VesselType Entity toResponseDto() Method', () => {
         const vesselType = new VesselType();
         vesselType.id = 1;
         vesselType.name = name;
+        vesselType.color = '#3B82F6';
         vesselType.created_at = new Date('2024-01-01');
         vesselType.updated_at = new Date('2024-01-01');
         vesselType.vessels = [];
@@ -245,6 +257,7 @@ describe('VesselType Entity toResponseDto() Method', () => {
         const vesselType = new VesselType();
         vesselType.id = 1;
         vesselType.name = name;
+        vesselType.color = '#3B82F6';
         vesselType.created_at = new Date('2024-01-01');
         vesselType.updated_at = new Date('2024-01-01');
         vesselType.vessels = [];
@@ -272,6 +285,7 @@ describe('VesselType Entity toResponseDto() Method', () => {
         const vesselType = new VesselType();
         vesselType.id = 1;
         vesselType.name = name;
+        vesselType.color = '#3B82F6';
         vesselType.created_at = new Date('2024-01-01');
         vesselType.updated_at = new Date('2024-01-01');
         vesselType.vessels = [];
@@ -336,6 +350,7 @@ describe('VesselType Entity toResponseDto() Method', () => {
       const vesselType = new VesselType();
       vesselType.id = 1;
       vesselType.name = 'Test';
+      vesselType.color = '#3B82F6';
       vesselType.created_at = new Date('2024-01-01');
       vesselType.updated_at = new Date('2024-01-01');
       vesselType.vessels = [];
@@ -344,6 +359,7 @@ describe('VesselType Entity toResponseDto() Method', () => {
 
       expect(typeof result.id).toBe('number');
       expect(typeof result.name).toBe('string');
+      expect(typeof result.color).toBe('string');
       expect(typeof result.created_at).toBe('string');
       expect(typeof result.updated_at).toBe('string');
       expect(typeof result.vessel_count).toBe('number');
@@ -360,8 +376,8 @@ describe('VesselType Entity toResponseDto() Method', () => {
       const result = vesselType.toResponseDto();
       const keys = Object.keys(result);
 
-      expect(keys).toEqual(['id', 'name', 'created_at', 'updated_at', 'vessel_count']);
-      expect(keys).toHaveLength(5);
+      expect(keys).toEqual(['id', 'name', 'color', 'created_at', 'updated_at', 'vessel_count']);
+      expect(keys).toHaveLength(6);
     });
 
     it('should not include internal entity properties', () => {
@@ -377,13 +393,14 @@ describe('VesselType Entity toResponseDto() Method', () => {
       // Should not include the vessels array
       expect(result).not.toHaveProperty('vessels');
       // Only check for the presence of expected properties
-      expect(Object.keys(result)).toEqual(['id', 'name', 'created_at', 'updated_at', 'vessel_count']);
+      expect(Object.keys(result)).toEqual(['id', 'name', 'color', 'created_at', 'updated_at', 'vessel_count']);
     });
 
     it('should match VesselTypeResponseDto interface structure', () => {
       const vesselType = new VesselType();
       vesselType.id = 1;
       vesselType.name = 'Test';
+      vesselType.color = '#3B82F6';
       vesselType.created_at = new Date('2024-01-01');
       vesselType.updated_at = new Date('2024-01-01');
       vesselType.vessels = [];
@@ -395,6 +412,7 @@ describe('VesselType Entity toResponseDto() Method', () => {
       
       expect(dto.id).toBe(1);
       expect(dto.name).toBe('Test');
+      expect(dto.color).toBe('#3B82F6');
       expect(dto.created_at).toBe('2024-01-01T00:00:00.000Z');
       expect(dto.updated_at).toBe('2024-01-01T00:00:00.000Z');
       expect(dto.vessel_count).toBe(0);
@@ -406,6 +424,7 @@ describe('VesselType Entity toResponseDto() Method', () => {
       const vesselType = new VesselType();
       vesselType.id = Number.MAX_SAFE_INTEGER;
       vesselType.name = 'Test';
+      vesselType.color = '#3B82F6';
       vesselType.created_at = new Date('2024-01-01');
       vesselType.updated_at = new Date('2024-01-01');
       vesselType.vessels = [];
@@ -420,6 +439,7 @@ describe('VesselType Entity toResponseDto() Method', () => {
       const vesselType = new VesselType();
       vesselType.id = 1;
       vesselType.name = 'Test';
+      vesselType.color = '#3B82F6';
       vesselType.created_at = new Date('2024-01-01');
       vesselType.updated_at = new Date('2024-01-01');
       

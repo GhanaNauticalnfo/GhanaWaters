@@ -1,8 +1,8 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { VesselTypeResponseDto } from '../type/dto/vessel-type-response.dto';
-import { GeoPoint } from '@ghanawaters/shared-models';
+import { GeoPoint, VesselResponse } from '@ghanawaters/shared-models';
 
-export class VesselResponseDto {
+export class VesselResponseDto implements VesselResponse {
   @ApiProperty({ description: 'Unique identifier for the vessel', example: 1 })
   id: number;
 
@@ -30,9 +30,7 @@ export class VesselResponseDto {
   @ApiPropertyOptional({ description: 'Heading in degrees at latest position', example: 180.0 })
   latest_position_heading?: number;
 
-  @ApiPropertyOptional({ 
-    description: 'Custom settings for this vessel', 
-    example: { '1': '+233 20 123 4567', '2': 'owner@example.com' } 
-  })
-  settings?: Record<string, string>;
+  @ApiPropertyOptional({ description: 'Whether the vessel has an active device', example: true })
+  has_active_device?: boolean;
+
 }

@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
 import { ButtonModule } from 'primeng/button';
-import { VesselTypeService, VesselType } from '../../settings/services/vessel-type.service';
+import { VesselTypeService, VesselType } from '../../settings/vessel-types/vessel-type.service';
 import { Vessel } from '../models/vessel.dto';
 
 @Component({
@@ -22,7 +22,7 @@ import { Vessel } from '../models/vessel.dto';
       <div class="grid">
         <!-- Basic Information -->
         <div class="col-12">
-          <h3>Basic Information</h3>
+          <h3 class="text-lg">Basic Information</h3>
         </div>
         
         <div class="col-12 md:col-6">
@@ -56,6 +56,8 @@ import { Vessel } from '../models/vessel.dto';
               [readonly]="mode === 'view'"
               [disabled]="mode === 'view'"
               styleClass="w-full"
+              [appendTo]="'body'"
+              [panelStyle]="{'max-height':'200px'}"
               required
             ></p-select>
           </div>
@@ -95,7 +97,6 @@ import { Vessel } from '../models/vessel.dto';
     
     h3 {
       color: var(--text-color);
-      font-size: 1.125rem;
       font-weight: 600;
       margin: 0;
     }

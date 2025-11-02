@@ -1,673 +1,258 @@
-// features/kml/components/kml-list.component.ts
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, AfterViewInit, ChangeDetectionStrategy, TemplateRef, signal, viewChild, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
-import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { TagModule } from 'primeng/tag';
+import { MessageService } from 'primeng/api';
+import { ResourceListComponent, ResourceListConfig, ResourceAction, TimestampPipe } from '@ghanawaters/shared';
 import { KmlDatasetService } from '../services/kml-dataset.service';
-import { KmlDataset } from '../models/kml-dataset.model';
-
-// PrimeNG imports
-import { TableModule } from 'primeng/table';
-import { ButtonModule } from 'primeng/button';
-import { ProgressSpinnerModule } from 'primeng/progressspinner';
-import { ToastModule } from 'primeng/toast';
-import { DialogModule } from 'primeng/dialog';
-import { ConfirmDialogModule } from 'primeng/confirmdialog';
-import { ConfirmationService, MessageService } from 'primeng/api';
-import { CardModule } from 'primeng/card';
-import { InputTextModule } from 'primeng/inputtext';
-import { TextareaModule } from 'primeng/textarea';
-import { CheckboxModule } from 'primeng/checkbox';
-import { TooltipModule } from 'primeng/tooltip';
-import { SkeletonModule } from 'primeng/skeleton';
+import { KmlDatasetResponse } from '@ghanawaters/shared-models';
+import { KmlDatasetFormComponent } from './kml-dataset-form.component';
 
 @Component({
   selector: 'app-kml-list',
+  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
   imports: [
     CommonModule,
-    RouterModule,
-    ReactiveFormsModule,
-    TableModule,
-    ButtonModule,
-    ProgressSpinnerModule,
-    ToastModule,
-    DialogModule,
-    ConfirmDialogModule,
-    CardModule,
-    InputTextModule,
-    TextareaModule,
-    CheckboxModule,
-    TooltipModule,
-    SkeletonModule
+    TagModule,
+    ResourceListComponent,
+    KmlDatasetFormComponent,
+    TimestampPipe
   ],
-  providers: [ConfirmationService, MessageService],
+  providers: [MessageService],
   template: `
-    <p-toast></p-toast>
-    <p-confirmDialog
-      header="Confirm Deletion" 
-      icon="pi pi-exclamation-triangle" 
-      acceptButtonStyleClass="p-button-danger" 
-      acceptIcon="pi pi-trash"
-      rejectButtonStyleClass="p-button-secondary">
-    </p-confirmDialog>
+    <lib-resource-list
+      [config]="listConfig"
+      [data]="datasets()"
+      [loading]="loading()"
+      [dialogMode]="dialogMode()"
+      [selectedItem]="selectedDataset()"
+      [showDialog]="showDialog"
+      (showDialogChange)="showDialog = $event"
+      (action)="handleAction($event)"
+      (dialogShown)="onDialogShow()">
 
-    <div class="kml-list-container">
-    <div class="flex justify-between items-center mb-3">
-        <p-button
-          label="New KML Document"
-          icon="pi pi-plus"
-          (onClick)="openNewDialog()"
-        ></p-button>
-      </div>
-
-      @if (loading() && datasets().length === 0) {
-        <div class="loading-container">
-          <p-progressSpinner></p-progressSpinner>
-        </div>
+      @if (showDialog) {
+        <app-kml-dataset-form
+          formContent
+          #datasetForm
+          [dataset]="selectedDataset()"
+          [mode]="dialogMode()"
+          (save)="saveDataset($event)"
+          (cancel)="showDialog = false">
+        </app-kml-dataset-form>
       }
+    </lib-resource-list>
 
-      <p-table
-        [value]="datasets()"
-        [tableStyle]="{ 'min-width': '50rem' }"
-        [paginator]="datasets().length > 10"
-        [rows]="10"
-        styleClass="p-datatable-sm p-datatable-striped"
-        [rowHover]="true"
-        [loading]="loading()"
-      >
-        <ng-template pTemplate="header">
-          <tr>
-            <th pSortableColumn="id" style="width: 10%">ID <p-sortIcon field="id"></p-sortIcon></th>
-            <th pSortableColumn="name" style="width: 20%">Name <p-sortIcon field="name"></p-sortIcon></th>
-            <th pSortableColumn="enabled" style="width: 10%">Enabled <p-sortIcon field="enabled"></p-sortIcon></th>
-            <th pSortableColumn="created" style="width: 15%">Created <p-sortIcon field="created"></p-sortIcon></th>
-            <th pSortableColumn="last_updated" style="width: 15%">Last Updated <p-sortIcon field="last_updated"></p-sortIcon></th>
-            <th style="width: 30%">Actions</th>
-          </tr>
-        </ng-template>
+    <!-- Column Templates -->
+    <ng-template #statusTemplate let-item>
+      <p-tag
+        [value]="item.enabled ? 'Active' : 'Inactive'"
+        [severity]="item.enabled ? 'success' : 'danger'">
+      </p-tag>
+    </ng-template>
 
-        <ng-template pTemplate="body" let-dataset>
-          <tr>
-            <td><span class="font-mono">{{ dataset.id }}</span></td>
-            <td>{{ dataset.name }}</td>
-            <td>
-              <span [class]="dataset.enabled ? 'status-badge status-enabled' : 'status-badge status-disabled'">
-                {{ dataset.enabled ? 'Yes' : 'No' }}
-              </span>
-            </td>
-            <td>{{ dataset.created | date:'medium' }}</td>
-            <td>{{ dataset.last_updated | date:'medium' }}</td>
-            <td>
-              <p-button 
-                label="Details" 
-                icon="pi pi-search" 
-                styleClass="p-button-text p-button-sm" 
-                (onClick)="openViewDialog(dataset)">
-              </p-button>
-              <p-button 
-                label="Edit" 
-                icon="pi pi-pencil" 
-                styleClass="p-button-text p-button-sm" 
-                (onClick)="openEditDialog(dataset)">
-              </p-button>
-              <p-button 
-                label="Delete" 
-                icon="pi pi-trash" 
-                styleClass="p-button-text p-button-sm" 
-                (onClick)="confirmDelete(dataset)">
-              </p-button>
-            </td>
-          </tr>
-        </ng-template>
-
-        <ng-template pTemplate="emptymessage">
-          <tr>
-            <td colspan="6" class="text-center p-4">
-              @if (!loading() && !error()) {
-                No KML datasets found.
-              } @else if (error()) {
-                <div class="p-error">{{ error() }}</div>
-              } @else {
-                <span></span>
-              }
-            </td>
-          </tr>
-        </ng-template>
-        <ng-template pTemplate="loadingbody">
-          @for (item of [1, 2, 3]; track $index) {
-            <tr>
-              <td><p-skeleton></p-skeleton></td>
-              <td><p-skeleton></p-skeleton></td>
-              <td><p-skeleton></p-skeleton></td>
-              <td><p-skeleton></p-skeleton></td>
-              <td><p-skeleton></p-skeleton></td>
-              <td><p-skeleton></p-skeleton></td>
-            </tr>
-          }
-        </ng-template>
-      </p-table>
-    </div>
-
-    <!-- View Dialog -->
-    <p-dialog
-      [(visible)]="viewDialogVisible"
-      [style]="{width: '80vw', 'max-width': '900px'}"
-      [modal]="true"
-      [draggable]="false"
-      [resizable]="false"
-      [closeOnEscape]="true"
-      [closable]="true"
-      header="View KML Dataset"
-      (onHide)="closeViewDialog()"
-    >
-      @if (selectedDataset()) {
-        <div class="view-dialog-content">
-          <div class="grid">
-            <div class="col-12 md:col-6">
-              <div class="detail-item">
-                <span class="detail-label">ID:</span>
-                <span class="detail-value">{{ selectedDataset()?.id }}</span>
-              </div>
-            </div>
-
-            <div class="col-12 md:col-6">
-              <div class="detail-item">
-                <span class="detail-label">Name:</span>
-                <span class="detail-value">{{ selectedDataset()?.name }}</span>
-              </div>
-            </div>
-
-            <div class="col-12 md:col-6">
-              <div class="detail-item">
-                <span class="detail-label">Enabled:</span>
-                <span class="status-badge"
-                  [class]="selectedDataset()?.enabled ? 'status-enabled' : 'status-disabled'">
-                  {{ selectedDataset()?.enabled ? 'Yes' : 'No' }}
-                </span>
-              </div>
-            </div>
-
-            <div class="col-12 md:col-6">
-              <div class="detail-item">
-                <span class="detail-label">Created:</span>
-                <span class="detail-value">{{ selectedDataset()?.created | date:'medium' }}</span>
-              </div>
-            </div>
-
-            <div class="col-12 md:col-6">
-              <div class="detail-item">
-                <span class="detail-label">Last Updated:</span>
-                <span class="detail-value">{{ selectedDataset()?.last_updated | date:'medium' }}</span>
-              </div>
-            </div>
-          </div>
-
-          <div class="kml-content">
-            <h3>KML Content</h3>
-            <div class="kml-code-container">
-              <pre class="kml-code">{{ selectedDataset()?.kml }}</pre>
-            </div>
-          </div>
-        </div>
-      }
-
-      <ng-template pTemplate="footer">
-        <div class="flex justify-content-between">
-          <p-button label="Back to List" icon="pi pi-arrow-left" styleClass="p-button-secondary" (onClick)="closeViewDialog()"></p-button>
-          <p-button label="Edit" icon="pi pi-pencil" styleClass="p-button-success" (onClick)="openEditDialog(selectedDataset())"></p-button>
-        </div>
-      </ng-template>
-    </p-dialog>
-
-    <!-- Edit/Create Dialog -->
-    <p-dialog
-      [(visible)]="formDialogVisible"
-      [style]="{width: '70vw', 'max-width': '800px'}"
-      [modal]="true"
-      [draggable]="false"
-      [resizable]="false"
-      [closeOnEscape]="true"
-      [closable]="true"
-      [header]="isEditMode() ? 'Edit KML Dataset' : 'Create New KML Dataset'"
-      (onHide)="closeFormDialog()"
-    >
-      <!-- Add formGroup directive -->
-      <form [formGroup]="kmlForm" class="form-container">
-        <div class="form-group">
-          <label for="name" class="form-label">Name <span class="required-asterisk">*</span></label>
-          <span class="p-input-icon-left w-full">
-            <i class="pi pi-tag"></i>
-            <input
-              type="text"
-              pInputText
-              id="name"
-              formControlName="name"
-              placeholder="Enter a name for the KML dataset"
-              class="w-full"
-              [ngClass]="{'ng-invalid ng-dirty': kmlForm.controls['name'].invalid && kmlForm.controls['name'].touched}"
-            />
-          </span>
-           @if (kmlForm.controls['name'].invalid && kmlForm.controls['name'].touched) {
-             <small class="p-error block mt-1">Name is required.</small>
-           }
-        </div>
-
-        <div class="form-group">
-          <label for="enabled" class="form-label">Status</label>
-          <div class="p-field-checkbox">
-            <p-checkbox
-              formControlName="enabled"
-              [binary]="true"
-              inputId="enabled"
-            ></p-checkbox>
-            <label for="enabled" class="ml-2">Enabled</label>
-          </div>
-        </div>
-
-        <div class="form-group">
-          <label for="kml" class="form-label">KML Content <span class="required-asterisk">*</span></label>
-          <textarea
-            pTextarea
-            id="kml"
-            formControlName="kml"
-            placeholder="Paste your KML content here"
-            rows="15"
-            class="w-full kml-textarea"
-            [ngClass]="{'ng-invalid ng-dirty': kmlForm.controls['kml'].invalid && kmlForm.controls['kml'].touched}"
-          ></textarea>
-           @if (kmlForm.controls['kml'].invalid && kmlForm.controls['kml'].touched) {
-             <small class="p-error block mt-1">KML content is required.</small>
-           }
-        </div>
-      </form>
-
-      <ng-template pTemplate="footer">
-        <p-button
-          icon="pi pi-save"
-          label="Save"
-          styleClass="p-button-success mr-2"
-          (onClick)="saveDataset()"
-          [disabled]="kmlForm.invalid || saving()"
-          [loading]="saving()"
-        ></p-button>
-        <p-button
-          icon="pi pi-times"
-          label="Cancel"
-          styleClass="p-button-secondary"
-          (onClick)="closeFormDialog()"
-          [disabled]="saving()"
-        ></p-button>
-      </ng-template>
-    </p-dialog>
+    <ng-template #lastUpdatedTemplate let-item>
+      {{ item.last_updated | timestamp }}
+    </ng-template>
   `,
-  styles: [`
-    :host { display: block; }
-    .kml-list-container { margin-top: 1rem; }
-    .font-mono { font-family: monospace; background-color: var(--surface-100); padding: 0.1rem 0.3rem; border-radius: 3px; }
-    
-    
-    p-message { margin-bottom: 1rem; }
-    .text-center { text-align: center; }
-    
-    .loading-container {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      padding: 2rem;
-      min-height: 200px;
-    }
-
-    .status-badge {
-      border-radius: 4px;
-      padding: 0.25rem 0.5rem;
-      text-transform: uppercase;
-      font-weight: 700;
-      font-size: 0.75rem;
-      letter-spacing: 0.3px;
-      display: inline-block;
-    }
-
-    .status-enabled {
-      background-color: var(--green-100, #C8E6C9);
-      color: var(--green-700, #256029);
-    }
-
-    .status-disabled {
-      background-color: var(--red-100, #FFCDD2);
-      color: var(--red-700, #C63737);
-    }
-
-    .detail-item {
-      margin-bottom: 1rem;
-      display: flex;
-      align-items: flex-start;
-      gap: 0.5rem;
-    }
-
-    .detail-label {
-      font-weight: 600;
-      min-width: 120px;
-      flex-shrink: 0;
-    }
-    .detail-value {
-      word-break: break-word;
-    }
-
-    .kml-content {
-      margin-top: 1.5rem;
-    }
-
-    .kml-code-container {
-      max-height: 400px;
-      overflow: auto;
-      background-color: var(--surface-b, #f8f9fa);
-      border-radius: 4px;
-      border: 1px solid var(--surface-d, #e9ecef);
-    }
-
-    .kml-code {
-      padding: 1rem;
-      white-space: pre-wrap;
-      word-wrap: break-word;
-      font-family: var(--font-family-monospace, monospace);
-      color: var(--text-color, #333);
-      margin: 0;
-      font-size: 0.875rem;
-    }
-
-    .form-container {
-      padding: 0.5rem 0;
-    }
-
-    .form-group {
-      margin-bottom: 1.5rem;
-    }
-
-    .form-label {
-      display: block;
-      margin-bottom: 0.5rem;
-      font-weight: 500;
-    }
-
-    .required-asterisk {
-      color: var(--red-500, #f44336);
-    }
-
-    .kml-textarea {
-      font-family: var(--font-family-monospace, monospace);
-      resize: vertical;
-      min-height: 150px;
-    }
-
-    .p-field-checkbox {
-      display: flex;
-      align-items: center;
-    }
-
-    /* Utility classes */
-    .w-full { width: 100%; }
-    .mr-2 { margin-right: 0.5rem; }
-    .ml-2 { margin-left: 0.5rem; }
-    .mt-1 { margin-top: 0.25rem; }
-    .block { display: block; }
-    .flex { display: flex; }
-    .justify-content-between { justify-content: space-between; }
-    .align-items-center { align-items: center; }
-    .mb-3 { margin-bottom: 1rem; }
-
-    /* PrimeNG Input Validation Highlighting */
-    .ng-invalid.ng-dirty {
-       border-color: var(--red-500, #f44336);
-    }
-
-    .grid { display: flex; flex-wrap: wrap; margin-right: -0.5rem; margin-left: -0.5rem; row-gap: 0.5rem; }
-    .col-12 { flex: 0 0 100%; padding: 0 0.5rem; max-width: 100%; }
-
-    @media (min-width: 768px) {
-      .md\\:col-6 { flex: 0 0 50%; max-width: 50%; }
-    }
-  `],
   host: {
     'class': 'kml-list-host'
   }
 })
-export class KmlListComponent implements OnInit {
+export class KmlListComponent implements OnInit, AfterViewInit {
+  // Services
   private kmlDatasetService = inject(KmlDatasetService);
-  private confirmationService = inject(ConfirmationService);
   private messageService = inject(MessageService);
-  private fb = inject(FormBuilder);
 
-  // Data signals
-  datasets = signal<KmlDataset[]>([]);
-  loading = signal<boolean>(false);
-  saving = signal<boolean>(false);
-  error = signal<string | null>(null);
+  // View children
+  datasetFormComponent = viewChild<KmlDatasetFormComponent>('datasetForm');
+  statusTemplate = viewChild.required<TemplateRef<any>>('statusTemplate');
+  lastUpdatedTemplate = viewChild.required<TemplateRef<any>>('lastUpdatedTemplate');
 
-  // Dialog control properties
-  viewDialogVisible = false;
-  formDialogVisible = false;
+  // Signals
+  datasets = signal<KmlDatasetResponse[]>([]);
+  selectedDataset = signal<KmlDatasetResponse | null>(null);
+  loading = signal(false);
+  showDialog = false;
+  dialogMode = signal<'view' | 'edit' | 'create'>('create');
 
-  // Other signals
-  isEditMode = signal<boolean>(false);
-  selectedDataset = signal<KmlDataset | null>(null);
+  listConfig!: ResourceListConfig<KmlDatasetResponse>;
 
-  // Reactive Form Group
-  kmlForm: FormGroup;
 
-  constructor() {
-    this.kmlForm = this.fb.group({
-      name: ['', Validators.required],
-      enabled: [true],
-      kml: ['', Validators.required]
-    });
-  }
+  ngOnInit() {
+    // Initialize config without template references
+    this.listConfig = {
+      title: '',
+      searchPlaceholder: 'Search KML datasets...',
+      newButtonLabel: 'New KML Dataset',
+      entityName: 'datasets',
+      entityNameSingular: 'dataset',
+      columns: [
+        { field: 'id', header: 'ID', sortable: true, width: '10%' },
+        { field: 'name', header: 'Name', sortable: true, width: '30%' },
+        { field: 'enabled', header: 'Status', sortable: true, width: '15%' },
+        { field: 'last_updated', header: 'Last Updated', sortable: true, width: '20%' }
+      ],
+      searchFields: ['name', 'id'],
+      actions: {
+        view: true,
+        edit: true,
+        delete: true
+      },
+      deleteConfirmMessage: (item) => `Are you sure you want to delete the KML dataset "${item.name}"?`,
+      emptyMessage: 'No KML datasets found',
+      pageSize: 10
+    };
 
-  ngOnInit(): void {
     this.loadDatasets();
   }
 
-  loadDatasets(): void {
-    this.loading.set(true);
-    this.error.set(null);
-    this.datasets.set([]);
+  ngAfterViewInit() {
+    // Now add the template references
+    this.listConfig.columns[2].template = this.statusTemplate();
+    this.listConfig.columns[3].template = this.lastUpdatedTemplate();
+  }
 
+  loadDatasets() {
+    this.loading.set(true);
     this.kmlDatasetService.getAll().subscribe({
-      next: (data) => {
-        this.datasets.set(data);
-        console.log('KML Datasets loaded:', data.length);
+      next: (datasets) => {
+        this.datasets.set(datasets);
+        this.loading.set(false);
       },
-      error: (err) => {
-        this.error.set('Failed to load KML datasets. Please try again later.');
-        console.error('Error loading KML datasets:', err);
+      error: (error) => {
+        this.loading.set(false);
         this.messageService.add({
           severity: 'error',
-          summary: 'Load Error',
-          detail: 'Failed to load KML datasets',
-          life: 3000
+          summary: 'Error',
+          detail: error.error?.message || error.message || 'Failed to load KML datasets'
         });
-      },
-      complete: () => {
-        this.loading.set(false);
       }
     });
   }
 
-  // --- View Dialog Methods ---
-  openViewDialog(dataset: KmlDataset): void {
-    this.selectedDataset.set(dataset);
-    this.viewDialogVisible = true;
-  }
-
-  closeViewDialog(): void {
-    this.viewDialogVisible = false;
-  }
-
-  // --- Form Dialog Methods ---
-  openNewDialog(): void {
-    this.isEditMode.set(false);
-    this.selectedDataset.set(null);
-    this.kmlForm.reset({
-      name: '',
-      enabled: true,
-      kml: ''
-    });
-    this.formDialogVisible = true;
-  }
-
-  openEditDialog(dataset: KmlDataset | null): void {
-    if (!dataset) return;
-
-    this.isEditMode.set(true);
-    this.selectedDataset.set(dataset);
-    this.kmlForm.patchValue({
-      name: dataset.name || '',
-      enabled: dataset.enabled,
-      kml: dataset.kml || ''
-    });
-    this.formDialogVisible = true;
-
-    if (this.viewDialogVisible) {
-      this.viewDialogVisible = false;
+  handleAction(action: ResourceAction<KmlDatasetResponse>) {
+    switch (action.type) {
+      case 'create':
+        this.showCreateDialog();
+        break;
+      case 'view':
+        if (action.item) this.viewDataset(action.item);
+        break;
+      case 'edit':
+        if (action.item) this.editDataset(action.item);
+        break;
+      case 'delete':
+        if (action.item) this.deleteDataset(action.item);
+        break;
     }
   }
 
-  closeFormDialog(): void {
-    this.formDialogVisible = false;
+  showCreateDialog() {
     this.selectedDataset.set(null);
+    this.dialogMode.set('create');
+    this.showDialog = true;
   }
 
-  // --- Save Data Method ---
-  saveDataset(): void {
-    if (this.kmlForm.invalid) {
-      this.kmlForm.markAllAsTouched();
-      this.messageService.add({
-        severity: 'warn',
-        summary: 'Validation Error',
-        detail: 'Please fill in all required fields correctly.',
-        life: 3000
-      });
-      return;
-    }
+  viewDataset(dataset: KmlDatasetResponse) {
+    this.selectedDataset.set(dataset);
+    this.dialogMode.set('view');
+    this.showDialog = true;
+  }
 
-    this.saving.set(true);
-    const formData = this.kmlForm.value;
+  editDataset(dataset: KmlDatasetResponse) {
+    // Make a copy of the dataset
+    this.selectedDataset.set({ ...dataset });
+    this.dialogMode.set('edit');
+    this.showDialog = true;
+  }
 
-    if (this.isEditMode() && this.selectedDataset()) {
-      const datasetId = this.selectedDataset()?.id;
-
-      if (datasetId) {
-        this.kmlDatasetService.update(datasetId, formData).subscribe({
-          next: (updatedData) => {
-            console.log('KML Dataset updated:', updatedData);
-            this.datasets.update(currentDatasets =>
-              currentDatasets.map(item =>
-                item.id === updatedData.id ? updatedData : item
-              )
-            );
-            this.messageService.add({
-              severity: 'success',
-              summary: 'Success',
-              detail: 'KML dataset updated successfully',
-              life: 3000
-            });
-            this.closeFormDialog();
-          },
-          error: (err) => {
-            console.error('Error updating KML dataset:', err);
-            this.messageService.add({
-              severity: 'error',
-              summary: 'Update Error',
-              detail: err.error?.message || 'Failed to update KML dataset',
-              life: 5000
-            });
-          },
-          complete: () => {
-            this.saving.set(false);
-          }
-        });
-      } else {
-        console.error("Save error: Edit mode is true but dataset ID is missing.");
-        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Cannot update dataset: ID missing.' });
-        this.saving.set(false);
-      }
-    } else {
-      this.kmlDatasetService.create(formData).subscribe({
-        next: (newData) => {
-          console.log('KML Dataset created:', newData);
-          this.datasets.update(currentDatasets =>
-            [...currentDatasets, newData]
-          );
+  saveDataset(dataset: KmlDatasetResponse) {
+    if (this.dialogMode() === 'create') {
+      this.kmlDatasetService.create(dataset).subscribe({
+        next: (newDataset) => {
+          this.datasets.update(datasets => [...datasets, newDataset]);
+          this.showDialog = false;
           this.messageService.add({
             severity: 'success',
             summary: 'Success',
-            detail: 'KML dataset created successfully',
-            life: 3000
+            detail: 'KML dataset created successfully'
           });
-          this.closeFormDialog();
         },
-        error: (err) => {
-          console.error('Error creating KML dataset:', err);
+        error: (error) => {
           this.messageService.add({
             severity: 'error',
-            summary: 'Create Error',
-            detail: err.error?.message || 'Failed to create KML dataset',
-            life: 5000
+            summary: 'Error',
+            detail: error.error?.message || error.message || 'Failed to create KML dataset'
+          });
+        }
+      });
+    } else if (this.dialogMode() === 'edit' && dataset.id) {
+      // Extract only the fields the API expects (KmlDatasetInput)
+      const updateData = {
+        name: dataset.name,
+        enabled: dataset.enabled,
+        kml: dataset.kml
+      };
+      this.kmlDatasetService.update(dataset.id, updateData).subscribe({
+        next: (updatedDataset) => {
+          this.datasets.update(datasets =>
+            datasets.map(d => d.id === updatedDataset.id ? updatedDataset : d)
+          );
+          this.showDialog = false;
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Success',
+            detail: 'KML dataset updated successfully'
           });
         },
-        complete: () => {
-          this.saving.set(false);
+        error: (error) => {
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: error.error?.message || error.message || 'Failed to update KML dataset'
+          });
+        }
+      });
+    } else {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Error',
+        detail: 'Cannot save: missing dataset ID for edit operation'
+      });
+    }
+  }
+
+  deleteDataset(dataset: KmlDatasetResponse) {
+    if (dataset.id) {
+      this.kmlDatasetService.delete(dataset.id).subscribe({
+        next: () => {
+          this.datasets.update(datasets => datasets.filter(d => d.id !== dataset.id));
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Success',
+            detail: 'KML dataset deleted successfully'
+          });
+        },
+        error: (error) => {
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: error.error?.message || error.message || 'Failed to delete KML dataset'
+          });
         }
       });
     }
   }
 
-  // --- Delete Confirmation ---
-  confirmDelete(dataset: KmlDataset): void {
-    if (!dataset || dataset.id === undefined) return;
-
-    this.confirmationService.confirm({
-      message: `Are you sure you want to delete the KML dataset "${dataset.name}" (ID: ${dataset.id})? This action cannot be undone.`,
-      header: 'Confirm Deletion',
-      icon: 'pi pi-exclamation-triangle',
-      acceptButtonStyleClass: 'p-button-danger',
-      acceptLabel: 'Delete',
-      rejectLabel: 'Cancel',
-      accept: () => this.deleteKml(dataset.id),
-    });
-  }
-
-  deleteKml(id: number): void {
-    this.loading.set(true);
-    this.kmlDatasetService.delete(id).subscribe({
-      next: () => {
-        this.datasets.update(currentDatasets =>
-          currentDatasets.filter(dataset => dataset.id !== id)
-        );
-        console.log('KML Dataset deleted:', id);
-        this.messageService.add({
-          severity: 'success',
-          summary: 'Deleted',
-          detail: 'KML dataset deleted successfully',
-          life: 3000
-        });
-        if (this.selectedDataset()?.id === id) {
-            this.selectedDataset.set(null);
-            this.closeViewDialog();
-        }
-      },
-      error: (err) => {
-        console.error('Error deleting KML dataset:', err);
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Delete Error',
-          detail: err.error?.message || 'Failed to delete KML dataset',
-          life: 5000
-        });
-      },
-      complete: () => {
-         this.loading.set(false);
+  onDialogShow() {
+    // Wait for dialog animation to complete, then prepare map
+    setTimeout(() => {
+      const formComponent = this.datasetFormComponent();
+      if (formComponent) {
+        // Initialize map after dialog is fully open
+        formComponent.prepareMap();
       }
-    });
+    }, 10); // Minimal delay since dialog now opens instantly
   }
 }

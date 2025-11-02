@@ -8,15 +8,15 @@ Ghana Waters provides real-time vessel tracking, navigation aids, and offline-ca
 
 - **Admin Dashboard** - Vessel management and monitoring interface
 - **Public Frontend** - Public-facing map with navigation data
-- **API Backend** - RESTful API with real-time MQTT support
+- **API Backend** - RESTful API with real-time WebSocket support
 - **Android App** - Mobile vessel tracking and navigation (separate repository)
 
 ## Key Features
 
-- 🚢 **Real-time Vessel Tracking** - Track vessels via GPS with MQTT updates
+- 🚢 **Real-time Vessel Tracking** - Track vessels via GPS with WebSocket updates
 - 🗺️ **Offline Maps** - Sync navigation data for offline use
 - 📍 **Navigation Aids** - Routes and waypoints for navigation
-- 🔒 **Secure Authentication** - Device token system for vessel tracking
+- 🔒 **Secure Authentication** - Keycloak-based authentication with device tokens
 - 📊 **Spatial Data** - PostGIS-powered geographic queries
 - 🔄 **Incremental Sync** - Efficient data synchronization
 
@@ -25,8 +25,8 @@ Ghana Waters provides real-time vessel tracking, navigation aids, and offline-ca
 - **Frontend**: Angular 19, PrimeNG, MapLibre GL JS
 - **Backend**: NestJS 10, TypeORM, PostgreSQL 17 with PostGIS
 - **Infrastructure**: Docker, Nx monorepo, TypeScript
-- **Real-time**: Apache Artemis MQTT broker
-- **Maps**: Martin vector tile server
+- **Real-time**: WebSocket (Socket.IO) for live vessel updates
+- **Authentication**: Keycloak (OAuth2/OIDC with PKCE)
 
 ## Quick Start
 
@@ -46,14 +46,11 @@ cd ghanawaters
 # Install dependencies
 npm install
 
-# Start infrastructure (PostgreSQL, Martin, Artemis)
-npm run db:up
-
-# Run database migrations
-npm run migration:run:dev
+# Start infrastructure and run migrations
+npm run dev:setup
 
 # Start the API server
-npx nx serve api
+npx nx build api && npx nx serve api
 
 # In another terminal, start the admin dashboard
 npx nx serve admin
@@ -64,8 +61,24 @@ npx nx serve admin
 - Admin Dashboard: http://localhost:4201
 - Public Frontend: http://localhost:4200
 - API: http://localhost:3000
-- Martin Tiles: http://localhost:4000
-- Artemis Console: http://localhost:8161 (admin/admin)
+- API Documentation: http://localhost:3000/api/docs
+- Keycloak Admin: http://localhost:8080/admin (admin/admin)
+- Database: PostgreSQL on port 5432
+
+### Development User Accounts
+
+The development environment includes pre-configured test users:
+
+| Username | Password | Role | Permissions |
+|----------|----------|------|-------------|
+| `admin` | `admin123` | admin | Full system access - can manage all aspects of Ghana Waters |
+| `viewer` | `viewer123` | viewer | Read-only access - can view all data but cannot make changes |
+
+**Note**: The admin role includes viewer permissions (composite role). Use these accounts to test different permission levels in the admin dashboard.
+
+### API Documentation (Swagger)
+
+Interactive API documentation with testing capabilities is available at **http://localhost:3000/api/docs** when the API server is running. Use the "Authorize" button to add Bearer tokens for protected endpoints.
 
 ## Project Structure
 
@@ -77,9 +90,11 @@ ghanawaters/
 │   └── frontend/     # Public map interface (Angular + MapLibre)
 ├── libs/
 │   ├── map/          # Shared MapLibre components
+│   ├── shared/       # Shared components and utilities
 │   └── shared-models/ # Shared TypeScript models
 ├── docker/           # Docker configurations
-└── docs/            # Documentation
+├── docs/            # Documentation
+└── k8s/             # Kubernetes deployment configurations
 ```
 
 ## Development
@@ -107,23 +122,11 @@ npm run migration:run:dev
 npm run migration:revert:dev
 
 # Infrastructure
-npm run db:up            # Start all services
+npm run dev:setup        # Start dependent services (Docker) and run migrations
+npm run db:up            # Start PostgreSQL and Keycloak
 npm run db:down          # Stop all services
 npm run db:logs          # View service logs
 ```
-
-### API Endpoints
-
-Key endpoints include:
-
-- `GET /api/data/sync?since={timestamp}` - Sync endpoint for offline data
-- `GET/POST/PUT/DELETE /api/routes` - Navigation routes
-- `GET/POST/PUT/DELETE /api/markers` - Map markers
-- `GET/POST/PUT/DELETE /api/hazards` - Navigation hazards
-- `POST /api/devices/activate` - Device activation
-- `POST /api/vessels/telemetry/report` - Position reporting
-
-See [API Reference](docs/api-reference.md) for complete documentation.
 
 ## Offline Sync Feature
 
@@ -154,9 +157,8 @@ DATABASE_SSL=false
 # TypeORM
 TYPEORM_LOGGING=true
 
-# Artemis MQTT
-ARTEMIS_USER=artemis
-ARTEMIS_PASSWORD=artemis
+# Keycloak (automatically configured in Docker)
+# See docker/local/keycloak/ for realm configurations
 ```
 
 ### Production Deployment
@@ -165,9 +167,10 @@ For production deployment:
 
 1. Update environment variables for production database
 2. Enable SSL for database connections
-3. Configure proper authentication (Keycloak)
-4. Set up reverse proxy (nginx)
-5. Enable CORS for your domains
+3. Configure Keycloak with production realm settings
+4. Set up Kubernetes ingress with TLS certificates
+5. Configure CORS for your domains
+6. Set up proper monitoring and logging
 
 ## Testing
 
@@ -186,11 +189,20 @@ npx nx run-many -t test
 
 ## Contributing
 
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+### PR Workflow
+
+**Daily work:**
+1. Create branch from `develop`
+2. Make changes
+3. PR to `develop` → auto-deploys to DEV
+4. Merge, done
+
+**When ready for testing:**
+1. PR: `develop` → `test` → auto-deploys to TEST
+2. QA tests it
+
+**When ready for production:**
+1. PR: `test` → `main` → deploys to PROD
 
 ### Code Style
 
@@ -202,9 +214,10 @@ npx nx run-many -t test
 ## Documentation
 
 - [Sync Feature Guide](docs/sync-feature.md) - Offline sync implementation
-- [API Reference](docs/api-reference.md) - Complete API documentation
-- [Migration Guide](docs/sync-migration-guide.md) - Adding sync to features
-- [Architecture Decisions](docs/architecture.md) - System design choices
+- [Device Management](docs/device-management.md) - Device authentication system
+- [Environment Configuration](docs/environment-configuration.md) - Multi-environment setup
+- [Style Guide](docs/styleguide.md) - UI/UX and coding standards
+- [Angular Best Practices](docs/angular-bestpractices.md) - Modern Angular patterns
 
 ## License
 

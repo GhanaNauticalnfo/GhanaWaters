@@ -32,29 +32,26 @@ export class LandingSite {
   @Index({ spatial: true })
   location: GeoPoint;
 
-  @Column({ default: 'active' })
-  status: string;
+  @Column({ default: true })
+  active: boolean;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ type: 'timestamptz' })
   created_at: Date;
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({ type: 'timestamptz' })
   updated_at: Date;
 
-  toResponseDto(settings?: Record<string, string>): LandingSiteResponseDto {
+  toResponseDto(): LandingSiteResponseDto {
     const dto: LandingSiteResponseDto = {
       id: this.id,
       name: this.name,
       description: this.description,
       location: this.location,
-      status: this.status,
+      active: this.active,
       created_at: this.created_at.toISOString(),
       updated_at: this.updated_at.toISOString(),
     };
 
-    if (settings) {
-      dto.settings = settings;
-    }
 
     return dto;
   }

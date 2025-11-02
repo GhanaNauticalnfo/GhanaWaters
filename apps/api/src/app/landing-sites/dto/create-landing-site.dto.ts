@@ -1,12 +1,12 @@
 import { IsString, IsNotEmpty, IsOptional, IsBoolean, ValidateNested, IsObject, IsNumber, MaxLength } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
-import { GeoPoint } from '@ghanawaters/shared-models';
+import { GeoPoint, LandingSiteInput } from '@ghanawaters/shared-models';
 
 class GeoPointDto implements GeoPoint {
   @ApiProperty({ example: 'Point' })
   @IsString()
-  type: 'Point' = 'Point';
+  type = 'Point' as const;
 
   @ApiProperty({ 
     example: [-0.017, 5.619],
@@ -16,7 +16,7 @@ class GeoPointDto implements GeoPoint {
   coordinates: [number, number];
 }
 
-export class CreateLandingSiteDto {
+export class CreateLandingSiteDto implements LandingSiteInput {
   @ApiProperty({ example: 'Tema Harbor Landing Site' })
   @IsString()
   @IsNotEmpty()
@@ -46,11 +46,11 @@ export class CreateLandingSiteDto {
   location: GeoPoint;
 
   @ApiProperty({ 
-    enum: ['active', 'inactive', 'maintenance'],
-    default: 'active',
+    description: 'Whether the landing site is active',
+    default: true,
     required: false 
   })
   @IsOptional()
-  @IsString()
-  status?: string;
+  @IsBoolean()
+  active?: boolean;
 }

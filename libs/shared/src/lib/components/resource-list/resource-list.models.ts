@@ -24,6 +24,9 @@ export interface ResourceListConfig<T> {
     custom?: CustomAction[];
   };
   
+  // Action column width
+  actionColumnWidth?: string;
+  
   // Messages
   deleteConfirmMessage?: (item: T) => string;
   deleteConfirmHeader?: string;
@@ -32,6 +35,13 @@ export interface ResourceListConfig<T> {
   // Pagination
   pageSize?: number;
   pageSizeOptions?: number[];
+  
+  // Dialog configuration
+  dialogStyles?: {
+    create?: { width: string; height: string };
+    edit?: { width: string; height: string };
+    view?: { width: string; height: string };
+  };
 }
 
 export interface ColumnConfig {

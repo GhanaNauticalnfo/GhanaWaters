@@ -8,8 +8,8 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://github.com/GhanaNauticalnfo/snapper.git
-    targetRevision: HEAD
+    repoURL: https://github.com/GhanaNauticalnfo/GhanaWaters.git
+    targetRevision: develop
     path: k8s/overlays/dev
   destination:
     server: https://kubernetes.default.svc

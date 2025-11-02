@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, signal, computed, OnInit, TemplateRef, ContentChild } from '@angular/core';
+import { Component, Input, Output, EventEmitter, signal, OnInit, TemplateRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
@@ -32,7 +32,7 @@ export interface SearchDropdownConfig {
           (focus)="showDropdown.set(true)"
           (blur)="onBlur()"
           [placeholder]="placeholder"
-          class="search-input"
+          class="search-input text-sm"
         />
         @if (searchTerm) {
           <i class="pi pi-times clear-icon" (click)="clearSearch()"></i>
@@ -54,10 +54,10 @@ export interface SearchDropdownConfig {
             </div>
           }
           @if (config.showKeyboardHints) {
-            <div class="keyboard-hints">
-              <span class="hint"><kbd>↵</kbd> to select</span>
-              <span class="hint"><kbd>↓</kbd><kbd>↑</kbd> to navigate</span>
-              <span class="hint"><kbd>esc</kbd> to close</span>
+            <div class="keyboard-hints text-xs">
+              <span class="hint"><kbd class="text-xs text-center">↵</kbd> to select</span>
+              <span class="hint"><kbd class="text-xs text-center">↓</kbd><kbd class="text-xs text-center">↑</kbd> to navigate</span>
+              <span class="hint"><kbd class="text-xs text-center">esc</kbd> to close</span>
             </div>
           }
         </div>
@@ -100,8 +100,8 @@ export interface SearchDropdownConfig {
       padding: 12px 45px 12px 40px;
       border: 2px solid #e1e5e9;
       border-radius: 8px;
-      font-size: 14px;
       background: white;
+      color: #333;
       box-shadow: 0 2px 4px rgba(0,0,0,0.1);
       transition: all 0.2s ease;
       font-family: inherit;
@@ -194,7 +194,6 @@ export interface SearchDropdownConfig {
       padding: 12px 16px;
       background-color: #f9fafb;
       border-top: 1px solid #e5e7eb;
-      font-size: 12px;
       color: #6b7280;
     }
     
@@ -210,10 +209,8 @@ export interface SearchDropdownConfig {
       border-radius: 3px;
       padding: 2px 6px;
       font-family: monospace;
-      font-size: 11px;
       color: #374151;
       min-width: 18px;
-      text-align: center;
       box-shadow: 0 1px 2px rgba(0,0,0,0.05);
     }
   `]
@@ -255,25 +252,28 @@ export class SearchDropdownComponent<T extends SearchDropdownItem> implements On
     if (!this.showDropdown() || items.length === 0) return;
     
     switch (event.key) {
-      case 'ArrowDown':
+      case 'ArrowDown': {
         event.preventDefault();
         const nextIndex = Math.min(this.selectedIndex() + 1, items.length - 1);
         this.selectedIndex.set(nextIndex);
         break;
+      }
         
-      case 'ArrowUp':
+      case 'ArrowUp': {
         event.preventDefault();
         const prevIndex = Math.max(this.selectedIndex() - 1, -1);
         this.selectedIndex.set(prevIndex);
         break;
+      }
         
-      case 'Enter':
+      case 'Enter': {
         event.preventDefault();
         const selectedIdx = this.selectedIndex();
         if (selectedIdx >= 0 && selectedIdx < items.length) {
           this.selectItem(items[selectedIdx]);
         }
         break;
+      }
         
       case 'Escape':
         event.preventDefault();

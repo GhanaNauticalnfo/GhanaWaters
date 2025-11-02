@@ -1,8 +1,3 @@
-/**
- * This is not a production server yet!
- * This is only a minimal API to get started.
- */
-
 import { Logger, ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
@@ -60,12 +55,9 @@ async function bootstrap() {
     .addTag('settings', 'Application settings management')
     .addTag('resource-settings', 'Resource-specific settings management')
     .addTag('landing-sites', 'Landing site management')
-    .addTag('kml-datasets', 'KML dataset management')
-    .addTag('volta-depth', 'Volta Lake depth tiles')
     .addTag('sync', 'Offline data synchronization')
     .addTag('tree-stubs', 'Tree stub hazard management')
     .addTag('tree-stub-groups', 'Tree stub group management')
-    .addTag('gis', 'GIS and QGIS integration endpoints')
     .build();
   
   const document = SwaggerModule.createDocument(app, config);

@@ -46,7 +46,7 @@ export class BoatIconComponent {
   /**
    * The fill color of the boat icon
    */
-  @Input() color: string = '#3B82F6';
+  @Input() color = '#3B82F6';
   
   /**
    * The size of the icon (width and height)
@@ -61,12 +61,12 @@ export class BoatIconComponent {
   /**
    * Stroke width for the boat outline
    */
-  @Input() strokeWidth: number = 0;
+  @Input() strokeWidth = 0;
   
   /**
    * Optional CSS class for additional styling
    */
-  @Input() cssClass: string = '';
+  @Input() cssClass = '';
   
   /**
    * Optional title for accessibility/tooltip

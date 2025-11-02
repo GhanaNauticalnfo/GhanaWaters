@@ -1,4 +1,5 @@
 import { Component, OnInit, inject, signal, computed } from '@angular/core';
+import { formatTimestamp } from '@ghanawaters/shared';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Subject, takeUntil } from 'rxjs';
@@ -16,9 +17,9 @@ import { ToastModule } from 'primeng/toast';
 import { DialogModule } from 'primeng/dialog';
 import { CheckboxModule } from 'primeng/checkbox';
 
-import { VesselDataset } from '../../vessels/models/vessel-dataset.model';
-import { VesselDatasetService, TelemetryExportFilters, TelemetryExportStats } from '../../vessels/services/vessel-dataset.service';
-import { VesselTypeService, VesselType } from '../../settings/services/vessel-type.service';
+import { VesselDataset, TelemetryExportFilters, TelemetryExportStats } from '@ghanawaters/shared-models';
+import { VesselDatasetService } from '../../vessels/services/vessel-dataset.service';
+import { VesselTypeService, VesselType } from '../../settings/vessel-types/vessel-type.service';
 
 @Component({
   selector: 'app-download-tab-vessel-telemetry',
@@ -579,13 +580,7 @@ export class DownloadTabVesselTelemetryComponent implements OnInit {
   }
 
   formatDate(dateStr: string): string {
-    return new Date(dateStr).toLocaleDateString('en-GB', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+    return formatTimestamp(dateStr);
   }
 
   getDaysBetween(start: string, end: string): number {

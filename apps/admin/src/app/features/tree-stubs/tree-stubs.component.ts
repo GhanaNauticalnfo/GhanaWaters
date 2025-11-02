@@ -1,5 +1,6 @@
 import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { TimestampPipe } from '@ghanawaters/shared';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { TableModule } from 'primeng/table';
@@ -29,13 +30,14 @@ import { TreeStubGroupResponseDto, TreeStubGroupInputDto } from '@ghanawaters/sh
     ToastModule,
     ConfirmDialogModule,
     SkeletonModule,
-    CheckboxModule
+    CheckboxModule,
+    TimestampPipe
   ],
   providers: [MessageService, ConfirmationService],
   template: `
     <div class="tree-stubs-container">
       <div class="page-header">
-        <h2>Tree Stubs</h2>
+        <h2 class="text-2xl">Tree Stubs</h2>
       </div>
       
       <div class="flex justify-between items-center mb-4">
@@ -104,7 +106,7 @@ import { TreeStubGroupResponseDto, TreeStubGroupInputDto } from '@ghanawaters/sh
                 [severity]="group.enabled ? 'success' : 'danger'">
               </p-tag>
             </td>
-            <td>{{ group.updated_at | date:'short' }}</td>
+            <td>{{ group.updated_at | timestamp }}</td>
             <td>
               <button 
                 pButton 

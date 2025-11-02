@@ -1,6 +1,8 @@
-#apps/api/Dockerfile
+# apps/api/Dockerfile
+# Multi-stage Dockerfile that BUILDS the Ghana Waters API from source code and packages it for production
+# Used by GitHub Actions CI/CD pipeline (.github/workflows/deploy.yml) to create container images
 
-# Stage 1: Build
+# Stage 1: Build - Compile TypeScript source code into JavaScript bundles
 FROM node:22 AS build
 WORKDIR /app
 
@@ -22,7 +24,7 @@ RUN npx nx build api --configuration=${ENVIRONMENT}
 RUN echo "--- Contents of /app/dist/apps/api after nx build ---"
 RUN ls -lR /app/dist/apps/api || echo "/app/dist/apps/api not found"
 
-# Stage 2: Run
+# Stage 2: Runtime - Create lightweight production container with built artifacts
 FROM node:22-alpine
 WORKDIR /app
 

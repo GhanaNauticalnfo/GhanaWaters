@@ -1,16 +1,27 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { Response } from 'express';
 import { SyncController } from './sync.controller';
 import { SyncService } from './sync.service';
+import { SyncEntryDto } from './dto';
 
 describe('SyncController', () => {
   let controller: SyncController;
   let service: SyncService;
+  let mockResponse: Partial<Response>;
 
   const mockSyncService = {
-    getChangesSince: jest.fn(),
+    getChangesByVersion: jest.fn(),
+    getCurrentSyncVersion: jest.fn(),
+    resetSync: jest.fn(),
   };
 
   beforeEach(async () => {
+    mockResponse = {
+      status: jest.fn().mockReturnThis(),
+      send: jest.fn(),
+      json: jest.fn(),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       controllers: [SyncController],
       providers: [
@@ -34,55 +45,99 @@ describe('SyncController', () => {
   });
 
   describe('syncData', () => {
-    it('should call service with date from query parameter', async () => {
-      const mockResponse = {
-        version: '2025-01-01T12:00:00Z',
-        data: [
+    it('should return sync data with version parameters', async () => {
+      const mockSyncEntryDto: SyncEntryDto = {
+        majorVersion: 1,
+        fromMinorVersion: 0,
+        toMinorVersion: 5,
+        lastUpdate: '2025-01-01T12:00:00Z',
+        hasMoreEntities: false,
+        entities: [
           {
-            entity_type: 'route',
-            entity_id: '123',
-            action: 'create',
-            data: { test: 'data' },
+            entityType: 'route',
+            entityId: '123',
+            entityAction: 'create',
+            entityData: { test: 'data' },
           },
         ],
       };
-      mockSyncService.getChangesSince.mockResolvedValue(mockResponse);
+      mockSyncService.getChangesByVersion.mockResolvedValue(mockSyncEntryDto);
 
-      const sinceString = '2025-01-01T00:00:00Z';
-      const result = await controller.syncData(sinceString);
+      await controller.syncData(
+        mockResponse as Response,
+        '1',
+        '0',
+        '100'
+      );
 
-      expect(service.getChangesSince).toHaveBeenCalledWith(new Date(sinceString));
-      expect(result).toEqual(mockResponse);
+      expect(service.getChangesByVersion).toHaveBeenCalledWith(1, 0, 100);
+      expect(mockResponse.json).toHaveBeenCalledWith(mockSyncEntryDto);
     });
 
-    it('should use epoch date when no since parameter provided', async () => {
-      const mockResponse = {
-        version: '2025-01-01T12:00:00Z',
-        data: [],
+    it('should use default values when no parameters provided', async () => {
+      const mockSyncEntryDto: SyncEntryDto = {
+        majorVersion: 1,
+        fromMinorVersion: 0,
+        toMinorVersion: 3,
+        lastUpdate: '2025-01-01T12:00:00Z',
+        hasMoreEntities: false,
+        entities: [],
       };
-      mockSyncService.getChangesSince.mockResolvedValue(mockResponse);
+      mockSyncService.getChangesByVersion.mockResolvedValue(mockSyncEntryDto);
 
-      const result = await controller.syncData();
+      await controller.syncData(mockResponse as Response);
 
-      expect(service.getChangesSince).toHaveBeenCalledWith(new Date(0));
-      expect(result).toEqual(mockResponse);
+      expect(service.getChangesByVersion).toHaveBeenCalledWith(undefined, undefined, 100);
+      expect(mockResponse.json).toHaveBeenCalledWith(mockSyncEntryDto);
     });
 
-    it('should handle invalid date strings', async () => {
-      const mockResponse = {
-        version: '2025-01-01T12:00:00Z',
-        data: [],
+    it('should return 204 when no versions exist', async () => {
+      mockSyncService.getChangesByVersion.mockResolvedValue(null);
+
+      await controller.syncData(
+        mockResponse as Response,
+        '999',
+        '0'
+      );
+
+      expect(service.getChangesByVersion).toHaveBeenCalledWith(999, 0, 100);
+      expect(mockResponse.status).toHaveBeenCalledWith(204);
+      expect(mockResponse.send).toHaveBeenCalled();
+    });
+
+    it('should handle invalid version strings', async () => {
+      const mockSyncEntryDto: SyncEntryDto = {
+        majorVersion: 1,
+        fromMinorVersion: 0,
+        toMinorVersion: 1,
+        lastUpdate: '2025-01-01T12:00:00Z',
+        hasMoreEntities: false,
+        entities: [],
       };
-      mockSyncService.getChangesSince.mockResolvedValue(mockResponse);
+      mockSyncService.getChangesByVersion.mockResolvedValue(mockSyncEntryDto);
 
-      const invalidDate = 'invalid-date';
-      const result = await controller.syncData(invalidDate);
+      await controller.syncData(
+        mockResponse as Response,
+        'invalid',
+        'invalid',
+        'invalid'
+      );
 
-      // JavaScript Date constructor with invalid string returns Invalid Date
-      // which when passed to getChangesSince should be handled
-      expect(service.getChangesSince).toHaveBeenCalled();
-      const calledDate = mockSyncService.getChangesSince.mock.calls[0][0];
-      expect(calledDate.toString()).toBe('Invalid Date');
+      // Should parse as NaN 
+      expect(service.getChangesByVersion).toHaveBeenCalledWith(NaN, NaN, NaN);
+      expect(mockResponse.json).toHaveBeenCalledWith(mockSyncEntryDto);
+    });
+  });
+
+  describe('resetSync', () => {
+    it('should call service resetSync method', async () => {
+      const mockResult = { success: true, majorVersion: 2 };
+      mockSyncService.resetSync.mockResolvedValue(mockResult);
+
+      const result = await controller.resetSync();
+
+      expect(service.resetSync).toHaveBeenCalled();
+      expect(result).toEqual(mockResult);
     });
   });
 });

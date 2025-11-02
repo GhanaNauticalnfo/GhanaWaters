@@ -2,12 +2,9 @@ import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateCol
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Vessel } from '../vessel.entity';
 import { DeviceResponseDto } from './dto/device-response.dto';
+import { DeviceState } from '@ghanawaters/shared-models';
 
-export enum DeviceState {
-  PENDING = 'pending',
-  ACTIVE = 'active', 
-  RETIRED = 'retired'
-}
+export { DeviceState };
 
 @Entity('devices')
 export class Device {
@@ -39,11 +36,11 @@ export class Device {
   })
   state: DeviceState;
 
-  @Column({ type: 'timestamp', nullable: true })
+  @Column({ type: 'timestamptz', nullable: true })
   @ApiPropertyOptional({ description: 'Timestamp when device was activated', type: Date })
   activated_at: Date;
 
-  @Column({ type: 'timestamp', nullable: true })
+  @Column({ type: 'timestamptz', nullable: true })
   @ApiPropertyOptional({ description: 'Timestamp when device token expires', type: Date })
   expires_at: Date;
 
@@ -56,11 +53,11 @@ export class Device {
   @ApiPropertyOptional({ description: 'ID of the associated vessel', example: 1 })
   vessel_id: number;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ type: 'timestamptz' })
   @ApiProperty({ description: 'Timestamp when device was created', type: Date })
   created_at: Date;
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({ type: 'timestamptz' })
   @ApiProperty({ description: 'Timestamp when device was last updated', type: Date })
   updated_at: Date;
 
@@ -71,10 +68,10 @@ export class Device {
       activation_token: this.activation_token,
       auth_token: this.auth_token || undefined,
       state: this.state,
-      activated_at: this.activated_at || undefined,
-      expires_at: this.expires_at || undefined,
-      created_at: this.created_at,
-      updated_at: this.updated_at,
+      activated_at: this.activated_at?.toISOString() || undefined,
+      expires_at: this.expires_at?.toISOString() || undefined,
+      created_at: this.created_at.toISOString(),
+      updated_at: this.updated_at.toISOString(),
     };
 
     if (this.vessel) {

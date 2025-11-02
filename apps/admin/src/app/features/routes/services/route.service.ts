@@ -1,32 +1,23 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, throwError } from 'rxjs';
-import { catchError } from 'rxjs/operators';
-import { Route } from '../models/route.model';
-import { environment } from '../../../../environments/environment';
+import { Observable } from 'rxjs';
+import { RouteResponse as Route } from '@ghanawaters/shared-models';
 
 @Injectable({
   providedIn: 'root'
 })
 export class RouteService {
-  private apiUrl = `${environment.apiUrl}/routes`;
+  private apiUrl = '/api/routes';
 
   constructor(private http: HttpClient) {}
 
   getAll(): Observable<Route[]> {
-    return this.http.get<Route[]>(this.apiUrl).pipe(
-      catchError(error => {
-        console.error('Error fetching routes:', error);
-        console.error('Error details:', error.error);
-        return throwError(() => error);
-      })
-    );
+    return this.http.get<Route[]>(this.apiUrl);
   }
 
-  getOne(id: number): Observable<Route> {
+  getById(id: number): Observable<Route> {
     return this.http.get<Route>(`${this.apiUrl}/${id}`);
   }
-
 
   create(route: Route): Observable<Route> {
     // Remove id from the route object as it's not part of RouteInputDto
@@ -37,7 +28,6 @@ export class RouteService {
   update(id: number, route: Route): Observable<Route> {
     // Remove id from the route object as it's not part of RouteInputDto
     const { id: _, ...routeData } = route;
-    console.log('RouteService.update - Sending route data:', JSON.stringify(routeData, null, 2));
     return this.http.put<Route>(`${this.apiUrl}/${id}`, routeData);
   }
 

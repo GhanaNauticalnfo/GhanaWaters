@@ -1,7 +1,7 @@
 import { IsNumber, IsOptional, IsString, IsDateString, ValidateNested, IsObject, Min, Max } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
-import { GeoPoint } from '@ghanawaters/shared-models';
+import { GeoPoint, VesselTelemetryInput } from '@ghanawaters/shared-models';
 
 class GeoPointDto implements GeoPoint {
   @ApiProperty({ example: 'Point' })
@@ -16,7 +16,7 @@ class GeoPointDto implements GeoPoint {
   coordinates: [number, number];
 }
 
-export class VesselTelemetryInputDto {
+export class VesselTelemetryInputDto implements VesselTelemetryInput {
   @ApiProperty({ required: false })
   @IsOptional()
   @IsDateString()
@@ -44,25 +44,6 @@ export class VesselTelemetryInputDto {
   @Min(0)
   @Max(360)
   heading_degrees?: number;
-
-  @ApiProperty({ required: false, minimum: 0, maximum: 100 })
-  @IsOptional()
-  @IsNumber()
-  @Min(0)
-  @Max(100)
-  battery_level?: number;
-
-  @ApiProperty({ required: false, minimum: 0, maximum: 100 })
-  @IsOptional()
-  @IsNumber()
-  @Min(0)
-  @Max(100)
-  signal_strength?: number;
-
-  @ApiProperty({ required: false })
-  @IsOptional()
-  @IsString()
-  device_id?: string;
 
   @ApiProperty({ required: false })
   @IsOptional()

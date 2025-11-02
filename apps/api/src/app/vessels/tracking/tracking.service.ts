@@ -77,16 +77,14 @@ export class TrackingService {
     return Promise.all(points.map(point => this.toResponseDto(point)));
   }
 
-  async create(vesselId: number, trackingData: VesselTelemetryInputDto): Promise<VesselTelemetryResponseDto> {
+  async create(vesselId: number, trackingData: VesselTelemetryInputDto, deviceId?: string): Promise<VesselTelemetryResponseDto> {
     return await this.dataSource.transaction(async manager => {
       const point = new VesselTelemetry();
       point.vessel_id = vesselId;
       point.timestamp = trackingData.timestamp ? new Date(trackingData.timestamp) : new Date();
       point.speed_knots = trackingData.speed_knots;
       point.heading_degrees = trackingData.heading_degrees;
-      point.battery_level = trackingData.battery_level;
-      point.signal_strength = trackingData.signal_strength;
-      point.device_id = trackingData.device_id;
+      point.device_id = deviceId;
       point.status = trackingData.status;
       
       // Set the position directly as GeoJSON object - TypeORM will handle PostGIS conversion
@@ -180,8 +178,6 @@ export class TrackingService {
       position: position,
       speed_knots: point.speed_knots,
       heading_degrees: point.heading_degrees,
-      battery_level: point.battery_level,
-      signal_strength: point.signal_strength,
       device_id: point.device_id,
       status: point.status
     };
