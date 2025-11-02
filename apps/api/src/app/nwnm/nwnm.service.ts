@@ -5,6 +5,7 @@ export interface NwNmMessagePart {
   type?: string;
   geometry?: any;
   eventDates?: any[];
+  descs?: any[];
 }
 
 export interface NwNmMessage {
@@ -94,14 +95,15 @@ export class NwnmService {
     return niordMessages.map(msg => {
       const parts: NwNmMessagePart[] = [];
 
-      // Extract geometry from message parts if available
+      // Extract full part structure including type, geometry, and descriptions
       if (msg.parts && Array.isArray(msg.parts)) {
         msg.parts.forEach((part: any) => {
-          if (part.geometry) {
-            parts.push({
-              geometry: part.geometry
-            });
-          }
+          parts.push({
+            type: part.type,
+            geometry: part.geometry,
+            eventDates: part.eventDates,
+            descs: Array.isArray(part.descs) ? part.descs : []
+          });
         });
       }
 
@@ -128,13 +130,22 @@ export class NwnmService {
         followUpDate: msg.followUpDate,
 
         // Geographic info
-        areas: msg.areas || [],
+        areas: Array.isArray(msg.areas) ? msg.areas : [],
 
         // Multi-language content
-        descs: msg.descs || [],
+        descs: Array.isArray(msg.descs) ? msg.descs : [],
 
-        // Parts
+        // Parts with full structure
         parts: parts.length > 0 ? parts : undefined,
+
+        // References
+        references: Array.isArray(msg.references) ? msg.references : undefined,
+
+        // Charts
+        charts: Array.isArray(msg.charts) ? msg.charts : undefined,
+
+        // Original information flag
+        originalInformation: msg.originalInformation,
       };
     });
   }

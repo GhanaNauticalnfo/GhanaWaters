@@ -295,6 +295,12 @@ export class NwNmLayerService extends BaseLayerService {
                     // Additional data
                     areas: message.areas,
                     descs: message.descs,
+                    parts: message.parts,
+                    references: message.references,
+                    charts: message.charts,
+
+                    // Original information flag
+                    originalInformation: message.originalInformation,
                 };
 
                 // Handle FeatureCollection (most common case from Niord API)

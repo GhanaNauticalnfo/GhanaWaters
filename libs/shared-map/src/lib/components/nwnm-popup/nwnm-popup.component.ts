@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { NwNmFeatureProperties } from '../../layers/nwnm/nw-nm.models';
@@ -10,57 +10,64 @@ import { NwNmFeatureProperties } from '../../layers/nwnm/nw-nm.models';
   templateUrl: './nwnm-popup.component.html',
   styleUrls: ['./nwnm-popup.component.css']
 })
-export class NwnmPopupComponent {
+export class NwnmPopupComponent implements OnInit {
   @Input() message!: NwNmFeatureProperties;
 
   constructor(private sanitizer: DomSanitizer) {}
 
-  get statusClass(): string {
-    return `status-${this.message.status || 'PUBLISHED'}`;
-  }
-
-  get messageIdDisplay(): string {
-    // Show short ID or regular ID
-    return this.message.shortId || this.message.id?.toString() || 'N/A';
-  }
-
-  get typeSuffix(): string {
-    // Add T for temporary, P for preliminary
-    if (this.message.type?.includes('TEMPORARY')) return ' (T)';
-    if (this.message.type?.includes('PRELIMINARY')) return ' (P)';
-    return '';
-  }
-
-  get safeDescription(): SafeHtml {
-    // Sanitize HTML content from Niord
-    const desc = this.message.description || this.message.descs?.[0]?.details || '';
-    return this.sanitizer.sanitize(1, desc) || '';
-  }
-
-  get publishDate(): string {
-    if (!this.message.publishDateFrom) return '';
-    const from = new Date(this.message.publishDateFrom);
-    const to = this.message.publishDateTo ? new Date(this.message.publishDateTo) : null;
-
-    if (to && from.getTime() !== to.getTime()) {
-      return `${this.formatDate(from)} - ${this.formatDate(to)}`;
+  ngOnInit(): void {
+    // MapLibre serializes complex GeoJSON properties to JSON strings
+    // Parse them back to objects if needed
+    if (this.message.references && typeof this.message.references === 'string') {
+      try {
+        this.message.references = JSON.parse(this.message.references as string);
+      } catch (e) {
+        console.error('Failed to parse references:', e);
+        this.message.references = [];
+      }
     }
-    return this.formatDate(from);
+
+    if (this.message.charts && typeof this.message.charts === 'string') {
+      try {
+        this.message.charts = JSON.parse(this.message.charts as string);
+      } catch (e) {
+        console.error('Failed to parse charts:', e);
+        this.message.charts = [];
+      }
+    }
+
+    if (this.message.parts && typeof this.message.parts === 'string') {
+      try {
+        this.message.parts = JSON.parse(this.message.parts as string);
+      } catch (e) {
+        console.error('Failed to parse parts:', e);
+        this.message.parts = [];
+      }
+    }
+
+    if (this.message.descs && typeof this.message.descs === 'string') {
+      try {
+        this.message.descs = JSON.parse(this.message.descs as string);
+      } catch (e) {
+        console.error('Failed to parse descs:', e);
+        this.message.descs = [];
+      }
+    }
+
+    if (this.message.areas && typeof this.message.areas === 'string') {
+      try {
+        this.message.areas = JSON.parse(this.message.areas as string);
+      } catch (e) {
+        console.error('Failed to parse areas:', e);
+        this.message.areas = [];
+      }
+    }
   }
 
-  private formatDate(date: Date): string {
-    return date.toLocaleDateString('en-GB', {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric'
-    });
-  }
-
-  get areaNames(): string {
-    if (!this.message.areas || this.message.areas.length === 0) return '';
-    return this.message.areas
-      .map((area: any) => area.descs?.[0]?.name || area.name)
-      .filter(Boolean)
-      .join(' / ');
+  /**
+   * Sanitize HTML content from Niord to prevent XSS attacks
+   */
+  sanitizeHtml(html: string): SafeHtml {
+    return this.sanitizer.sanitize(1, html) || '';
   }
 }

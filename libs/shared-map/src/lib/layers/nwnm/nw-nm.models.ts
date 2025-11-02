@@ -14,7 +14,9 @@ export interface NwNmMessageDescription {
   title?: string;
   subject?: string;
   details?: string;
+  description?: string;
   name?: string;
+  source?: string;
 }
 
 /**
@@ -27,11 +29,29 @@ export interface NwNmArea {
   parent?: NwNmArea;
 }
 
+/**
+ * Chart reference in NW/NM messages
+ */
+export interface NwNmChart {
+  chartNumber?: string;
+  internationalNumber?: string;
+}
+
+/**
+ * Reference to another message
+ */
+export interface NwNmReference {
+  messageId: string;
+  type?: 'REPETITION' | 'REPETITION_NEW_TIME' | 'CANCELLATION' | 'UPDATE';
+  descs?: NwNmMessageDescription[];
+}
+
 export interface NwNmMessagePart {
   type?: string;
   // Allow geometry to be a FeatureCollection (most common from Niord), Feature, or direct Geometry
   geometry?: FeatureCollection<Geometry, GeoJsonProperties> | Feature<Geometry | null, GeoJsonProperties> | Geometry;
   eventDates?: any[];
+  descs?: NwNmMessageDescription[];
 }
 
 export interface NwNmMessage {
@@ -61,6 +81,13 @@ export interface NwNmMessage {
 
   // Message structure
   parts?: NwNmMessagePart[];
+
+  // References and charts
+  references?: NwNmReference[];
+  charts?: NwNmChart[];
+
+  // Original information flag
+  originalInformation?: boolean;
 }
 
 /**
@@ -89,6 +116,12 @@ export interface NwNmFeatureProperties {
     // Additional data
     areas?: any[];
     descs?: any[];
+    parts?: any[];
+    references?: any[];
+    charts?: any[];
+
+    // Original information flag
+    originalInformation?: boolean;
 
     // Use 'unknown' instead of 'any' for better type safety
     // Allows merging with properties from the original GeoJSON feature

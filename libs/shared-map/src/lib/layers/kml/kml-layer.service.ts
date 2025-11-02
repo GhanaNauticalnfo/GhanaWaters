@@ -73,16 +73,25 @@ export class KmlLayerService extends BaseLayerService {
 
   /**
    * Fit the map to show all features
+   * @param retryCount - Internal retry counter (default: 0)
    */
-  fitToFeatures(): void {
+  fitToFeatures(retryCount: number = 0): void {
     if (!this.map || !this.featureData?.features.length) return;
 
     // Check if map container has valid dimensions
     const container = this.map.getContainer();
     if (!container || container.offsetWidth === 0 || container.offsetHeight === 0) {
-      console.warn('Map container has no dimensions, skipping fitBounds');
+      // Maximum 50 retries (~3 seconds at 60fps) to prevent infinite loops
+      const MAX_RETRIES = 50;
+
+      if (retryCount >= MAX_RETRIES) {
+        console.warn('Map container has no dimensions after max retries, giving up');
+        return;
+      }
+
+      console.warn(`Map container has no dimensions, retrying (${retryCount + 1}/${MAX_RETRIES})`);
       // Use requestAnimationFrame for smoother retries
-      requestAnimationFrame(() => this.fitToFeatures());
+      requestAnimationFrame(() => this.fitToFeatures(retryCount + 1));
       return;
     }
 

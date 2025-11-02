@@ -125,7 +125,7 @@ import { environment } from '../../../../environments/environment';
                 <div class="flex items-center gap-3">
                   <p-fileupload
                     mode="basic"
-                    chooseLabel="Upload KML File"
+                    chooseLabel="Upload"
                     chooseIcon="pi pi-upload"
                     accept=".kml"
                     [customUpload]="true"

@@ -1,33 +1,74 @@
 <div class="nwnm-popup">
-  <!-- Message ID Badge -->
-  <div class="message-header">
-    <span class="message-id-badge" [ngClass]="statusClass">
-      {{ message.mainType }}{{ typeSuffix }} {{ messageIdDisplay }}
-    </span>
-  </div>
+  <div class="message-details-item">
+    <!-- Title line with star and badge -->
+    <div class="message-header-line">
+      <div *ngIf="message.originalInformation" class="original-info-star">&#10029;</div>
 
-  <!-- Title -->
-  <div class="message-title" *ngIf="message.title || message.descs?.[0]?.title">
-    <strong>{{ message.title || message.descs?.[0]?.title }}</strong>
-  </div>
+      <div *ngIf="message.shortId" class="message-id-badge-container">
+        <span class="badge-pill badge-dark label-message-id">{{ message.shortId }}</span>
+      </div>
 
-  <!-- Description -->
-  <div class="message-description" *ngIf="safeDescription"
-       [innerHTML]="safeDescription">
-  </div>
+      <div class="message-title">
+        <strong>{{ message.title || message.descs?.[0]?.title }}</strong>
+        <span *ngIf="message.descs?.[0]?.lang && message.descs?.[0]?.lang !== 'en'" class="lang-indicator">
+          <img [src]="'/img/nwnm/flags/' + message.descs?.[0]?.lang + '.png'" class="flag-icon"/>
+        </span>
+      </div>
+    </div>
 
-  <!-- Publication Date -->
-  <div class="message-date" *ngIf="publishDate">
-    <small><strong>Published:</strong> {{ publishDate }}</small>
-  </div>
+    <table class="message-details-item-fields">
+      <!-- Reference lines -->
+      <tr *ngIf="message.references && message.references.length > 0">
+        <th>References</th>
+        <td>
+          <div *ngFor="let ref of message.references">
+            <span>{{ ref.messageId }}</span>
+            <span *ngIf="ref.type" class="ref-type">
+              <span *ngIf="ref.type === 'REPETITION'">(repetition)</span>
+              <span *ngIf="ref.type === 'REPETITION_NEW_TIME'">(repetition with new time)</span>
+              <span *ngIf="ref.type === 'CANCELLATION'">(cancellation)</span>
+              <span *ngIf="ref.type === 'UPDATE'">(updated repetition)</span>
+            </span>
+            <span *ngIf="ref.descs && ref.descs.length > 0 && ref.descs?.[0]?.description">
+              - {{ ref.descs?.[0]?.description }}
+            </span>
+          </div>
+        </td>
+      </tr>
 
-  <!-- Areas -->
-  <div class="message-areas" *ngIf="areaNames">
-    <small><strong>Areas:</strong> {{ areaNames }}</small>
-  </div>
+      <!-- Details line (parts) -->
+      <ng-container *ngIf="message.parts">
+        <tr *ngFor="let part of message.parts; let i = index">
+          <th>
+            <span *ngIf="i === 0 || message.parts[i].type !== message.parts[i - 1]?.type">
+              {{ part.type ? part.type.toLowerCase() : 'details' }}
+            </span>
+          </th>
+          <td class="message-description">
+            <div *ngIf="part.descs && part.descs.length > 0">
+              <p *ngIf="part.descs?.[0]?.subject"><strong>{{ part.descs?.[0]?.subject }}</strong></p>
+              <div *ngIf="part.descs?.[0]?.details" [innerHTML]="sanitizeHtml(part.descs?.[0]?.details || '')"></div>
+            </div>
+          </td>
+        </tr>
+      </ng-container>
 
-  <!-- Status (if not published) -->
-  <div class="message-status" *ngIf="message.status && message.status !== 'PUBLISHED'">
-    <small><em>Status: {{ message.status }}</em></small>
+      <!-- Charts line -->
+      <tr *ngIf="message.charts && message.charts.length > 0">
+        <th>Charts</th>
+        <td>
+          <span *ngFor="let chart of message.charts; let i = index">
+            <span *ngIf="i > 0">, </span>
+            {{ chart.chartNumber }}
+            <span *ngIf="chart.internationalNumber">(INT {{ chart.internationalNumber }})</span>
+          </span>
+        </td>
+      </tr>
+
+      <!-- Source line -->
+      <tr *ngIf="message.descs?.[0]?.source">
+        <td colspan="2" class="text-right">({{ message.descs?.[0]?.source }})</td>
+      </tr>
+    </table>
   </div>
 </div>
